@@ -18,7 +18,7 @@ const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 const pick = a => a[Math.floor(rnd() * a.length)];
 const wpick = pairs => { let t = rnd() * pairs.reduce((s, p) => s + p[1], 0); for (const [v, w] of pairs) { if ((t -= w) <= 0) return v; } return pairs[0][0]; };
 
-const PI = { admset: 'sliders-h', dashboard: 'th-large', admissions: 'user-plus', dues: 'calendar-clock', seats: 'table', fees: 'indian-rupee', payments: 'credit-card', refunds: 'replay', documents: 'file', notifications: 'bell', bell: 'bell', reports: 'chart-bar', audit: 'shield', settings: 'cog', search: 'search', plus: 'plus', download: 'download', upload: 'upload', filter: 'filter', x: 'times', check: 'check', chevron: 'chevron-down', right: 'chevron-right', help: 'question-circle', printer: 'print', send: 'send', clock: 'clock', user: 'user', lock: 'lock', rotate: 'refresh', alert: 'exclamation-triangle', link: 'link', eye: 'eye', sms: 'mobile', mail: 'envelope', chat: 'whatsapp', building: 'building', more: 'ellipsis-h', grip: 'bars', copy: 'copy', layers: 'clone', sheet: 'file-excel', hand: 'pen-to-square', info: 'info-circle' };
+const PI = { admset: 'sliders-h', dashboard: 'th-large', admissions: 'user-plus', dues: 'calendar-clock', seats: 'table', fees: 'indian-rupee', payments: 'credit-card', refunds: 'replay', documents: 'file', notifications: 'comments', bell: 'bell', reports: 'chart-bar', audit: 'shield', settings: 'cog', search: 'search', plus: 'plus', download: 'download', upload: 'upload', filter: 'filter', x: 'times', check: 'check', chevron: 'chevron-down', right: 'chevron-right', help: 'question-circle', printer: 'print', send: 'send', clock: 'clock', user: 'user', lock: 'lock', rotate: 'refresh', alert: 'exclamation-triangle', link: 'link', eye: 'eye', sms: 'mobile', mail: 'envelope', chat: 'whatsapp', building: 'building', more: 'ellipsis-h', grip: 'bars', copy: 'copy', layers: 'clone', sheet: 'file-excel', hand: 'pen-to-square', info: 'info-circle' };
 const ic = (n, s = 14) => `<i class="ic pi pi-${PI[n] || n}" style="font-size:${s}px"></i>`;
 
 /* ================= sample data ================= */
@@ -33,7 +33,7 @@ const PROGS = [
 const QUOTAS = ['Government', 'Management', 'NRI', 'Lateral entry'];
 const TUITION = { Government: 52000, Management: 98000, NRI: 265000, 'Lateral entry': 64000 };
 const FIXED = { 'Admission fee': 5000, 'Caution deposit': 10000, 'Exam fee': 3500 };
-const PAY_MODES = ['Cash', 'UPI', 'Bank transfer', 'Cheque', 'DD', 'Payment link'];
+const PAY_MODES = ['Cash', 'UPI', 'Bank transfer', 'Cheque', 'DD'];
 const modePicked = () => { const b = $('#pMode .on'); if (b) return b.textContent; $('#pMode').classList.add('invalid'); const e = $('#pModeErr'); if (e) e.textContent = 'Choose how the payment was received.'; return ''; };
 const STATUSES = ['Seat booked', 'Details collected', 'Confirmed', 'Cancelled', 'Withdrawn'];
 const OCCUPY = ['Seat booked', 'Details collected', 'Confirmed'];
@@ -98,6 +98,7 @@ for (let i = 0; i < 196; i++) {
   };
   if (status === 'Seat booked') s.docs = { SSLC: 'Pending', 'Plus Two': 'Pending', TC: 'Pending', 'Community certificate': 'Pending' };
   recalc(s);
+  s.bfee = 10000;
   students.push(s);
 }
 
@@ -105,7 +106,7 @@ for (let i = 0; i < 196; i++) {
 let rawPays = [];
 students.forEach(s => {
   if (!s.paid) return;
-  const mk = (amt, date) => rawPays.push({ sid: s.id, amt, date: date > TODAY ? [addDays(TODAY, -Math.floor(rnd() * 25)), s.d1].sort()[1] : date, mode: wpick([['UPI', 38], ['Cash', 22], ['Bank transfer', 20], ['Cheque', 10], ['DD', 6], ['Payment link', 4]]), cashier: pick(CASHIERS) });
+  const mk = (amt, date) => rawPays.push({ sid: s.id, amt, date: date > TODAY ? [addDays(TODAY, -Math.floor(rnd() * 25)), s.d1].sort()[1] : date, mode: wpick([['UPI', 38], ['Cash', 22], ['Bank transfer', 20], ['Cheque', 10], ['DD', 6]]), cashier: pick(CASHIERS) });
   const pl = instPlan(s); let left = s.paid;
   pl.forEach((i, k) => { if (left <= 0) return; const a = Math.min(i.amt, left); left -= a; mk(a, k === 0 ? s.d1 : addDays(i.due, -Math.floor(rnd() * 6))); });
 });
@@ -114,13 +115,6 @@ rawPays.forEach((p, i) => {
   const ref = p.mode === 'Cash' ? '—' : p.mode === 'UPI' ? 'UPI' + Math.floor(1e11 + rnd() * 8e11) : p.mode === 'Cheque' ? 'CHQ ' + Math.floor(100000 + rnd() * 899999) : p.mode === 'DD' ? 'DD ' + Math.floor(100000 + rnd() * 899999) : p.mode === 'Payment link' ? 'pay_' + Math.random().toString(36).slice(2, 12) : 'NEFT' + Math.floor(1e9 + rnd() * 8e9);
   payments.push({ id: 'p' + i, rcpt: 'TEC/RCP/26/' + pad(i + 1, 5), ...p, ref, kind: 'Payment', status: 'Posted' });
 });
-// one reversal (contra) for a bounced cheque
-const bounced = payments.find(p => p.mode === 'Cheque');
-if (bounced) {
-  bounced.status = 'Reversed';
-  payments.push({ id: 'p-rev1', rcpt: 'TEC/CTR/26/00001', sid: bounced.sid, amt: -bounced.amt, date: addDays(bounced.date, 4) > TODAY ? TODAY : addDays(bounced.date, 4), mode: 'Contra', cashier: 'Joby Mathew', ref: 'Reverses ' + bounced.rcpt + ' · cheque returned', kind: 'Reversal', status: 'Posted' });
-  const s = students.find(x => x.id === bounced.sid); s.paid -= bounced.amt; recalc(s);
-}
 
 // refunds
 const RSTAT = ['Submitted', 'Awaiting approval', 'Awaiting approval', 'Approved', 'Processing', 'Completed', 'Completed', 'Rejected', 'On hold'];
@@ -137,51 +131,47 @@ if (cs) refunds.push({ id: 'r99', no: 'TEC/RFD/26/' + pad(++rIdx, 4), sid: cs.id
 
 // audit
 const USERS = [
-  { name: 'Anita Joseph', role: 'Organisation admin', email: 'anita@thejus.edu.in', scope: 'Organisation', twofa: true, last: '2 min ago', status: 'Active' },
+  { name: 'Anita Joseph', role: 'Admin', email: 'anita@thejus.edu.in', scope: 'Organisation', twofa: true, last: '2 min ago', status: 'Active' },
   { name: 'Fr. Thomas Kuriakose', role: 'Organisation owner', email: 'chairman@thejus.edu.in', scope: 'Organisation', twofa: true, last: 'Yesterday', status: 'Active' },
   { name: 'Dr. Suma Rajan', role: 'Institution head', email: 'principal@tec.thejus.edu.in', scope: 'Thejus Engineering College', twofa: true, last: '1 h ago', status: 'Active' },
-  { name: 'Bindu Thomas', role: 'Admission officer', email: 'bindu@tec.thejus.edu.in', scope: 'Thejus Engineering College', twofa: false, last: '5 min ago', status: 'Active' },
-  { name: 'Sajeev Kumar', role: 'Admission officer', email: 'sajeev@tec.thejus.edu.in', scope: 'Programme · B.Tech', twofa: false, last: '20 min ago', status: 'Active' },
-  { name: 'Reshma P.', role: 'Admission officer', email: 'reshma@tec.thejus.edu.in', scope: 'Programme · MBA', twofa: false, last: '3 h ago', status: 'Active' },
-  { name: 'George Varghese', role: 'Finance manager', email: 'accounts@thejus.edu.in', scope: 'Organisation', twofa: true, last: '12 min ago', status: 'Active' },
-  { name: 'Joby Mathew', role: 'Cashier / accountant', email: 'joby@tec.thejus.edu.in', scope: 'Thejus Engineering College', twofa: true, last: 'Just now', status: 'Active' },
-  { name: 'Divya Suresh', role: 'Cashier / accountant', email: 'divya@tec.thejus.edu.in', scope: 'Thejus Engineering College', twofa: true, last: '1 h ago', status: 'Active' },
-  { name: 'Manoj Pillai', role: 'Refund approver', email: 'manager@tec.thejus.edu.in', scope: 'Thejus Engineering College', twofa: true, last: 'Today 09:12', status: 'Active' },
-  { name: 'K. R. Associates', role: 'Auditor', email: 'audit@krassociates.in', scope: 'Fees, Payments, Refunds', twofa: true, last: '12 Oct 2026', status: 'Active' },
-  { name: 'Liya Francis', role: 'Admission officer', email: 'liya@tec.thejus.edu.in', scope: 'Thejus Engineering College', twofa: false, last: '—', status: 'Invited' },
+  { name: 'Bindu Thomas', role: 'Admin', email: 'bindu@tec.thejus.edu.in', scope: 'Thejus Engineering College', twofa: false, last: '5 min ago', status: 'Active' },
+  { name: 'Sajeev Kumar', role: 'Admin', email: 'sajeev@tec.thejus.edu.in', scope: 'Programme · B.Tech', twofa: false, last: '20 min ago', status: 'Active' },
+  { name: 'Reshma P.', role: 'Admin', email: 'reshma@tec.thejus.edu.in', scope: 'Programme · MBA', twofa: false, last: '3 h ago', status: 'Active' },
+  { name: 'George Varghese', role: 'Finance', email: 'accounts@thejus.edu.in', scope: 'Organisation', twofa: true, last: '12 min ago', status: 'Active' },
+  { name: 'Joby Mathew', role: 'Finance', email: 'joby@tec.thejus.edu.in', scope: 'Thejus Engineering College', twofa: true, last: 'Just now', status: 'Active' },
+  { name: 'Divya Suresh', role: 'Finance', email: 'divya@tec.thejus.edu.in', scope: 'Thejus Engineering College', twofa: true, last: '1 h ago', status: 'Active' },
+  { name: 'Manoj Pillai', role: 'Finance', email: 'manager@tec.thejus.edu.in', scope: 'Thejus Engineering College', twofa: true, last: 'Today 09:12', status: 'Active' },
+  { name: 'K. R. Associates', role: 'Finance', email: 'audit@krassociates.in', scope: 'Fees, Payments, Refunds', twofa: true, last: '12 Oct 2026', status: 'Active' },
+  { name: 'Liya Francis', role: 'Admin', email: 'liya@tec.thejus.edu.in', scope: 'Thejus Engineering College', twofa: false, last: '—', status: 'Invited' },
 ];
 const sById = id => students.find(s => s.id === id);
 (() => {
   const ev = [];
   const t = (d, h) => `${d} ${pad(9 + (h % 8), 2)}:${pad((h * 7) % 60, 2)}`;
-  payments.slice(-26).forEach((p, i) => ev.push({ at: t(p.date, i), user: p.cashier, role: 'Cashier / accountant', module: 'Payments', action: p.kind === 'Reversal' ? 'payment.reverse' : 'payment.record', record: p.rcpt, detail: `${inr(p.amt)} · ${p.mode} · ${sById(p.sid).name}`, before: '—', after: `ledger +${inr(p.amt)}`, ip: '10.12.4.' + (20 + i) }));
-  students.filter(s => s.status === 'Seat booked').slice(0, 10).forEach((s, i) => ev.push({ at: t(s.created, i + 3), user: s.officer, role: 'Admission officer', module: 'Admissions', action: 'admission.status', record: s.adm, detail: `${s.name} · seat booked by ${s.guardian} · refund policy ${POLICY.ver} accepted`, before: '—', after: 'Seat booked', ip: '10.12.4.5' }));
-  refunds.filter(r => ['Approved', 'Completed', 'Processing'].includes(r.status)).forEach((r, i) => ev.push({ at: t(addDays(r.raised, 2) > TODAY ? TODAY : addDays(r.raised, 2), i + 1), user: 'Manoj Pillai', role: 'Refund approver', module: 'Refunds', action: 'refund.approve', record: r.no, detail: `Level 1 approved · ${inr(r.amount)}`, before: 'Awaiting approval', after: 'Approved', ip: '10.12.4.9' }));
-  ev.push({ at: '2026-11-03 17:42', user: 'George Varghese', role: 'Finance manager', module: 'Fees', action: 'template.publish', record: 'FT-26-BTECH-MGMT v3', detail: 'Published new version; 0 assigned plans changed', before: 'v2 active', after: 'v3 active', ip: '10.12.4.2' });
-  ev.push({ at: '2026-11-03 11:05', user: 'Anita Joseph', role: 'Organisation admin', module: 'Settings', action: 'role.permission', record: 'Cashier / accountant', detail: 'Enabled payment.record for Initial fee', before: 'No', after: 'Yes', ip: '10.12.4.1' });
+  payments.slice(-26).forEach((p, i) => ev.push({ at: t(p.date, i), user: p.cashier, role: 'Finance', module: 'Payments', action: p.kind === 'Reversal' ? 'payment.reverse' : 'payment.record', record: p.rcpt, detail: `${inr(p.amt)} · ${p.mode} · ${sById(p.sid).name}`, before: '—', after: `ledger +${inr(p.amt)}`, ip: '10.12.4.' + (20 + i) }));
+  students.filter(s => s.status === 'Seat booked').slice(0, 10).forEach((s, i) => ev.push({ at: t(s.created, i + 3), user: s.officer, role: 'Admin', module: 'Admissions', action: 'admission.status', record: s.adm, detail: `${s.name} · seat booked by ${s.guardian} · refund policy ${POLICY.ver} accepted`, before: '—', after: 'Seat booked', ip: '10.12.4.5' }));
+  refunds.filter(r => ['Approved', 'Completed', 'Processing'].includes(r.status)).forEach((r, i) => ev.push({ at: t(addDays(r.raised, 2) > TODAY ? TODAY : addDays(r.raised, 2), i + 1), user: 'Manoj Pillai', role: 'Finance', module: 'Refunds', action: 'refund.approve', record: r.no, detail: `Level 1 approved · ${inr(r.amount)}`, before: 'Awaiting approval', after: 'Approved', ip: '10.12.4.9' }));
+  ev.push({ at: '2026-11-03 17:42', user: 'George Varghese', role: 'Finance', module: 'Fees', action: 'template.publish', record: 'FT-26-BTECH-MGMT v3', detail: 'Published new version; 0 assigned plans changed', before: 'v2 active', after: 'v3 active', ip: '10.12.4.2' });
+  ev.push({ at: '2026-11-03 11:05', user: 'Anita Joseph', role: 'Admin', module: 'Settings', action: 'role.permission', record: 'Finance', detail: 'Enabled payment.record for Initial fee', before: 'No', after: 'Yes', ip: '10.12.4.1' });
   ev.push({ at: '2026-11-02 16:20', user: 'Support · Rahul (EduAdmit)', role: 'Platform support', module: 'Platform access', action: 'support.session', record: 'Ticket #4182', detail: 'Read-only session with tenant consent, 30 min', before: '—', after: 'Ended 16:50', ip: '13.232.8.14' });
-  ev.push({ at: '2026-11-01 10:14', user: 'K. R. Associates', role: 'Auditor', module: 'Reports', action: 'export', record: 'Fee collection register', detail: 'Excel export · Oct 2026', before: '—', after: '—', ip: '49.37.12.88' });
-  ev.push({ at: '2026-11-04 08:58', user: 'Joby Mathew', role: 'Cashier / accountant', module: 'Auth', action: 'login', record: '—', detail: 'Password + OTP', before: '—', after: '—', ip: '10.12.4.31' });
+  ev.push({ at: '2026-11-01 10:14', user: 'K. R. Associates', role: 'Finance', module: 'Reports', action: 'export', record: 'Fee collection register', detail: 'Excel export · Oct 2026', before: '—', after: '—', ip: '49.37.12.88' });
+  ev.push({ at: '2026-11-04 08:58', user: 'Joby Mathew', role: 'Finance', module: 'Auth', action: 'login', record: '—', detail: 'Password + OTP', before: '—', after: '—', ip: '10.12.4.31' });
   ev.sort((a, b) => b.at.localeCompare(a.at));
   ev.forEach((e, i) => audit.push({ id: 'a' + i, ...e }));
 })();
 
 /* ================= state ================= */
 const ROLES = {
-  'Organisation admin': null,
-  'Admission officer': ['dashboard', 'admissions', 'admset', 'reports', 'audit'],
-  'Finance manager': ['dashboard', 'admissions', 'admset', 'dues', 'payments', 'refunds', 'reports', 'audit'],
-  'Cashier / accountant': ['dashboard', 'admissions', 'dues', 'payments', 'reports', 'audit'],
-  'Refund approver': ['dashboard', 'refunds', 'reports', 'audit'],
-  'Auditor': ['dashboard', 'admissions', 'admset', 'dues', 'payments', 'refunds', 'reports', 'audit'],
+  'Admin': null,
+  'Finance': ['dashboard', 'admissions', 'admset', 'dues', 'payments', 'refunds', 'reports', 'audit'],
 };
-const state = { role: 'Organisation admin', preset: null, ay: '2026–27' };
+const state = { role: 'Admin', preset: null, ay: '2026–27' };
 
 const NAV = [
   ['Overview', [['dashboard', 'Dashboard']]],
   ['Admissions', [['admissions', 'Admissions']]],
   ['Finance', [['payments', 'Payments']]],
-  ['Operations', [['notifications', 'Notifications'], ['reports', 'Reports'], ['audit', 'Audit log']]],
+  ['Operations', [['notifications', 'Messages'], ['reports', 'Reports'], ['audit', 'Audit log']]],
   ['Organisation', [['settings', 'Settings']]],
 ];
 const allowed = p => !ROLES[state.role] || ROLES[state.role].includes(p);
@@ -228,19 +218,20 @@ const setTitle = (title, actions = '') => `<div class="set-title"><h2>${title}</
 const admHead = (sec, actions = '') => setTitle(ADMSET.find(x => x[0] === sec)[1], actions);
 const admWrap = (sec, body, actions = '') => `<div class="fill">${admHead(sec, actions)}<div class="content">${body}</div></div>`;
 function settingsShell(cur, inner) {
-  const groups = [['Organisation', state.role === 'Organisation admin' ? SET.map(([k, l]) => ['#settings/' + k, l, 'settings/' + k]) : []], ['Admission', allowed('admset') ? ADMSET.map(([k, l]) => ['#admset/' + k, l, 'admset/' + k]) : []]];
+  const groups = [['Organisation', state.role === 'Admin' ? SET.map(([k, l]) => ['#settings/' + k, l, 'settings/' + k]) : []], ['Admission', allowed('admset') ? ADMSET.map(([k, l]) => ['#admset/' + k, l, 'admset/' + k]) : []]];
   return `<div>${pageHead('Settings')}<div class="content"><div class="split"><nav class="subnav">${groups.filter(g => g[1].length).map(([g, items]) => `<div class="subnav-h">${g}</div>${items.map(([href, l, id]) => `<a href="${href}" class="${id === cur ? 'on' : ''}">${l}</a>`).join('')}`).join('')}</nav><div class="set-body">${inner}</div></div></div></div>`;
 }
 
 /* ================= DataTable (PrimeReact style) ================= */
 const S = { cols: [], rows: [], view: [], sort: null, q: '', filter: null, onOpen: null, col: null, page: 0, rpp: 25 };
-function sheet({ cols, rows, onOpen, toolbar = '', chips = '', chipLabel = 'Status', tabs = '' }) {
+function sheet({ cols, rows, onOpen, toolbar = '', chips = '', chipLabel = 'Status', tabs = '', lead = '' }) {
   Object.assign(S, { cols, rows, onOpen, sort: null, q: '', filter: null, col: null, view: rows, page: 0, sel: [] });
   return `<div class="sheet-card">
     ${tabs}
     <div class="toolbar">
       <div class="tsearch">${ic('search', 14)}<input id="sheetSearch" placeholder="Keyword search"></div>
       ${chips ? `<div class="fdrop" id="fdrop"><button class="fdrop-btn" data-fdrop>${ic('filter', 13)}<span class="fdrop-k">${chipLabel}:</span><span id="fdropLabel">All</span><b id="fdropCount"></b><i class="pi pi-chevron-down fdrop-chev"></i></button><div class="fdrop-menu" id="fchips">${chips}</div></div>` : ''}
+      ${lead ? `<div class="tlead">${lead}</div>` : ''}
       <div style="margin-left:auto;display:flex;gap:6px;align-items:center">${toolbar}
         <button class="btn sm" data-export>${ic('download', 14)}Export</button></div>
     </div>
@@ -313,15 +304,25 @@ PAGES.dashboard = () => {
   const days = [...Array(14)].map((_, i) => addDays(TODAY, i - 13));
   const byDay = days.map(d => payments.filter(p => p.date === d).reduce((t, p) => t + p.amt, 0));
   const maxD = Math.max(...byDay, 1);
-  const W = 760, H = 290, X0 = 54, bw = (W - X0) / 14, PH = H - 40;
-  const bars = days.map((d, i) => { const h = Math.max(2, byDay[i] / maxD * PH); return `<g><rect x="${X0 + i * bw + 7}" y="${H - 22 - h}" width="${bw - 14}" height="${h}" rx="4" fill="${d === TODAY ? '#0082FB' : '#DDE3E8'}" opacity="1"><title>${fd(d)}: ${inr(byDay[i])}</title></rect>${i % 2 === 1 || d === TODAY ? `<text x="${X0 + i * bw + bw / 2}" y="${H - 4}" text-anchor="middle">${fdShort(d)}</text>` : ''}</g>`; }).join('');
+  const colSvg = (W, H) => {
+  const X0 = 54, bw = (W - X0) / 14, PH = H - 40;
+  const bars = days.map((d, i) => { const h = Math.max(2, byDay[i] / maxD * PH); return `<g><rect x="${X0 + i * bw + 7}" y="${H - 22 - h}" width="${bw - 14}" height="${h}" rx="4" fill="${d === TODAY ? '#C10007' : '#E5E5E5'}" opacity="1"><title>${fd(d)}: ${inr(byDay[i])}</title></rect>${i % 2 === 1 || d === TODAY ? `<text x="${X0 + i * bw + bw / 2}" y="${H - 4}" text-anchor="middle">${fdShort(d)}</text>` : ''}</g>`; }).join('');
   const grid = [0, .5, 1].map(f => `<line x1="${X0}" x2="${W}" y1="${H - 22 - f * PH}" y2="${H - 22 - f * PH}" stroke="#E6EAF0" stroke-dasharray="${f ? '3 3' : ''}"/><text x="${X0 - 8}" y="${H - 18 - f * PH}" text-anchor="end">${f ? inrS(maxD * f) : '₹0'}</text>`).join('');
+  return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="display:block">${grid}${bars}</svg>`;
+  };
+  window.fitCol = () => { const el = document.getElementById('colChart'); if (!el) return; el.innerHTML = ''; const w = el.clientWidth; el.dataset.w = w; el.innerHTML = colSvg(Math.max(320, w), Math.max(220, el.clientHeight)); };
+  setTimeout(() => {
+    window.fitCol();
+    // redraw when the card changes width (sidebar collapse, window resize, layout changes)
+    const host = document.querySelector('.col-body'); if (!host || !window.ResizeObserver) return;
+    new ResizeObserver(() => { const el = document.getElementById('colChart'); if (el && Math.abs(host.clientWidth - 2 * 18 - (+el.dataset.w || 0)) > 2) window.fitCol(); }).observe(host);
+  });
   // programme bars
-  const progRows = PROGS.map(p => {
+  const progRows = actProgs().map(p => {
     const c = Object.values(p.cap).reduce((a, b) => a + b, 0);
     const n = st => students.filter(s => s.prog === p.code && s.status === st).length;
     const cf = n('Confirmed'), pp = n('Details collected'), sb = n('Seat booked');
-    return `<div class="hbar" data-go="admissions" data-preset='{"prog":"${p.code}"}' style="cursor:pointer"><span class="lbl">${p.name}</span><span class="track"><i style="width:${cf / c * 100}%;background:#34A853"></i><i style="width:${pp / c * 100}%;background:#3399FC"></i><i style="width:${sb / c * 100}%;background:#FBBC05"></i></span><span class="val">${cf + pp + sb} <span class="faint">/ ${c}</span></span></div>`;
+    return `<div class="hbar" data-go="admissions" data-preset='{"prog":"${p.code}"}' style="cursor:pointer"><span class="lbl">${p.name}</span><span class="track"><i style="width:${cf / c * 100}%;background:#C10007"></i><i style="width:${pp / c * 100}%;background:#FF6467"></i><i style="width:${sb / c * 100}%;background:#FFC9C9"></i></span><span class="val">${cf + pp + sb} <span class="faint">/ ${c}</span></span></div>`;
   }).join('');
   const quotaRows = QUOTAS.map(q => {
     const a = occ.filter(s => s.quota === q); const as = a.reduce((t, s) => t + s.net, 0), pd = a.reduce((t, s) => t + s.paid, 0);
@@ -331,30 +332,25 @@ PAGES.dashboard = () => {
   return `<div>${pageHead('Good morning, Anita', 'Thejus Engineering College · Admission cycle 2026–27 · Wednesday, 4 Nov 2026',
     `<div class="seg" id="dashRange"><button>Today</button><button>7 days</button><button class="on">This cycle</button></div><button class="btn">${ic('mail', 14)}Email digest</button>`)}
   <div class="content">
-    <div class="kpis">
-      <button class="kpi hero" data-go="admset/seats"><div class="k-l">${ic('seats', 14)}Seats filled</div><div class="k-v">${occ.length}<span style="font-size:14px;color:rgba(255,255,255,.72)"> / ${cap}</span></div><div class="k-s">${Math.round(occ.length / cap * 100)}% of capacity · <span style="color:#fff">+14 this week</span></div></button>
-      <button class="kpi" data-go="admissions" data-preset='{"status":"Confirmed"}'><div class="k-l">${ic('check', 14)}Confirmed</div><div class="k-v">${students.filter(s => s.status === 'Confirmed').length}</div><div class="k-s"><span class="up">▲ 9</span> vs last week</div></button>
+    <div class="kpis" style="grid-template-columns:repeat(5,minmax(0,1fr))">
+      <button class="kpi hero" data-go="reports"><div class="k-l">${ic('seats', 14)}Seats filled</div><div class="k-v">${occ.length}<span style="font-size:14px;color:rgba(255,255,255,.72)"> / ${cap}</span></div><div class="k-s">${Math.round(occ.length / cap * 100)}% of capacity · <span style="color:#fff">+14 this week</span></div></button>
       <button class="kpi" data-go="admset/fees"><div class="k-l">${ic('fees', 14)}Assessed</div><div class="k-v">${inrS(assessed)}</div><div class="k-s">Net of ${inr(occ.reduce((t, s) => t + s.conc, 0))} concessions</div></button>
       <button class="kpi" data-go="payments"><div class="k-l">${ic('payments', 14)}Collected</div><div class="k-v">${inrS(collected)}</div><div class="k-s">${Math.round(collected / assessed * 100)}% of assessed · 100% receipted</div></button>
       <button class="kpi" data-go="dues"><div class="k-l">${ic('clock', 14)}Overdue</div><div class="k-v" style="color:#D93025">${inrS(overdue)}</div><div class="k-s">${overdueS.length} students · outstanding ${inrS(outstanding)}</div></button>
       <button class="kpi" data-go="refunds"><div class="k-l">${ic('refunds', 14)}Refunds pending</div><div class="k-v">${refPend.length}</div><div class="k-s">${inr(refPend.reduce((t, r) => t + r.amount, 0))} awaiting action</div></button>
     </div>
     <div class="grid-3" style="margin-bottom:14px">
-      <div class="card span-2"><div class="card-h"><h3>Collections · last 14 days</h3><span class="muted num">${inr(byDay.reduce((a, b) => a + b, 0))}</span></div>
-        <div class="card-b"><svg class="chart-svg" viewBox="0 0 ${W} ${H}" width="100%" style="display:block">${grid}${bars}</svg></div></div>
-      <div class="card"><div class="card-h"><h3>Admission pipeline</h3></div><div class="card-b">
-        ${STATUSES.map(st => { const n = students.filter(s => s.status === st).length; return `<div class="list-row" data-go="admissions" data-preset='{"status":"${st}"}' style="cursor:pointer">${chip(st)}<span class="grow"></span><span class="num">${n}</span><span class="faint" style="width:44px;text-align:right">${Math.round(n / students.length * 100)}%</span></div>`; }).join('')}
-      </div></div>
-    </div>
-    <div class="grid-3" style="margin-bottom:14px">
-      <div class="card span-2"><div class="card-h"><h3>Admissions by programme</h3><div class="legend" style="margin-left:auto"><span><i style="background:#34A853"></i>Confirmed</span><span><i style="background:#3399FC"></i>Details collected</span><span><i style="background:#FBBC05"></i>Seat booked</span></div></div><div class="card-b">${progRows}</div></div>
+      <div class="card span-2 col-card"><div class="card-h"><h3>Collections · last 14 days</h3><span class="muted num">${inr(byDay.reduce((a, b) => a + b, 0))}</span></div>
+        <div class="card-b col-body"><div id="colChart">${colSvg(760, 290)}</div></div></div>
       <div class="card"><div class="card-h"><h3>Needs attention</h3></div><div class="card-b">
         ${att.map(s => `<div class="list-row" data-student="${s.id}" style="cursor:pointer"><span class="dotico" style="background:var(--bad-bg);color:var(--bad)">${ic('clock', 14)}</span><div class="grow"><div class="t">${esc(s.name)}</div><div class="s">${s.adm} · due ${fd(s.nextDue)}</div></div><span class="num" style="color:var(--bad)">${inr(s.overdue)}</span></div>`).join('')}
         ${refunds.filter(r => r.status === 'Awaiting approval').slice(0, 2).map(r => `<div class="list-row" data-refund="${r.id}" style="cursor:pointer"><span class="dotico" style="background:var(--warn-bg);color:var(--warn)">${ic('refunds', 14)}</span><div class="grow"><div class="t">Refund ${r.no}</div><div class="s">Awaiting your approval</div></div><span class="num">${inr(r.amount)}</span></div>`).join('')}
       </div></div>
     </div>
-    <div class="grid-2">
-      <div class="card"><div class="card-h"><h3>Assessed vs collected by quota</h3></div><div class="card-b"><table class="simple"><thead><tr><th>Quota</th><th class="r">Students</th><th class="r">Assessed</th><th class="r">Collected</th><th></th></tr></thead><tbody>${quotaRows}</tbody></table></div></div>
+    <div style="margin-bottom:14px">
+      <div class="card"><div class="card-h"><h3>Admissions by programme</h3><div class="legend" style="margin-left:auto"><span><i style="background:#C10007"></i>Confirmed</span><span><i style="background:#FF6467"></i>Details collected</span><span><i style="background:#FFC9C9"></i>Seat booked</span></div></div><div class="card-b">${progRows}</div></div>
+    </div>
+    <div>
       <div class="card"><div class="card-h"><h3>Recent activity</h3><a class="muted" href="#audit">View audit log</a></div><div class="card-b">
         ${audit.slice(0, 6).map(a => `<div class="list-row"><span class="dotico">${ic(a.module === 'Payments' ? 'payments' : a.module === 'Refunds' ? 'refunds' : a.module === 'Admissions' ? 'admissions' : 'audit', 14)}</span><div class="grow"><div class="t">${esc(a.detail)}</div><div class="s">${esc(a.user)} · ${a.at.slice(11)} · ${fdShort(a.at.slice(0, 10))}</div></div><span class="tag">${a.action}</span></div>`).join('')}
       </div></div>
@@ -370,42 +366,48 @@ const admCols = () => [
   { key: 'quota', label: 'Quota', w: 110 },
   { key: 'cat', label: 'Category', w: 80 },
   { key: 'status', label: 'Status', w: 140, render: r => chip(r.status) },
-  { key: 'net', label: 'Assessed', w: 104, align: 'r', sum: 'inr', fmt: v => v ? inr(v) : '—' },
-  { key: 'paid', label: 'Paid', w: 100, align: 'r', sum: 'inr', fmt: v => v ? inr(v) : '—' },
-  { key: 'due', label: 'Balance', w: 100, align: 'r', sum: 'inr', fmt: v => v ? inr(v) : '—' },
-  { key: 'overdue', label: 'Overdue', w: 96, align: 'r', sum: 'inr', render: r => r.overdue ? `<span class="neg">${inr(r.overdue)}</span>` : '<span class="faint">—</span>' },
-  { key: 'nextDue', label: 'Next due', w: 104, render: r => r.nextDue ? fd(r.nextDue) : '<span class="faint">—</span>' },
-  { key: 'guardian', label: 'Booked by', w: 150 },
+  { key: 'bfee', label: 'Booking fee', w: 116, align: 'r', sum: 'inr', fmt: v => v ? inr(v) : '—' },
   { key: 'mobile', label: 'Mobile', w: 110 },
   { key: 'entrance', label: 'Entrance', w: 130 },
-  { key: 'officer', label: 'Admission officer', w: 130 },
+  { key: 'officer', label: 'Handled by', w: 130 },
   { key: 'created', label: 'Created', w: 104, fmt: fd },
 ];
+const progCourse = p => p.name.split(' ')[0];                          // B.Tech · M.Tech · MBA
+const progBranch = p => p.name.slice(progCourse(p).length).trim() || p.dept; // Computer Science …
 PAGES.admissions = () => {
-  const counts = st => students.filter(s => s.status === st).length;
-  const chips = fchip('all', 'All', students.length, true) + STATUSES.map(s => fchip(s, s, counts(s))).join('') + fchip('overdue', 'Overdue', students.filter(s => s.overdue).length);
+  const yr = students.filter(inAy);
+  const counts = st => yr.filter(s => s.status === st).length;
+  const chips = fchip('all', 'All', yr.length, true) + STATUSES.map(s => fchip(s, s, counts(s))).join('') + fchip('overdue', 'Overdue', yr.filter(s => s.overdue).length);
   const html = `<div class="fill">${pageHead('Admissions', 'One row per student. Same columns as your old admission register — now with live fees, seats and audit.',
-    `<button class="btn act-write" data-action="import">${ic('upload', 14)}Import Excel</button><button class="btn primary act-write" data-action="new-admission">${ic('plus', 14)}Book seat</button>`)}
-    <div class="content">${sheet({ cols: admCols(), rows: students, onOpen: r => openStudent(r.id), chips,
-      toolbar: `<select class="input" id="progFilter" style="height:28px;width:200px;font-size:12px"><option value="">All programmes</option>${PROGS.map(p => `<option value="${p.code}">${p.name}</option>`).join('')}</select>`,
-      tabs: sheetTabs('admissions', [['register', 'Register 2026–27'], ['docs', 'Document checklist']], 'register') })}</div></div>`;
-  let status = [], prog = '';
-  const apply = () => { S.filter = r => (!status.length || status.some(id => id === 'overdue' ? r.overdue > 0 : r.status === id)) && (!prog || r.prog === prog); renderSheet(); };
+    `<button class="btn primary act-write" data-action="new-admission">${ic('plus', 14)}Book seat</button>`)}
+    <div class="content">${sheet({ cols: admCols(), rows: yr, onOpen: r => openStudent(r.id), chips,
+      lead: `<select class="input tsel" id="crsFilter" aria-label="Course"><option value="">All courses</option>${[...new Set(PROGS.map(progCourse))].map(c => `<option>${esc(c)}</option>`).join('')}</select><select class="input tsel" id="brFilter" aria-label="Branch"></select>`,
+      tabs: admTabs('register') })}</div></div>`;
+  let status = [], crs = '', prog = '';
+  const courseOf = code => { const p = PROGS.find(x => x.code === code); return p ? progCourse(p) : ''; };
+  const apply = () => { S.filter = r => (!status.length || status.some(id => id === 'overdue' ? r.overdue > 0 : r.status === id)) && (!crs || courseOf(r.prog) === crs) && (!prog || r.prog === prog); S.page = 0; renderSheet(); };
+  const fillBranches = () => {
+    const list = PROGS.filter(p => !crs || progCourse(p) === crs);
+    if (!list.some(p => p.code === prog)) prog = '';
+    $('#brFilter').innerHTML = `<option value="">All branches</option>` + list.map(p => `<option value="${p.code}" ${p.code === prog ? 'selected' : ''}>${esc(crs ? progBranch(p) : progCourse(p) + ' · ' + progBranch(p))}</option>`).join('');
+  };
   chipHandler = ids => { status = ids; apply(); };
   setTimeout(() => {
-    $('#progFilter').onchange = e => { prog = e.target.value; apply(); };
-    if (state.preset) { const p = state.preset; state.preset = null; if (p.status) setChips([p.status]); if (p.f) setChips([p.f]); if (p.prog) { $('#progFilter').value = p.prog; prog = p.prog; apply(); } }
+    fillBranches();
+    $('#crsFilter').onchange = e => { crs = e.target.value; fillBranches(); apply(); };
+    $('#brFilter').onchange = e => { prog = e.target.value; apply(); };
+    if (state.preset) { const p = state.preset; state.preset = null; if (p.status) setChips([p.status]); if (p.f) setChips([p.f]); if (p.prog) { crs = courseOf(p.prog); prog = p.prog; $('#crsFilter').value = crs; fillBranches(); apply(); } }
   });
   return html;
 };
 PAGES['admissions/docs'] = () => {
-  const rows = students.filter(s => s.adm).map(s => ({ ...s, ...Object.fromEntries(Object.entries(s.docs).map(([k, v]) => ['d_' + k, v])) }));
+  const rows = students.filter(s => s.adm && inAy(s)).map(s => ({ ...s, ...Object.fromEntries(Object.entries(s.docs).map(([k, v]) => ['d_' + k, v])) }));
   return `<div class="fill">${pageHead('Admissions', 'Document checklist — upload and verify certificates per student.', `<button class="btn primary act-write">${ic('upload', 14)}Bulk upload</button>`)}
   <div class="content">${sheet({ cols: [
     { key: 'adm', label: 'Admission no.', w: 128, render: r => `<span class="lnk" data-open>${r.adm}</span>` }, { key: 'name', label: 'Student name', w: 170 }, { key: 'progName', label: 'Programme', w: 190 },
     ...Object.keys(students[0].docs).map(d => ({ key: 'd_' + d, label: d, w: 150, render: r => chip(r['d_' + d]) })),
     { key: 'status', label: 'Admission status', w: 140, render: r => chip(r.status) }], rows, onOpen: r => openStudent(r.id, 'docs'),
-    tabs: sheetTabs('admissions', [['register', 'Register 2026–27'], ['docs', 'Document checklist']], 'docs') })}</div></div>`;
+    tabs: admTabs('docs') })}</div></div>`;
 };
 
 /* ---------- Student drawer ---------- */
@@ -491,62 +493,139 @@ function scheduleTable(s, highlightFirst) {
 function bookingWizard(sid, step = 1, pid) {
   const s = sid ? sById(sid) : null;
   if (step === 1) {
-    openModal(`<div class="m-head"><h2>Book a seat</h2><button class="icon-btn" data-close-modal>${ic('x')}</button></div>
-    <div class="m-body"><form id="wzForm" autocomplete="off">
-      <div class="form-sec">Student</div>
-      <div class="form-grid" style="grid-template-columns:repeat(2,minmax(0,1fr))">
-        <div class="field"><label>Student name <span class="req">*</span></label><input class="input" name="name" placeholder="As in SSLC"></div>
-        <div class="field"><label>Student mobile <span class="req">*</span></label><input class="input" name="mobile" placeholder="10-digit"></div>
-        <div class="field"><label>Programme <span class="req">*</span></label><select class="input" name="prog" id="nProg">${PROGS.map(p => `<option value="${p.code}">${p.name}</option>`).join('')}</select></div>
-        <div class="field"><label>Quota <span class="req">*</span></label><select class="input" name="quota" id="nQuota">${QUOTAS.map(q => `<option>${q}</option>`).join('')}</select></div>
-      </div>
-      <div class="form-sec">Seat booked by</div>
+    /* Admission form — sections per PRD ADM-02 (personal, academic, entrance exam, admission details),
+       guardian/seat booker (§3), masked community + income (§3, §7), document checklist (ADM-07),
+       booking fee received at the desk. Mandatory + duplicate check on name + DOB + mobile (ADM-03). */
+    const F = (label, name, opts = {}) => `<div class="field${opts.full ? ' full' : ''}"${opts.span ? ` style="grid-column:span ${opts.span}"` : ''}><label>${label}${opts.req ? ' <span class="req">*</span>' : ''}${opts.hint ? ` <span class="faint" style="font-weight:400">· ${opts.hint}</span>` : ''}</label>${opts.html || `<input class="input" name="${name}"${opts.type ? ` type="${opts.type}"` : ''}${opts.ph ? ` placeholder="${opts.ph}"` : ''}${opts.attr || ''}>`}</div>`;
+    const SEL = (name, list, attr = '') => `<select class="input" name="${name}"${attr}>${list.map(o => Array.isArray(o) ? `<option value="${o[0]}">${o[1]}</option>` : `<option>${o}</option>`).join('')}</select>`;
+    const host = $('#bkHost'); if (!host) { location.hash = 'admissions/new'; return; }
+    host.innerHTML = (`<form id="wzForm" class="bk-form" autocomplete="off">
+      <div class="form-sec">Quota, course &amp; branch</div>
       <div class="form-grid">
-        <div class="field"><label>Name <span class="req">*</span></label><input class="input" name="guardian" placeholder="Parent or guardian"></div>
-        <div class="field"><label>Relation</label><select class="input" name="relation"><option>Father</option><option>Mother</option><option>Guardian</option><option>Self</option></select></div>
-        <div class="field"><label>Mobile <span class="req">*</span></label><input class="input" name="gmobile" placeholder="Receipt goes here"></div>
+        ${F('Quota', 'quota', { req: true, html: SEL('quota', QUOTAS, ' id="nQuota"') })}
+        ${F('Course', 'course', { req: true, html: '<select class="input" id="nCourse"></select>' })}
+        ${F('Branch', 'prog', { req: true, html: '<select class="input" name="prog" id="nProg"></select>' })}
       </div>
+      <div id="seatInfo" style="margin-top:12px"></div>
+      <div class="form-sec">Admission details</div>
+      <div class="form-grid">
+        ${F('Academic year', 'ay', { html: SEL('ay', [state.ay]) })}
+        ${F('Fee category', 'cat', { req: true, html: SEL('cat', ['General', 'OBC', 'EWS', 'SC', 'ST', 'OEC']) })}
+        ${F('Admission date', 'adate', { type: 'date', attr: ` value="${TODAY}"` })}
+        ${F('Application no.', 'appno', { html: `<input class="input" value="APP-26-${1040 + students.length}" disabled>` })}
+      </div>
+      <div class="form-sec">Personal details</div>
+      <div class="form-grid">
+        ${F('Student name', 'name', { req: true, ph: 'As in SSLC certificate' })}
+        ${F('Date of birth', 'dob', { req: true, type: 'date' })}
+        ${F('Gender', 'gender', { req: true, html: SEL('gender', ['', 'Female', 'Male', 'Other'].map(g => [g, g || 'Select'])) })}
+        ${F('Student mobile', 'mobile', { req: true, ph: '10-digit', attr: ' inputmode="numeric" maxlength="10"' })}
+        ${F('Email', 'email', { type: 'email', ph: 'student@example.com' })}
+        ${F('Aadhaar no.', 'aadhaar', { hint: 'stored encrypted', ph: '12-digit', attr: ' inputmode="numeric" maxlength="12"' })}
+        ${F('Nationality', 'nat', { html: SEL('nat', ['Indian', 'NRI / OCI', 'Foreign national']) })}
+        ${F('Religion', 'religion', { html: SEL('religion', ['—', 'Hindu', 'Muslim', 'Christian', 'Other', 'Prefer not to say']) })}
+        ${F('Community / caste', 'community', { hint: 'masked', ph: 'As in community certificate' })}
+        ${F('Annual family income (₹)', 'income', { hint: 'masked', ph: 'e.g. 450000', attr: ' inputmode="numeric"' })}
+        ${F('Blood group', 'blood', { html: SEL('blood', ['—', 'A+', 'A−', 'B+', 'B−', 'O+', 'O−', 'AB+', 'AB−']) })}
+        ${F('Address', 'address', { span: 3, html: '<textarea class="input" name="address" rows="2" placeholder="House, street, city, district, PIN"></textarea>' })}
+      </div>
+      <div class="form-sec">Parent / guardian · seat booked by</div>
+      <div class="form-grid">
+        ${F('Name', 'guardian', { req: true, ph: 'Parent or guardian' })}
+        ${F('Relation', 'relation', { html: SEL('relation', ['Father', 'Mother', 'Guardian', 'Self']) })}
+        ${F('Mobile', 'gmobile', { req: true, ph: 'Receipts and reminders go here', attr: ' inputmode="numeric" maxlength="10"' })}
+        ${F('Email', 'gemail', { type: 'email' })}
+        ${F('Occupation', 'gocc')}
+      </div>
+      <div class="form-sec">Academic details</div>
+      <div class="form-grid">
+        ${F('Qualifying exam', 'qual', { req: true, html: `<select class="input" name="qual" id="nQual"></select>` })}
+        ${F('Board / university', 'board', { ph: 'e.g. Kerala HSE' })}
+        ${F('Year of passing', 'yop', { html: SEL('yop', ['2026', '2025', '2024', '2023']) })}
+        ${F('Marks %', 'marks', { req: true, ph: 'e.g. 88.5', attr: ' inputmode="decimal"' })}
+        ${F('School / college', 'school', { span: 2 })}
+      </div>
+      <div class="form-sec">Entrance exam</div>
+      <div class="form-grid">
+        ${F('Exam', 'exam', { html: `<input class="input" name="exam" id="nExam" readonly>` })}
+        <div class="field"><label id="nRankL">Rank / score</label><input class="input" name="rank" id="nRank"></div>
+        ${F('Roll no.', 'roll')}
+      </div>
+      <div class="form-sec">Documents received at the desk</div>
+      <div class="doc-checks">${['SSLC', 'Plus Two', 'TC', 'Community certificate'].map(d => `<label class="doc-check"><input type="checkbox" name="doc" value="${d}"><span>${d}</span></label>`).join('')}</div>
       <div class="form-sec">Booking fee collected</div>
-      <div class="form-grid" style="grid-template-columns:minmax(0,1fr) minmax(0,2fr)">
-        <div class="field"><label>Amount (₹) <span class="req">*</span></label><input class="input num" id="pAmt" inputmode="numeric" placeholder="e.g. 10000"></div>
-        <div class="field"><label>Mode <span class="req">*</span></label><div class="seg" id="pMode" role="radiogroup" aria-label="Mode of payment">${PAY_MODES.filter(m => m !== 'Payment link').map(m => `<button type="button">${m}</button>`).join('')}</div><span class="hint mode-err" id="pModeErr"></span></div>
+      <div class="form-grid">
+        ${F('Amount (₹)', 'amt', { req: true, html: '<input class="input num" id="pAmt" inputmode="numeric" placeholder="e.g. 10000">' })}
+        <div class="field" style="grid-column:span 2"><label>Mode <span class="req">*</span></label><div class="seg" id="pMode" role="radiogroup" aria-label="Mode of payment">${PAY_MODES.map(m => `<button type="button">${m}</button>`).join('')}</div><span class="hint mode-err" id="pModeErr"></span></div>
         <div class="field hidden" id="pRefF" style="grid-column:1/-1"><label>Reference no.</label><input class="input" id="pRef" placeholder="UTR / cheque / DD no. (optional)"></div>
       </div>
-      <div id="seatInfo" style="margin-top:16px"></div><div id="dupWarn" class="hidden" style="margin-top:10px"></div>
+      <div id="dupWarn" class="hidden" style="margin-top:10px"></div>
       <div id="wzErr"></div>
-    </form></div>
-    <div class="m-foot"><button class="btn" style="margin-left:auto" data-close-modal>Cancel</button><button class="btn primary" id="wzBook">Book seat</button></div>`, true);
+    </form>
+    <div class="bk-foot"><span class="bk-stepn" id="bkStepN"></span><span class="faint" id="bkCount" style="margin-right:auto"></span><a class="btn ghost" href="#admissions">Cancel</a><button class="btn" id="bkPrev" type="button">${ic('left', 12)}Back</button><button class="btn primary" id="bkNext" type="button">Next${ic('right', 12)}</button><button class="btn primary hidden" id="wzBook">Book seat</button></div>`);
+    bkSetup();
     const upd = () => {
       const p = PROGS.find(x => x.code === $('#nProg').value), q = $('#nQuota').value;
+      if (!p) { $('#seatInfo').innerHTML = `<div class="notice bad">${ic('alert', 14)}<div>No active course offers the ${q} quota. Add seats in Settings → Seat matrix.</div></div>`; $('#wzBook').disabled = true; return; }
       const cap = p.cap[q] || 0, used = students.filter(x => x.prog === p.code && x.quota === q && OCCUPY.includes(x.status)).length, left = cap - used;
       $('#seatInfo').innerHTML = left > 0
         ? `<div class="notice ok">${ic('seats', 14)}<div><b>${left} of ${cap}</b> seats available in ${p.name} · ${q}.</div></div>`
         : `<div class="notice bad">${ic('alert', 14)}<div>${cap ? 'No seats left' : 'This quota has no seats'} in ${p.name} · ${q}. Booking is blocked to prevent over-booking.</div></div>`;
       $('#wzBook').disabled = left <= 0;
+      // entrance exam + qualifying exam follow the programme (GATE only for M.Tech, per PRD)
+      const mt = p.code === 'MT-CSE', mba = p.code === 'MBA';
+      $('#nExam').value = mt ? 'GATE' : mba ? 'KMAT / CAT' : 'KEAM';
+      $('#nRankL').innerHTML = (mt ? 'GATE score' : mba ? 'KMAT / CAT score' : 'KEAM rank') + (mt ? ' <span class="req">*</span>' : '');
+      const quals = mt ? ['B.Tech / B.E.'] : mba ? ['Any degree'] : q === 'Lateral entry' ? ['Diploma (Polytechnic)'] : ['Plus Two (Kerala HSE)', 'CBSE XII', 'ISC XII', 'Other board'];
+      $('#nQual').innerHTML = quals.map(x => `<option>${x}</option>`).join('');
     };
-    $('#nProg').onchange = upd; $('#nQuota').onchange = upd; upd();
+    // course = first word of the programme (B.Tech / M.Tech / MBA); branch = the rest
+    const crs = p => p.name.split(' ')[0];
+    const brn = p => p.name.slice(crs(p).length).trim() || p.dept;
+    const offered = q => actProgs().filter(p => (p.cap[q] || 0) > 0);
+    const fillBranches = () => {
+      const q = $('#nQuota').value, c = $('#nCourse').value, cur = $('#nProg').value;
+      $('#nProg').innerHTML = offered(q).filter(p => crs(p) === c).map(p => `<option value="${p.code}" ${p.code === cur ? 'selected' : ''}>${esc(brn(p))}</option>`).join('');
+      upd();
+    };
+    const fillCourses = () => {
+      const q = $('#nQuota').value, cur = $('#nCourse').value, cs = [...new Set(offered(q).map(crs))];
+      $('#nCourse').innerHTML = cs.map(c => `<option ${c === cur ? 'selected' : ''}>${esc(c)}</option>`).join('');
+      fillBranches();
+    };
+    $('#nQuota').onchange = fillCourses; $('#nCourse').onchange = fillBranches; $('#nProg').onchange = upd; fillCourses();
     $('#pMode').onclick = e => { const b = e.target.closest('button'); if (!b) return; $$('#pMode button').forEach(x => x.classList.toggle('on', x === b)); $('#pRefF').classList.toggle('hidden', b.textContent === 'Cash'); $('#pMode').classList.remove('invalid'); $('#pModeErr').textContent = ''; };
     const dupCheck = () => {
-      const f = new FormData($('#wzForm')); const n = (f.get('name') || '').trim().toLowerCase(), m = (f.get('mobile') || '').trim();
-      const hit = n.length > 3 && students.find(x => x.name.toLowerCase() === n || (m.length >= 10 && x.mobile === m));
+      const f = new FormData($('#wzForm')); const n = (f.get('name') || '').trim().toLowerCase(), m = (f.get('mobile') || '').trim(), dob = f.get('dob');
+      const hit = n.length > 3 && students.find(x => (x.name.toLowerCase() === n && (!dob || !x.dob || x.dob === dob)) || (m.length >= 10 && x.mobile === m));
       const w = $('#dupWarn'); w.classList.toggle('hidden', !hit);
       if (hit) w.innerHTML = `<div class="notice warn">${ic('alert', 14)}<div>Possible duplicate: <b>${esc(hit.name)}</b> · ${hit.adm} · ${hit.progName} (${hit.status}). <span class="lnk" style="cursor:pointer;font-weight:400" data-student="${hit.id}">Open record</span></div></div>`;
     };
     $$('#wzForm input').forEach(i => i.addEventListener('input', dupCheck));
     $('#wzBook').onclick = () => {
       const f = new FormData($('#wzForm'));
-      const v = k => (f.get(k) || '').trim();
+      const v = k => (f.get(k) || '').toString().trim();
+      const p = PROGS.find(x => x.code === v('prog')), quota = v('quota'), mt = p.code === 'MT-CSE';
       const amt = +($('#pAmt').value.replace(/[^\d]/g, '')) || 0, mode = $('#pMode .on')?.textContent || '';
-      const miss = [!v('name') && 'student name', v('mobile').length < 10 && 'student mobile', !v('guardian') && 'booker name', v('gmobile').length < 10 && 'booker mobile', !amt && 'booking fee amount', !mode && 'payment mode'].filter(Boolean);
+      const miss = [!v('name') && 'student name', !v('dob') && 'date of birth', !v('gender') && 'gender', v('mobile').length < 10 && 'student mobile',
+        !v('guardian') && 'guardian name', v('gmobile').length < 10 && 'guardian mobile', !v('marks') && 'marks %', mt && !v('rank') && 'GATE score',
+        v('aadhaar') && v('aadhaar').length !== 12 && 'valid 12-digit Aadhaar', !amt && 'booking fee amount', !mode && 'payment mode'].filter(Boolean);
       if (!mode) modePicked();
-      if (miss.length) { $('#wzErr').innerHTML = `<div class="notice bad" style="margin-top:12px">${ic('alert', 14)}<div>Required: ${miss.join(', ')}.</div></div>`; return; }
-      const p = PROGS.find(x => x.code === v('prog')), quota = v('quota');
+      if (miss.length) { $('#wzErr').innerHTML = `<div class="notice bad" style="margin-top:12px">${ic('alert', 14)}<div>Required: ${miss.join(', ')}.</div></div>`; $('#wzErr').scrollIntoView({ block: 'nearest' }); return; }
       const fee = Math.round(TUITION[quota] * p.m / 100) * 100 + 18500;
-      const ns = { id: 's' + students.length, app: 'APP-26-' + (1040 + students.length), adm: 'TEC/2026/' + pad(++admSeq, 5), name: v('name'), dob: '', mobile: v('mobile'), guardian: v('guardian'), relation: v('relation'), gmobile: v('gmobile'), prog: p.code, progName: p.name, dept: p.dept, quota, cat: '—', status: 'Seat booked', created: TODAY, officer: 'Anita Joseph', entrance: '—', fee, conc: 0, net: fee, d1: TODAY, paid: 0, policy: { ver: POLICY.ver, at: TODAY }, details: false, docs: { SSLC: 'Pending', 'Plus Two': 'Pending', TC: 'Pending', 'Community certificate': 'Pending' } };
+      const docs = f.getAll('doc');
+      const ns = { id: 's' + students.length, app: 'APP-26-' + (1040 + students.length), adm: 'TEC/2026/' + pad(++admSeq, 5), ay: v('ay'),
+        name: v('name'), dob: v('dob'), gender: v('gender'), mobile: v('mobile'), email: v('email'), aadhaar: v('aadhaar') ? 'XXXX XXXX ' + v('aadhaar').slice(-4) : '', nat: v('nat'), religion: v('religion'),
+        community: v('community'), income: +v('income') || 0, blood: v('blood'), address: v('address'),
+        guardian: v('guardian'), relation: v('relation'), gmobile: v('gmobile'), gemail: v('gemail'), gocc: v('gocc'),
+        qual: v('qual'), board: v('board'), yop: v('yop'), marks: v('marks'), school: v('school'),
+        prog: p.code, progName: p.name, dept: p.dept, quota, cat: v('cat'), status: 'Details collected', created: v('adate') || TODAY, officer: 'Anita Joseph',
+        entrance: v('rank') ? `${v('exam')} ${v('rank')}` : '—', examRoll: v('roll'), fee, conc: 0, net: fee, d1: TODAY, paid: 0, policy: { ver: POLICY.ver, at: TODAY }, details: true,
+        docs: Object.fromEntries(['SSLC', 'Plus Two', 'TC', 'Community certificate'].map(d => [d, docs.includes(d) ? 'Uploaded' : 'Pending'])) };
       const pay = { id: 'p' + Date.now(), rcpt: 'TEC/RCP/26/' + pad(payments.filter(x => x.kind === 'Payment').length + 1, 5), sid: ns.id, amt, date: TODAY, mode, cashier: 'Anita Joseph', ref: mode === 'Cash' ? '—' : ($('#pRef').value.trim() || '—'), kind: 'Payment', status: 'Posted', alloc: 'Booking fee' };
-      ns.paid = amt; students.unshift(ns); payments.push(pay); recalc(ns);
-      audit.unshift({ id: 'a' + Date.now(), at: TODAY + ' 10:22', user: 'Anita Joseph', role: state.role, module: 'Admissions', action: 'seat.book', record: ns.adm, detail: `${ns.name} · seat booked by ${ns.guardian} · booking fee ${inr(amt)} (${mode})`, before: '—', after: 'Seat booked', ip: '10.12.4.1' });
-      closeModal(); route(); toast(`Seat booked · ${ns.adm} · booking fee ${inr(amt)} received`);
+      ns.paid = amt; ns.bfee = amt; students.unshift(ns); payments.push(pay); recalc(ns);
+      audit.unshift({ id: 'a' + Date.now(), at: TODAY + ' 10:22', user: 'Anita Joseph', role: state.role, module: 'Admissions', action: 'seat.book', record: ns.adm, detail: `${ns.name} · seat booked by ${ns.guardian} · booking fee ${inr(amt)} (${mode})`, before: '—', after: ns.status, ip: '10.12.4.1' });
+      location.hash = 'admissions'; toast(`Seat booked · ${ns.adm} · booking fee ${inr(amt)} received`);
     };
   }
   if (step === 2) {
@@ -623,6 +702,65 @@ function bookingWizard(sid, step = 1, pid) {
     <div class="m-foot"><span class="faint" style="margin-right:auto">${ic('check', 12)} Sent to ${esc(s.guardian)} by SMS + WhatsApp</span><button class="btn">${ic('send', 14)}Resend</button><button class="btn">${ic('printer', 14)}Print both</button><button class="btn primary" data-close-modal data-toast="Admission complete · ${s.adm} handed to Finance for the next payments">Done</button></div>`, true);
     $('#wzDoc').onclick = e => { const b = e.target.closest('button'); if (!b) return; $$('#wzDoc button').forEach(x => x.classList.toggle('on', x === b)); $('#wzR').classList.toggle('hidden', b.dataset.d !== 'r'); $('#wzF').classList.toggle('hidden', b.dataset.d !== 'f'); };
   }
+}
+
+/* ---------- Book seat: full page with section progress ---------- */
+PAGES['admissions/new'] = () => {
+  setTimeout(() => bookingWizard(null, 1));
+  return `<div class="bk-page">${pageHead('Book a seat', '', `<a class="btn" href="#admissions">${ic('x', 13)}Cancel</a>`, `<a href="#admissions">Admissions</a> / New admission`)}
+    <div class="content"><div class="bk-progress"><div class="bk-progress-t"><b id="bkDone">0</b> of <span id="bkTotal">0</span> sections complete</div><div class="meter"><i id="bkBar" style="width:0%"></i></div></div>
+    <div class="bk-layout"><nav class="subnav bk-steps" id="bkSteps" aria-label="Form sections"></nav><div id="bkHost"></div></div></div></div>`;
+};
+function bkSetup() {
+  // one section per page: wrap each heading + its fields, then show one at a time
+  const form = $('#wzForm'), secs = []; let cur = null, at = 0;
+  [...form.children].forEach(ch => {
+    if (ch.classList.contains('form-sec')) { cur = document.createElement('section'); cur.className = 'bk-sec'; cur.id = 'bk-sec-' + secs.length; form.insertBefore(cur, ch); secs.push({ el: cur, title: ch.textContent.trim() }); }
+    if (cur) cur.appendChild(ch);
+  });
+  $('#bkTotal').textContent = secs.length;
+  $('#bkSteps').innerHTML = `<div class="subnav-h">Admission form</div>` + secs.map((x, i) => `<a class="bk-step" href="#" data-bk-go="${i}"><span class="bk-lbl">${esc(x.title)}</span><span class="bk-dot" aria-hidden="true"></span></a>`).join('');
+  const filled = f => { const c = f.querySelector('input:not([type=checkbox]):not([disabled]), select, textarea, .seg'); if (!c) return true; if (c.classList.contains('seg')) return !!c.querySelector('.on'); return !!c.value && c.value !== '—'; };
+  const required = i => [...secs[i].el.querySelectorAll('.field')].filter(f => f.querySelector('label .req') && !f.classList.contains('hidden'));
+  const missing = i => required(i).filter(f => !filled(f));
+  const status = i => {
+    const req = required(i);
+    if (req.length) return req.every(filled) ? 'done' : req.some(filled) ? 'part' : '';
+    return [...secs[i].el.querySelectorAll('input, select, textarea')].some(x => x.type === 'checkbox' ? x.checked : (x.value && x.value !== '—' && !x.disabled && !x.readOnly && x.type !== 'date')) ? 'done' : '';
+  };
+  const refresh = () => {
+    if (!document.body.contains(form) || !$('#bkSteps')) return;
+    let done = 0;
+    secs.forEach((x, i) => { const st = status(i); if (st === 'done') done++; const a = $(`[data-bk-go="${i}"]`); a.classList.toggle('done', st === 'done'); a.classList.toggle('part', st === 'part'); a.querySelector('.bk-dot').innerHTML = st === 'done' ? ic('check', 12) : ''; a.title = st === 'done' ? 'Complete' : st === 'part' ? 'Partly filled' : ''; });
+    $('#bkDone').textContent = done; $('#bkBar').style.width = (done / secs.length * 100) + '%';
+    const left = secs.length - done; $('#bkCount').textContent = left ? ` · ${left} section${left > 1 ? 's' : ''} to complete` : ' · all sections complete';
+  };
+  const show = i => {
+    at = Math.max(0, Math.min(secs.length - 1, i));
+    secs.forEach((x, k) => x.el.classList.toggle('hidden', k !== at));
+    $$('.bk-step').forEach((a, k) => a.classList.toggle('cur', k === at));
+    const last = at === secs.length - 1;
+    $('#bkPrev').disabled = at === 0; $('#bkNext').classList.toggle('hidden', last); $('#wzBook').classList.toggle('hidden', !last);
+    $('#bkStepN').textContent = `Step ${at + 1} of ${secs.length}`;
+    $('#main').scrollTop = 0;
+    const f = secs[at].el.querySelector('input:not([disabled]):not([readonly]):not([type=checkbox]), select, textarea'); if (f) f.focus({ preventScroll: true });
+  };
+  const flag = i => { const m = missing(i); secs[i].el.querySelectorAll('.field.invalid').forEach(f => f.classList.remove('invalid')); m.forEach(f => f.classList.add('invalid')); return m; };
+  $('#bkNext').onclick = () => {
+    const m = flag(at);
+    if (m.length) { toast(`Fill ${m.length === 1 ? 'the required field' : `the ${m.length} required fields`} to continue`); const c = m[0].querySelector('input, select, textarea'); if (c) c.focus(); return; }
+    show(at + 1);
+  };
+  $('#bkPrev').onclick = () => show(at - 1);
+  $('#bkSteps').onclick = e => { const a = e.target.closest('[data-bk-go]'); if (!a) return; e.preventDefault(); show(+a.dataset.bkGo); };
+  // on Book seat, jump to the first page that still has gaps
+  $('#wzBook').addEventListener('click', () => { const i = secs.findIndex((x, k) => missing(k).length); if (i >= 0) { show(i); flag(i); } }, true);
+  form.addEventListener('input', e => { const f = e.target.closest('.field'); if (f) f.classList.remove('invalid'); refresh(); });
+  form.addEventListener('change', e => { const f = e.target.closest('.field'); if (f) f.classList.remove('invalid'); refresh(); });
+  form.addEventListener('click', () => setTimeout(refresh));
+  form.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT') { e.preventDefault(); if (at < secs.length - 1) $('#bkNext').click(); } });
+  $('#main').onscroll = null;
+  show(0); setTimeout(refresh);
 }
 function feeSlipPaper(s) {
   const nd = nextDue(s);
@@ -715,7 +853,7 @@ function recordPayment(sid, presetMode) {
     const p = { id: 'p' + Date.now(), rcpt: 'TEC/RCP/26/' + pad(payments.filter(x => x.kind === 'Payment').length + 1, 5), sid: st.id, amt, date: TODAY, mode, cashier: 'Anita Joseph', ref, kind: 'Payment', status: 'Posted' };
     payments.push(p);
     p.alloc = (nextDue(st) || { n: 'Fee instalment' }).n; st.paid += amt; recalc(st);
-    audit.unshift({ id: 'a' + Date.now(), at: TODAY + ' 10:41', user: 'Anita Joseph', role: 'Organisation admin', module: 'Payments', action: 'payment.record', record: p.rcpt, detail: `${inr(amt)} · ${mode} · ${st.name}`, before: '—', after: `ledger +${inr(amt)}`, ip: '10.12.4.1' });
+    audit.unshift({ id: 'a' + Date.now(), at: TODAY + ' 10:41', user: 'Anita Joseph', role: 'Admin', module: 'Payments', action: 'payment.record', record: p.rcpt, detail: `${inr(amt)} · ${mode} · ${st.name}`, before: '—', after: `ledger +${inr(amt)}`, ip: '10.12.4.1' });
     closeModal(); closeDrawer(); route();
     toast(`${p.rcpt} posted · ledger updated · SMS queued to guardian`);
     setTimeout(() => showReceipt(p.id), 300);
@@ -734,29 +872,93 @@ function receiptPaper(p) {
 function showReceipt(pid) {
   const p = payments.find(x => x.id === pid);
   openModal(`${mHead('Receipt ' + p.rcpt + ' ' + chip(p.status))}<div class="m-body" style="background:var(--bg)">${receiptPaper(p)}</div>
-  <div class="m-foot"><span class="faint" style="margin-right:auto">${ic('sms', 12).replace('class="ic"', 'class="ic" style="display:inline;vertical-align:-1px"')} SMS delivered · ${ic('mail', 12).replace('class="ic"', 'class="ic" style="display:inline;vertical-align:-1px"')} Email sent</span>${p.kind === 'Payment' && p.status === 'Posted' ? `<button class="btn danger act-write" data-action="reverse" data-pid="${p.id}">Request reversal</button>` : ''}<button class="btn">${ic('send', 14)}Resend</button><button class="btn" data-feeslip="${p.sid}">${ic('documents', 14)}Fee slip</button><button class="btn primary">${ic('printer', 14)}Print</button></div>`, true);
+  <div class="m-foot"><span class="faint" style="margin-right:auto">${ic('sms', 12).replace('class="ic"', 'class="ic" style="display:inline;vertical-align:-1px"')} SMS delivered · ${ic('mail', 12).replace('class="ic"', 'class="ic" style="display:inline;vertical-align:-1px"')} Email sent</span><button class="btn">${ic('send', 14)}Resend</button><button class="btn" data-feeslip="${p.sid}">${ic('documents', 14)}Fee slip</button><button class="btn primary">${ic('printer', 14)}Print</button></div>`, true);
 }
 
 /* ---------- Seat matrix ---------- */
-PAGES.seats = () => {
+const seatOccupancy = () => {
+  const PROGS_A = actProgs();
   const stat = (p, q) => { const n = st => students.filter(s => s.prog === p.code && s.quota === q && s.status === st).length; const cf = n('Confirmed'), dc = n('Details collected'), sb = n('Seat booked'); return { cap: p.cap[q] || 0, cf, dc, sb, used: cf + dc + sb }; };
   const add = (a, b) => ({ cap: a.cap + b.cap, cf: a.cf + b.cf, dc: a.dc + b.dc, sb: a.sb + b.sb, used: a.used + b.used });
   const Z = { cap: 0, cf: 0, dc: 0, sb: 0, used: 0 };
-  const byQ = QUOTAS.map(q => PROGS.reduce((a, p) => add(a, stat(p, q)), Z)), all = byQ.reduce(add, Z);
+  const byQ = QUOTAS.map(q => PROGS_A.reduce((a, p) => add(a, stat(p, q)), Z)), all = byQ.reduce(add, Z);
   const pct = (v, c) => c ? v / c * 100 : 0;
   const bar = (s, big) => `<div class="sm-bar ${big ? 'big' : ''}" title="${s.cf} confirmed · ${s.dc} details collected · ${s.sb} seat booked · ${Math.max(0, s.cap - s.used)} available"><i class="cf" style="width:${pct(s.cf, s.cap)}%"></i><i class="dc" style="width:${pct(s.dc, s.cap)}%"></i><i class="sb" style="width:${pct(s.sb, s.cap)}%"></i></div>`;
   const badge = s => { const left = s.cap - s.used; return left <= 0 ? '<span class="chip bad">Full</span>' : left / s.cap <= .15 ? `<span class="chip warn">${left} left</span>` : `<span class="sm-left">${left} left</span>`; };
   const cell = s => s.cap ? `<div class="sm-cell"><div class="sm-top"><span class="sm-num">${s.used}<span> / ${s.cap}</span></span>${badge(s)}</div>${bar(s)}</div>` : '<span class="sm-na">Not offered</span>';
   const card = (label, s, hero) => `<div class="card sm-card ${hero ? 'hero' : ''}"><div class="sm-card-l">${label}</div><div class="sm-card-v">${s.used}<span> / ${s.cap}</span></div>${bar(s, true)}<div class="sm-card-s"><span>${Math.round(pct(s.used, s.cap))}% filled</span><span>${s.cap - s.used} left</span></div></div>`;
-  return `<div class="fill">${admHead('seats', `<button class="btn act-write">${ic('upload', 14)}Import capacity</button><button class="btn primary act-write">${ic('settings', 14)}Edit capacity</button>`)}
-  <div class="content">
-  <div class="sm-cards">${card('All quotas', all, true)}${QUOTAS.map((q, k) => card(q, byQ[k])).join('')}</div>
+  return `  <div class="sm-cards">${card('All quotas', all, true)}${QUOTAS.map((q, k) => card(q, byQ[k])).join('')}</div>
   <div class="card sm-wrap"><div class="sm-legend"><span><i class="cf"></i>Confirmed</span><span><i class="dc"></i>Details collected</span><span><i class="sb"></i>Seat booked</span><span><i class="av"></i>Available</span><span class="sm-legend-note">Hover a bar for the exact split</span></div>
   <table class="sm-table"><thead><tr><th>Programme</th>${QUOTAS.map(q => `<th>${q}</th>`).join('')}<th class="r">Total</th></tr></thead>
-  <tbody>${PROGS.map(p => { const row = QUOTAS.map(q => stat(p, q)), t = row.reduce(add, Z); return `<tr><td><div class="sm-prog">${p.name}</div><div class="sm-sub">${p.dept} · ${p.code}</div></td>${row.map(s => `<td>${cell(s)}</td>`).join('')}<td class="r"><div class="sm-num">${t.used}<span> / ${t.cap}</span></div><div class="sm-sub">${Math.round(pct(t.used, t.cap))}% filled</div></td></tr>`; }).join('')}</tbody>
-  <tfoot><tr><td>All programmes</td>${byQ.map(s => `<td>${cell(s)}</td>`).join('')}<td class="r"><div class="sm-num">${all.used}<span> / ${all.cap}</span></div></td></tr></tfoot></table></div>
-  </div></div>`;
+  <tbody>${PROGS_A.map(p => { const row = QUOTAS.map(q => stat(p, q)), t = row.reduce(add, Z); return `<tr><td><div class="sm-prog">${p.name}</div><div class="sm-sub">${p.dept} · ${p.code}</div></td>${row.map(s => `<td>${cell(s)}</td>`).join('')}<td class="r"><div class="sm-num">${t.used}<span> / ${t.cap}</span></div><div class="sm-sub">${Math.round(pct(t.used, t.cap))}% filled</div></td></tr>`; }).join('')}</tbody>
+  <tfoot><tr><td>All programmes</td>${byQ.map(s => `<td>${cell(s)}</td>`).join('')}<td class="r"><div class="sm-num">${all.used}<span> / ${all.cap}</span></div></td></tr></tfoot></table></div>`;
 };
+
+/* ---------- Seat matrix (Settings): capacity editor ---------- */
+const actProgs = () => PROGS.filter(p => p.active !== false);
+const seatsUsed = (code, q) => students.filter(s => s.prog === code && (!q || s.quota === q) && OCCUPY.includes(s.status)).length;
+const deptList = () => [...new Set([...PROGS.map(p => p.dept), ...((STRUCT.kids[0] || {}).kids || []).map(d => d.name)])];
+const capTotal = p => QUOTAS.reduce((t, q) => t + (p.cap[q] || 0), 0);
+function smRows() {
+  return PROGS.map(p => {
+    const off = p.active === false;
+    return `<tr class="${off ? 'sm-off' : ''}">
+      <td><input class="input sm-name" data-sm-name="${p.code}" value="${esc(p.name)}" aria-label="Programme name"><div class="sm-sub">${p.code}${off ? ' · inactive' : ''}</div></td>
+      <td><select class="input" data-sm-dept="${p.code}" aria-label="Department">${deptList().map(d => `<option ${d === p.dept ? 'selected' : ''}>${esc(d)}</option>`).join('')}</select></td>
+      ${QUOTAS.map(q => `<td class="r"><input class="input num sm-cap" type="number" min="0" step="1" data-sm-cap="${p.code}|${q}" value="${p.cap[q] || 0}" aria-label="${q} seats"></td>`).join('')}
+      <td class="r sm-tot">${capTotal(p)}</td>
+      <td><button class="switch ${off ? '' : 'on'}" data-sm-active="${p.code}" title="${off ? 'Inactive — click to activate' : 'Active — click to deactivate'}"></button></td></tr>`;
+  }).join('');
+}
+const smFoot = () => { const A = actProgs(); return `<tr><td colspan="2">Active programmes · ${A.length}</td>${QUOTAS.map(q => `<td class="r">${A.reduce((t, p) => t + (p.cap[q] || 0), 0)}</td>`).join('')}<td class="r">${A.reduce((t, p) => t + capTotal(p), 0)}</td><td></td></tr>`; };
+function smRender() { const b = $('#smBody'); if (!b) return; b.innerHTML = smRows(); $('#smFoot').innerHTML = smFoot(); }
+PAGES.seats = () => `<div class="fill">${admHead('seats', `<button class="btn primary act-write" data-sm-add>${ic('plus', 14)}Add programme</button>`)}
+  <div class="content"><div class="card"><div class="card-h"><h3>Seats per programme and quota</h3><span class="muted" style="margin-left:auto">0 = quota not offered · inactive programmes can't be booked</span></div>
+  <div class="card-b" style="overflow:auto"><table class="simple sm-edit"><thead><tr><th style="min-width:230px">Programme</th><th style="min-width:170px">Department</th>${QUOTAS.map(q => `<th class="r">${q}</th>`).join('')}<th class="r">Total</th><th>Active</th></tr></thead>
+  <tbody id="smBody">${smRows()}</tbody><tfoot id="smFoot">${smFoot()}</tfoot></table></div></div>
+  <p class="faint" style="margin-top:10px">Changes save as you go. Seat occupancy (confirmed, details collected, booked, available) is in <a class="lnk" href="#reports">Reports</a>.</p></div></div>`;
+function smAddModal() {
+  openModal(`${mHead('Add programme')}<div class="m-body"><form id="npForm" autocomplete="off">
+    <div class="form-grid" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+      <div class="field"><label>Department <span class="req">*</span></label><select class="input" id="npDept">${deptList().map(d => `<option>${esc(d)}</option>`).join('')}<option value="__new">+ New department…</option></select></div>
+      <div class="field hidden" id="npNewF"><label>New department name <span class="req">*</span></label><input class="input" id="npNew" placeholder="e.g. Artificial Intelligence"></div>
+      <div class="field"><label>Programme name <span class="req">*</span></label><input class="input" id="npName" placeholder="e.g. B.Tech Artificial Intelligence"></div>
+      <div class="field"><label>Code <span class="req">*</span></label><input class="input" id="npCode" placeholder="e.g. BT-AI" style="text-transform:uppercase"></div>
+    </div>
+    <div class="form-sec">Seats per quota</div>
+    <div class="form-grid" style="grid-template-columns:repeat(4,minmax(0,1fr))">${QUOTAS.map(q => `<div class="field"><label>${q}</label><input class="input num" type="number" min="0" step="1" value="0" data-np-q="${q}"></div>`).join('')}</div>
+    <div class="check-row" style="margin-top:14px"><span style="flex:1">Active — open for booking</span><button type="button" class="switch on" id="npActive"></button></div>
+    <div id="npErr"></div></form></div>
+  <div class="m-foot"><button class="btn" data-close-modal>Cancel</button><button class="btn primary" id="npSave">Add programme</button></div>`);
+  $('#npDept').onchange = e => $('#npNewF').classList.toggle('hidden', e.target.value !== '__new');
+  $('#npActive').onclick = e => { e.stopPropagation(); e.currentTarget.classList.toggle('on'); };
+  $('#npSave').onclick = () => {
+    const isNew = $('#npDept').value === '__new', dept = isNew ? $('#npNew').value.trim() : $('#npDept').value;
+    const name = $('#npName').value.trim(), code = $('#npCode').value.trim().toUpperCase();
+    const cap = Object.fromEntries($$('[data-np-q]').map(i => [i.dataset.npQ, Math.max(0, Math.floor(+i.value || 0))]));
+    const err = [!dept && 'department', !name && 'programme name', !code && 'code', code && PROGS.some(x => x.code === code) && `a unique code (${code} is taken)`, !Object.values(cap).some(Boolean) && 'at least one seat'].filter(Boolean);
+    if (err.length) { $('#npErr').innerHTML = `<div class="notice bad" style="margin-top:12px">${ic('alert', 14)}<div>Required: ${err.join(', ')}.</div></div>`; return; }
+    PROGS.push({ code, name, dept, m: 1, cap, active: $('#npActive').classList.contains('on') });
+    // keep Settings → Structure in step
+    const inst = STRUCT.kids[0]; let d = inst.kids.find(k => k.name === dept);
+    if (!d) { d = { name: dept, lvl: 'Department', kids: [] }; inst.kids.push(d); }
+    d.kids.push(prog(name));
+    audit.unshift({ id: 'a' + Date.now(), at: TODAY + ' 11:05', user: 'Anita Joseph', role: state.role, module: 'Settings', action: 'seats.programme_add', record: code, detail: `${name} · ${dept} · ${QUOTAS.map(q => `${q} ${cap[q]}`).join(', ')}`, before: '—', after: `${Object.values(cap).reduce((a, b) => a + b, 0)} seats`, ip: '10.12.4.1' });
+    closeModal(); smRender(); toast(`${name} added${isNew ? ` under new department ${dept}` : ''}`);
+  };
+}
+document.addEventListener('change', e => {
+  const t = e.target, d = t.dataset || {};
+  const P = code => PROGS.find(x => x.code === code);
+  if (d.smCap) {
+    const [code, q] = d.smCap.split('|'), p = P(code), v = Math.max(0, Math.floor(+t.value || 0)), u = seatsUsed(code, q);
+    if (v < u) { t.value = p.cap[q] || 0; return toast(`${p.name} · ${q} already has ${u} seats taken — capacity can't go below that`); }
+    const was = p.cap[q] || 0; p.cap[q] = v; smRender();
+    if (v !== was) toast(`${p.name} · ${q}: ${was} → ${v} seats`);
+  }
+  if (d.smName) { const p = P(d.smName), v = t.value.trim(); if (!v) { t.value = p.name; return; } p.name = v; students.filter(x => x.prog === p.code).forEach(x => { x.progName = v; }); toast('Programme renamed'); }
+  if (d.smDept) { const p = P(d.smDept); p.dept = t.value; students.filter(x => x.prog === p.code).forEach(x => { x.dept = t.value; }); toast(`${p.name} moved to ${t.value}`); }
+});
 
 /* ---------- Fees ---------- */
 const FEE_TABS = [['heads', 'Fee heads'], ['templates', 'Fee templates'], ['schedules', 'Instalment schedules'], ['concessions', 'Concessions'], ['late', 'Late fee rules']];
@@ -810,17 +1012,18 @@ function bulkFee() {
   </div>
   <div class="section-t" style="margin-top:16px">Dry run</div>
   <table class="simple"><tbody><tr><td>Students in batch</td><td class="r">18</td></tr><tr><td>Will receive v3</td><td class="r">4</td></tr><tr><td>Already on v2 — unchanged</td><td class="r">14</td></tr><tr><td>Per-student overrides (need approval)</td><td class="r">2</td></tr></tbody></table>
-  <div class="notice warn" style="margin-top:12px">${ic('alert', 16)}<div>2 overrides will go to Finance manager George Varghese for approval before they apply.</div></div>
+  <div class="notice warn" style="margin-top:12px">${ic('alert', 16)}<div>2 overrides will go to an Admin for approval before they apply.</div></div>
   </div><div class="m-foot"><button class="btn" data-close-modal>Cancel</button><button class="btn primary" data-close-modal data-toast="Fees assigned to 4 students · 2 overrides sent for approval">Assign</button></div>`);
 }
 
 /* ---------- Payments ---------- */
-const PAY_TABS = [['daybook', 'Day book'], ['dues', 'Due payments'], ['refunds', 'Refunds'], ['counter', 'Cash counter'], ['reversals', 'Reversals'], ['links', 'Payment links']];
+const PAY_TABS = [['daybook', 'Day book'], ['dues', 'Due payments'], ['refunds', 'Refunds'], ['counter', 'Cash counter']];
 /* academic year: a record belongs to its student's intake year */
 const AYS = ['2026–27', '2025–26', '2024–25'];
 const ayOf = sid => sById(sid)?.ay || '2026–27';
 const inAy = r => ayOf(r.sid ?? r.id) === state.ay;
 const ayPick = () => `<label class="ay-pick">Academic year<select class="input" id="aySel">${AYS.map(y => `<option ${y === state.ay ? 'selected' : ''}>${y}</option>`).join('')}</select></label>`;
+const admTabs = cur => sheetTabs('admissions', [['register', 'Register ' + state.ay], ['docs', 'Document checklist']], cur).replace(/<\/div>$/, ayPick() + '</div>');
 const payTabs = (cur, withAy = true) => {
   const t = sheetTabs('payments', PAY_TABS.filter(([k]) => k === 'dues' ? allowed('dues') : k === 'refunds' ? allowed('refunds') : true), cur);
   return withAy ? t.replace(/<\/div>$/, ayPick() + '</div>') : t;
@@ -832,8 +1035,8 @@ const payCols = () => [
   { key: 'cashier', label: 'Recorded by', w: 120 }, { key: 'status', label: 'Status', w: 100, render: r => chip(r.status) }, { key: 'notify', label: 'SMS', w: 90, render: () => chip('Delivered') }];
 const payRows = () => payments.filter(inAy).map(p => { const s = sById(p.sid); return { ...p, sname: s.name, sadm: s.adm, _strike: p.status === 'Reversed' }; }).sort((a, b) => b.date.localeCompare(a.date) || b.rcpt.localeCompare(a.rcpt));
 PAGES.payments = PAGES['payments/daybook'] = () => {
-  const modes = [...PAY_MODES, 'Contra'], pr = payRows();
-  const html = `<div class="fill">${pageHead('Payments', 'Every payment posts to the ledger, issues a numbered receipt and notifies the guardian in one step.', `<button class="btn act-write" data-action="pay-link">${ic('link', 14)}Send payment link</button><button class="btn primary act-write" data-action="record-payment">${ic('plus', 14)}Record payment</button>`)}
+  const modes = PAY_MODES, pr = payRows();
+  const html = `<div class="fill">${pageHead('Payments', 'Every payment posts to the ledger, issues a numbered receipt and notifies the guardian in one step.', `<button class="btn primary act-write" data-action="record-payment">${ic('plus', 14)}Record payment</button>`)}
   <div class="content">${sheet({ cols: payCols(), rows: pr, onOpen: r => showReceipt(r.id), chips: fchip('all', 'All', pr.length, true) + modes.map(m => fchip(m, m, pr.filter(p => p.mode === m).length)).join(''), chipLabel: 'Mode', tabs: payTabs('daybook') })}</div></div>`;
   chipHandler = ids => { S.filter = ids.length ? r => ids.includes(r.mode) : null; renderSheet(); };
   return html;
@@ -851,15 +1054,8 @@ PAGES['payments/counter'] = () => {
       <div class="notice warn" style="margin-top:12px">${ic('alert', 16)}<div>Cash short by ₹500. Add a note before closing — the difference will be logged.</div></div>
     </div></div>
     <div class="card"><div class="card-h"><h3>Cash denominations</h3></div><div class="card-b"><table class="simple"><tbody>${[[500, 38], [200, 12], [100, 22], [50, 9], [20, 6], [10, 4]].map(([d, n]) => `<tr><td>₹${d} ×</td><td><input class="input num" style="width:70px;height:26px" value="${n}"></td><td class="r">${inr(d * n)}</td></tr>`).join('')}</tbody></table>
-      <div class="field" style="margin-top:12px"><label>Hand over to</label><select class="input"><option>Divya Suresh (evening counter)</option><option>George Varghese (Finance manager)</option></select></div></div></div>
+      <div class="field" style="margin-top:12px"><label>Hand over to</label><select class="input"><option>Divya Suresh (evening counter)</option><option>George Varghese (Finance)</option></select></div></div></div>
   </div></div>${payTabs('counter', false)}</div>`;
-};
-PAGES['payments/reversals'] = () => `<div class="fill">${pageHead('Payments', 'Corrections are posted as contra entries. Reversals by a cashier need a Finance manager to check them.')}
-  <div class="content">${sheet({ cols: payCols(), rows: payRows().filter(p => p.kind === 'Reversal' || p.status === 'Reversed'), onOpen: r => showReceipt(r.id), tabs: payTabs('reversals') })}</div></div>`;
-PAGES['payments/links'] = () => {
-  const rows = students.filter(s => s.overdue && inAy(s)).slice(0, 14).map((s, i) => ({ ...s, link: 'pay.thejus.eduadmit.app/' + Math.random().toString(36).slice(2, 8), sent: addDays(TODAY, -(i % 5)), lst: i % 3 === 0 ? 'Opened' : 'Sent' }));
-  return `<div class="fill">${pageHead('Payments', '', `<button class="btn primary act-write" data-action="pay-link">${ic('send', 14)}Send links to overdue</button>`)}
-  <div class="content">${sheet({ cols: [{ key: 'adm', label: 'Admission no.', w: 128 }, { key: 'name', label: 'Student', w: 170 }, { key: 'overdue', label: 'Amount', w: 110, align: 'r', fmt: inr, sum: 'inr' }, { key: 'link', label: 'Link', w: 230, render: r => `<span class="lnk">${r.link}</span>` }, { key: 'sent', label: 'Sent', w: 104, fmt: fd }, { key: 'lst', label: 'Status', w: 110, render: r => chip(r.lst === 'Opened' ? 'Processing' : 'Sent').replace('>Processing<', '>Opened<') }, { key: 'act', label: '', w: 140, render: () => `<button class="btn sm act-write">${ic('check', 12)}Mark received</button>` }], rows, onOpen: r => recordPayment(r.id, 'Payment link'), tabs: payTabs('links') })}</div></div>`;
 };
 /* ---------- Refunds ---------- */
 PAGES['payments/refunds'] = PAGES.refunds = () => {
@@ -880,9 +1076,8 @@ function openRefund(id) {
   const lv = (n, who, role, st, note) => `<div class="ch-item ${st}"><span class="ch-dot">${st === 'done' ? ic('check', 14) : st === 'no' ? ic('x', 14) : st === 'wait' ? ic('clock', 14) : n}</span><div><div>${who}</div><div class="faint" style="font-size:11.5px">${role}${note ? ' · ' + note : ''}</div></div><div>${st === 'done' ? chip('Approved') : st === 'wait' ? chip('Awaiting approval') : st === 'no' ? chip('Rejected') : '<span class="faint">Not started</span>'}</div></div>`;
   const after = ['Approved', 'Processing', 'Completed'].includes(r.status);
   const chain = [
-    lv(1, 'Manoj Pillai', 'Refund approver · Level 1', after ? 'done' : r.status === 'Rejected' ? 'no' : r.status === 'Awaiting approval' ? 'wait' : '', after ? fd(addDays(r.raised, 1)) : ''),
-    two ? lv(2, 'Dr. Suma Rajan', 'Institution head · Level 2 · amounts over ₹10,000', after ? 'done' : '', after ? fd(addDays(r.raised, 2)) : '') : '',
-    lv(two ? 3 : 2, 'Finance · Joby Mathew', 'Execution — must differ from approvers', r.status === 'Completed' ? 'done' : r.status === 'Processing' ? 'wait' : '', r.status === 'Completed' ? 'NEFT ' + (r.no.slice(-4)) + '7781' : ''),
+    lv(1, 'Anita Joseph', 'Admin · approval', after ? 'done' : r.status === 'Rejected' ? 'no' : r.status === 'Awaiting approval' ? 'wait' : '', after ? fd(addDays(r.raised, 1)) : ''),
+    lv(2, 'Finance · Joby Mathew', 'Execution — must differ from approvers', r.status === 'Completed' ? 'done' : r.status === 'Processing' ? 'wait' : '', r.status === 'Completed' ? 'NEFT ' + (r.no.slice(-4)) + '7781' : ''),
   ].join('');
   const canApprove = r.status === 'Awaiting approval' || r.status === 'Submitted' || r.status === 'On hold';
   openDrawer(`<div class="d-head"><div class="d-top"><div style="flex:1"><div class="d-title">${r.no}</div><div class="d-sub">${esc(s.name)} · ${s.adm} · ${chip(r.status)}</div></div><button class="icon-btn" data-close-drawer>${ic('x')}</button></div><div class="d-tabs"><button class="d-tab on">Request</button></div></div>
@@ -925,7 +1120,7 @@ function docEditor(name) {
 const NOTE_TABS = [['events', 'Events & channels'], ['log', 'Delivery log'], ['templates', 'Templates']];
 PAGES.notifications = PAGES['notifications/events'] = () => {
   const ev = [['Seat booked', 1, 1, 1], ['Payment received', 1, 1, 1], ['Instalment due (3 days before)', 1, 1, 0], ['Instalment overdue', 1, 1, 1], ['Refund status changed', 1, 0, 1], ['Document ready', 0, 1, 1], ['Admission cancelled', 1, 0, 1]];
-  return `<div class="fill">${pageHead('Notifications', 'Pick a channel for each event. Templates are per language and use your own sender IDs and DLT template IDs.', `<button class="btn">${ic('clock', 14)}Quiet hours 21:00–08:00</button>`)}
+  return `<div class="fill">${pageHead('Messages', 'Pick a channel for each event. Templates are per language and use your own sender IDs and DLT template IDs.', `<button class="btn">${ic('clock', 14)}Quiet hours 21:00–08:00</button>`)}
   <div class="content" style="overflow:auto"><div class="grid-3"><div class="card span-2"><table class="perm"><thead><tr><th>Event</th><th>SMS</th><th>WhatsApp <span class="p1">P1</span></th><th>Email</th><th>Languages</th><th>Reminder</th></tr></thead><tbody>
   ${ev.map(([e, a, b, c]) => `<tr><td>${e}</td>${[a, b, c].map(v => `<td><button class="switch ${v ? 'on' : ''}" data-toggle></button></td>`).join('')}<td><span class="tag">EN</span> <span class="tag">ML</span></td><td class="faint">${e.includes('due') ? '3 days before' : e.includes('overdue') ? 'Every 5 days' : '—'}</td></tr>`).join('')}
   </tbody></table></div>
@@ -941,10 +1136,10 @@ PAGES.notifications = PAGES['notifications/events'] = () => {
 };
 PAGES['notifications/log'] = () => {
   const rows = payments.slice(-60).reverse().map((p, i) => { const s = sById(p.sid); return { at: p.date, to: '+91 ' + s.mobile, name: s.guardian, ev: 'Payment received', ch: i % 3 === 0 ? 'WhatsApp' : 'SMS', tpl: 'PAY_RCVD_EN', st: i % 23 === 7 ? 'Failed' : i < 2 ? 'Queued' : 'Delivered', ref: p.rcpt }; });
-  return `<div class="fill">${pageHead('Notifications', 'Every message with its delivery status. Sending is idempotent, so a retry never sends the same message twice.')}
+  return `<div class="fill">${pageHead('Messages', 'Every message with its delivery status. Sending is idempotent, so a retry never sends the same message twice.')}
   <div class="content">${sheet({ cols: [{ key: 'at', label: 'Date', w: 104, fmt: fd }, { key: 'name', label: 'Recipient', w: 160 }, { key: 'to', label: 'Number', w: 130 }, { key: 'ev', label: 'Event', w: 150 }, { key: 'ch', label: 'Channel', w: 96 }, { key: 'tpl', label: 'Template', w: 120 }, { key: 'ref', label: 'Related', w: 140 }, { key: 'st', label: 'Status', w: 100, render: r => chip(r.st) }], rows, onOpen: () => { }, tabs: sheetTabs('notifications', NOTE_TABS, 'log') })}</div></div>`;
 };
-PAGES['notifications/templates'] = () => `<div class="fill">${pageHead('Notifications', 'One message template per event, channel and language.', `<button class="btn primary act-write">${ic('plus', 14)}New template</button>`)}
+PAGES['notifications/templates'] = () => `<div class="fill">${pageHead('Messages', 'One message template per event, channel and language.', `<button class="btn primary act-write">${ic('plus', 14)}New template</button>`)}
   <div class="content">${sheet({ cols: [{ key: 'c', label: 'Code', w: 140 }, { key: 'e', label: 'Event', w: 160 }, { key: 'ch', label: 'Channel', w: 90 }, { key: 'l', label: 'Lang', w: 60 }, { key: 'dlt', label: 'DLT template ID', w: 160 }, { key: 'b', label: 'Body', w: 420 }], rows: [
     { c: 'SEAT_BKD_EN', e: 'Seat booked', ch: 'SMS', l: 'EN', dlt: '1107169xxxx2231', b: 'Dear {guardian}, seat booked for {student} in {programme}. Adm no {adm_no}. -THEJUS' },
     { c: 'PAY_RCVD_EN', e: 'Payment received', ch: 'SMS', l: 'EN', dlt: '1107169xxxx2240', b: 'Received Rs {amount} for {student}. Receipt {receipt_no}. Balance Rs {balance}. -THEJUS' },
@@ -955,12 +1150,12 @@ PAGES['notifications/templates'] = () => `<div class="fill">${pageHead('Notifica
 
 /* ---------- Reports ---------- */
 const REPORTS = {
-  Admissions: ['Daily admission register', 'Admissions by programme & branch', 'Admissions by quota & category', 'Seat availability summary', 'Admission officer performance', 'Cancellations & withdrawals'],
+  Admissions: ['Daily admission register', 'Admissions by programme & branch', 'Admissions by quota & category', 'Seat availability summary', 'Staff performance', 'Cancellations & withdrawals'],
   'Fees & collections': ['Fee collection register', 'Mode-wise collection summary', 'Assessed vs collected', 'Outstanding dues by student', 'Overdue instalments ageing', 'Concessions & scholarships granted'],
   'Payments & refunds': ['Day book', 'Receipt cancellation & reversal register', 'Cashier-wise collection', 'Refund register', 'Refunds pending approval', 'Caution deposit liability'],
 };
 PAGES.reports = () => `<div>${pageHead('Reports', 'The 18 standard reports, filtered to your role. Large exports run in the background and you get a download link.')}
-  <div class="content"><div class="grid-3">${Object.entries(REPORTS).map(([g, list]) => `<div class="card"><div class="card-h"><h3>${g}</h3><span class="muted">${list.length}</span></div><div class="card-b">${list.map(r => `<div class="list-row" style="cursor:pointer" data-report="${r}"><span class="dotico">${ic('sheet', 14)}</span><span class="grow t">${r}</span><button class="icon-btn" title="Export">${ic('download', 14)}</button></div>`).join('')}</div></div>`).join('')}</div>
+  <div class="content"><div class="rep-h">Seat occupancy</div>${seatOccupancy()}<div class="rep-h">Standard reports</div><div class="grid-3">${Object.entries(REPORTS).map(([g, list]) => `<div class="card"><div class="card-h"><h3>${g}</h3><span class="muted">${list.length}</span></div><div class="card-b">${list.map(r => `<div class="list-row" style="cursor:pointer" data-report="${r}"><span class="dotico">${ic('sheet', 14)}</span><span class="grow t">${r}</span><button class="icon-btn" title="Export">${ic('download', 14)}</button></div>`).join('')}</div></div>`).join('')}</div>
   <div class="card" style="margin-top:14px"><div class="card-h"><h3>Background exports</h3></div><div class="card-b">
   ${[['Fee collection register · Apr–Oct 2026', 'Excel · 14,882 rows', 'Running'], ['Outstanding dues by student', 'PDF · 196 students', 'Ready'], ['Daily admission register · Oct', 'CSV · 512 rows', 'Ready']].map(([n, m, s]) => `<div class="list-row"><span class="dotico">${ic('download', 14)}</span><div class="grow"><div class="t">${n}</div><div class="s">${m} · requested by Anita Joseph</div></div>${chip(s)}${s === 'Ready' ? '<button class="btn sm">Download</button>' : ''}</div>`).join('')}
   </div></div></div></div>`;
@@ -987,7 +1182,7 @@ function openAudit(a) {
 }
 
 /* ---------- Settings ---------- */
-const SET = [['organisation', 'Organisation'], ['structure', 'Structure'], ['users', 'Users'], ['roles', 'Roles & permissions'], ['branding', 'Branding'], ['integrations', 'Integrations'], ['import', 'Data import'], ['subscription', 'Subscription & usage'], ['golive', 'Go-live checklist']];
+const SET = [['organisation', 'Organisation'], ['structure', 'Structure'], ['users', 'Users'], ['roles', 'Roles & permissions'], ['branding', 'Branding'], ['integrations', 'Integrations']];
 function settingsPage(sub) {
   const body = SETTINGS[sub] ? SETTINGS[sub]() : '';
   return settingsShell('settings/' + sub, setTitle(SET.find(x => x[0] === sub)[1]) + body);
@@ -1001,28 +1196,67 @@ SETTINGS.organisation = () => `<div class="card"><div class="card-b" style="padd
   <div class="field full"><label>Registered address</label><textarea class="input" rows="2">Vellarakkad, Thrissur, Kerala 680584</textarea></div>
   <div class="field"><label>Languages</label><input class="input" value="English, Malayalam"></div><div class="field"><label>Date format</label><select class="input"><option>04 Nov 2026</option><option>04/11/2026</option></select></div><div class="field"><label>Data retention</label><select class="input"><option>8 years after leaving</option></select></div>
   </div><div style="margin-top:16px;display:flex;justify-content:flex-end"><button class="btn primary" data-toast="Organisation details saved">Save</button></div></div></div>`;
-SETTINGS.structure = () => `<div class="grid-3"><div class="card span-2"><div class="card-h"><h3>Hierarchy</h3><span class="muted">Rename or skip any level</span></div><div class="card-b tree">
-  <div class="node"><span class="lvl">Organisation</span>${ic('building', 14)} Thejus Group of Institutions</div>
-  <div class="ch">
-    <div class="node"><span class="lvl">Institution</span>Thejus Engineering College <span class="chip plain" style="margin-left:auto">Engineering college</span></div>
-    <div class="ch">${[['Computer Science', ['B.Tech · CSE', 'M.Tech · CSE']], ['Electronics', ['B.Tech · ECE']], ['Mechanical', ['B.Tech · ME']], ['Civil', ['B.Tech · CE']], ['Management Studies', ['MBA']]].map(([d, ps]) => `<div class="node"><span class="lvl">Department</span>${d}</div><div class="ch">${ps.map(p => `<div class="node"><span class="lvl">Programme</span>${p}<span class="faint" style="margin-left:auto">Batch 2026–30 · Sections A, B</span></div>`).join('')}</div>`).join('')}</div>
-    <div class="node"><span class="lvl">Institution</span>Thejus Polytechnic <span class="chip plain" style="margin-left:auto">Polytechnic</span></div>
-    <div class="node"><span class="lvl">Institution</span>Thejus Public School <span class="chip plain" style="margin-left:auto">K-12 school</span></div>
-  </div></div></div>
-  <div class="card"><div class="card-h"><h3>Level labels</h3></div><div class="card-b">${['Institution', 'Department', 'Programme', 'Branch', 'Batch', 'Section'].map((l, i) => `<div class="check-row"><span style="flex:1">${l}</span><input class="input" style="width:120px;height:28px" value="${l}"><button class="switch ${i === 3 ? '' : 'on'}" data-toggle title="Use this level"></button></div>`).join('')}
-  <div class="section-t" style="margin-top:14px">Academic calendar</div><div class="list-row"><span class="grow">2026–27</span><span class="muted">01 Jun 2026 – 31 May 2027</span></div><div class="list-row"><span class="grow">Admission window</span><span class="muted">01 Jun – 30 Nov</span></div></div></div></div>`;
+/* ---------- Structure: editable hierarchy ---------- */
+const PROG_META = 'Batch 2026–30 · Sections A, B';
+const prog = name => ({ name, lvl: 'Programme', meta: PROG_META });
+const STRUCT = { name: 'Thejus Group of Institutions', lvl: 'Organisation', kids: [
+  { name: 'Thejus Engineering College', lvl: 'Institution', tag: 'Engineering college', kids: [
+    { name: 'Computer Science', lvl: 'Department', kids: [prog('B.Tech · CSE'), prog('M.Tech · CSE')] },
+    { name: 'Electronics', lvl: 'Department', kids: [prog('B.Tech · ECE')] },
+    { name: 'Mechanical', lvl: 'Department', kids: [prog('B.Tech · ME')] },
+    { name: 'Civil', lvl: 'Department', kids: [prog('B.Tech · CE')] },
+    { name: 'Management Studies', lvl: 'Department', kids: [prog('MBA')] }] },
+  { name: 'Thejus Polytechnic', lvl: 'Institution', tag: 'Polytechnic', kids: [] },
+  { name: 'Thejus Public School', lvl: 'Institution', tag: 'K-12 school', kids: [] }] };
+const ST_NEXT = { Organisation: 'Institution', Institution: 'Department', Department: 'Programme' };
+const ST_LABEL = {};           // renamed level labels, e.g. { Department: 'School' }
+let stEdit = null;             // path of the node being renamed, e.g. '0.1.2'
+const stLbl = l => ST_LABEL[l] || l;
+const stGet = path => path.split('.').slice(1).reduce((n, i) => n.kids[+i], STRUCT);
+function stNode(n, path) {
+  const next = ST_NEXT[n.lvl];
+  const name = stEdit === path
+    ? `<input class="input st-in" id="stIn" data-st-path="${path}" value="${esc(n.name)}" aria-label="${esc(stLbl(n.lvl))} name">`
+    : `<span class="st-name" data-st-rename="${path}" title="Click to rename">${n.lvl === 'Organisation' ? ic('building', 14) + ' ' : ''}${esc(n.name)}</span>`;
+  const right = n.meta ? `<span class="faint">${esc(n.meta)}</span>` : n.tag ? `<span class="chip plain">${esc(n.tag)}</span>` : '';
+  const acts = `<span class="st-acts">`
+    + `<button class="st-btn" data-st-rename="${path}" title="Rename">${ic('pencil', 13)}</button>`
+    + (next ? `<button class="st-btn" data-st-add="${path}" title="Add ${esc(stLbl(next).toLowerCase())}">${ic('plus', 13)}</button>` : '')
+    + (n.lvl !== 'Organisation' ? `<button class="st-btn danger" data-st-del="${path}" title="Delete">${ic('trash', 13)}</button>` : '')
+    + `</span>`;
+  return `<div class="node"><span class="lvl">${esc(stLbl(n.lvl))}</span>${name}<span class="st-right">${right}</span>${acts}</div>`
+    + (n.kids && n.kids.length ? `<div class="ch">${n.kids.map((k, i) => stNode(k, path + '.' + i)).join('')}</div>` : '');
+}
+function stRender() {
+  const t = $('#stTree'); if (!t) return;
+  t.innerHTML = stNode(STRUCT, '0');
+  const i = $('#stIn'); if (i) { i.focus(); i.select(); }
+}
+function stSave(commit) {
+  const i = $('#stIn'); if (!i) return;
+  const v = i.value.trim(), n = stGet(i.dataset.stPath);
+  stEdit = null;
+  if (commit && v && v !== n.name) { n.name = v; toast(`Renamed to ${v}`); }
+  stRender();
+}
+document.addEventListener('keydown', e => { if (e.target.id === 'stIn') { if (e.key === 'Enter') { e.preventDefault(); stSave(true); } if (e.key === 'Escape') stSave(false); } });
+document.addEventListener('focusout', e => { if (e.target.id !== 'stIn') return; const path = e.target.dataset.stPath; setTimeout(() => { const i = $('#stIn'); if (i && i.dataset.stPath === path && document.activeElement !== i) stSave(true); }); });
+document.addEventListener('input', e => { const l = e.target.dataset && e.target.dataset.stLabel; if (l) { ST_LABEL[l] = e.target.value.trim() || l; stRender(); } });
+SETTINGS.structure = () => { setTimeout(stRender); return `<div class="grid-3"><div class="card span-2"><div class="card-h"><h3>Hierarchy</h3><span class="muted" style="margin-left:auto;margin-right:10px">Click a name to rename</span><button class="btn sm act-write" data-st-add="0">${ic('plus', 13)}Add institution</button></div><div class="card-b tree" id="stTree"></div></div>
+  <div class="card"><div class="card-h"><h3>Level labels</h3></div><div class="card-b">${['Institution', 'Department', 'Programme', 'Branch', 'Batch', 'Section'].map((l, i) => `<div class="check-row"><span style="flex:1">${l}</span><input class="input" style="width:120px;height:28px" value="${esc(stLbl(l))}" data-st-label="${l}"><button class="switch ${i === 3 ? '' : 'on'}" data-toggle title="Use this level"></button></div>`).join('')}
+  <div class="section-t" style="margin-top:14px">Academic calendar</div><div class="list-row"><span class="grow">2026–27</span><span class="muted">01 Jun 2026 – 31 May 2027</span></div><div class="list-row"><span class="grow">Admission window</span><span class="muted">01 Jun – 30 Nov</span></div></div></div></div>`; };
 SETTINGS.users = () => `<div class="card"><div class="card-h"><h3>${USERS.length} users</h3><button class="btn primary sm" style="margin-left:auto">${ic('plus', 13)}Invite user</button></div><div class="card-b"><table class="simple"><thead><tr><th>Name</th><th>Role</th><th>Scope</th><th>2FA</th><th>Last active</th><th>Status</th></tr></thead><tbody>
   ${USERS.map(u => `<tr><td><div style="display:flex;gap:10px;align-items:center"><span class="avatar" style="width:26px;height:26px;font-size:10px">${u.name.split(' ').filter(w => /^[A-Z]/.test(w)).slice(-2).map(w => w[0]).join('')}</span><div><div>${u.name}</div><div class="faint" style="font-size:11.5px">${u.email}</div></div></div></td><td>${u.role}</td><td class="muted">${u.scope}</td><td>${u.twofa ? `<span style="color:var(--ok)">${ic('check', 14)}</span>` : '<span class="faint">Optional</span>'}</td><td class="muted">${u.last}</td><td>${chip(u.status)}</td></tr>`).join('')}
   </tbody></table><p class="faint" style="margin-top:10px">2FA is mandatory for finance and admin roles. A user can hold roles in several institutions and switch between them without logging out.</p></div></div>`;
 SETTINGS.roles = () => {
-  const R = ['Org admin', 'Admission officer', 'Finance manager', 'Cashier', 'Refund approver', 'Auditor'];
-  const M = [['Create or edit admission', 'y,y,n,n,n,v'], ['Configure fee templates', 'y,n,y,n,n,v'], ['Assign fee to student', 'y,y,y,n,n,v'], ['Record payment', 'y,c:Initial only,y,y,n,v'], ['Reverse or correct payment', 'y,n,c:With checker,c:Request only,n,v'], ['Approve refund', 'y,n,n,n,y,v'], ['Execute refund', 'y,n,y,c:After approval,n,v'], ['Manage users and roles', 'y,n,n,n,n,n'], ['View audit log', 'y,c:Own actions,c:Finance module,c:Own actions,c:Refund module,y']];
+  const R = ['Admin', 'Finance'];
+  const M = [['Book seat / create or edit admission', 'y,v'], ['Configure seat matrix and structure', 'y,n'], ['Configure fee templates', 'y,y'], ['Assign fee to student', 'y,y'], ['Record payment', 'y,y'], ['Approve refund', 'y,n'], ['Execute refund', 'y,c:After approval'], ['Messages and templates', 'y,n'], ['Manage users and roles', 'y,n'], ['Organisation settings', 'y,n'], ['Reports', 'y,y'], ['View audit log', 'y,c:Finance module']];
   const cell = v => v === 'y' ? '<span class="pv y">Yes</span>' : v === 'n' ? '<span class="pv n">No</span>' : v === 'v' ? '<span class="pv v">View</span>' : `<span class="pv c">${v.slice(2)}</span>`;
   return `<div class="card"><div class="card-h"><h3>Default permission matrix</h3><span class="muted">action × module × scope · click a cell to change</span></div><div class="card-b" style="overflow:auto"><table class="perm"><thead><tr><th>Action</th>${R.map(r => `<th>${r}</th>`).join('')}</tr></thead><tbody>
   ${M.map(([a, v]) => `<tr><td>${a}</td>${v.split(',').map(x => `<td style="cursor:pointer">${cell(x)}</td>`).join('')}</tr>`).join('')}
   </tbody></table></div></div>
-  <div class="grid-2" style="margin-top:14px"><div class="card"><div class="card-h"><h3>Field masking</h3></div><div class="card-b">${[['Caste / community', 'Admission officer, Org admin'], ['Annual income', 'Org admin'], ['Bank account', 'Finance manager, Cashier'], ['Aadhaar', 'Masked for everyone · last 4 shown']].map(([f, w]) => `<div class="list-row"><span class="dotico">${ic('lock', 14)}</span><div class="grow"><div class="t">${f}</div><div class="s">Visible to: ${w}</div></div></div>`).join('')}</div></div>
-  <div class="card"><div class="card-h"><h3>Role templates</h3><button class="btn sm" style="margin-left:auto">${ic('copy', 13)}Clone role</button></div><div class="card-b">${['Organisation owner', 'Organisation admin', 'Institution head', 'Admission officer', 'Finance manager', 'Cashier / accountant', 'Refund approver', 'Auditor'].map(r => `<div class="list-row"><span class="grow">${r}</span><span class="faint">${USERS.filter(u => u.role === r).length} users</span></div>`).join('')}</div></div></div>`;
+  <div class="grid-2" style="margin-top:14px"><div class="card"><div class="card-h"><h3>Field masking</h3></div><div class="card-b">${[['Caste / community', 'Admin'], ['Annual income', 'Admin'], ['Bank account', 'Admin, Finance'], ['Aadhaar', 'Masked for everyone · last 4 shown']].map(([f, w]) => `<div class="list-row"><span class="dotico">${ic('lock', 14)}</span><div class="grow"><div class="t">${f}</div><div class="s">Visible to: ${w}</div></div></div>`).join('')}</div></div>
+  <div class="card"><div class="card-h"><h3>Roles</h3><span class="muted" style="margin-left:auto">Admin has access to everything</span></div><div class="card-b">${['Admin', 'Finance'].map(r => `<div class="list-row"><span class="grow">${r}</span><span class="faint">${USERS.filter(u => u.role === r).length} users</span></div>`).join('')}</div></div></div>`;
 };
 SETTINGS.workflows = () => `<div class="card"><div class="card-h"><h3>Admission status pipeline</h3><span class="muted">Drag to reorder · rename freely</span></div><div class="card-b"><div class="pipeline">${STATUSES.map((s, i) => `<span class="pipe-step">${ic('grip', 14)}${chip(s)}</span>${i < 2 ? ic('right', 14) : ''}`).join('')}</div>
   <div class="check-row" style="margin-top:12px"><span style="flex:1">Seat is booked</span><div class="seg"><button class="on">At the desk, before payment</button><button>Only after first payment</button></div></div>
@@ -1030,7 +1264,7 @@ SETTINGS.workflows = () => `<div class="card"><div class="card-h"><h3>Admission 
   <div class="card" style="margin-top:14px"><div class="card-h"><h3>Refund policy · ${POLICY.ver}</h3></div><div class="card-b">${policyTable()}
   <div style="display:flex;gap:8px;margin-top:12px"><button class="btn sm" data-policy="">${ic('eye', 12)}Preview as booker</button><button class="btn sm">Publish new version</button></div></div></div>
   <div class="grid-2" style="margin-top:14px"><div class="card"><div class="card-h"><h3>Refund approval chain</h3></div><div class="card-b">
-    <div class="chain">${[['Refund approver', 'All amounts'], ['Institution head', 'Above ₹10,000'], ['Organisation owner', 'Above ₹1,00,000']].map(([r, w], i) => `<div class="ch-item"><span class="ch-dot">${i + 1}</span><div><div>${r}</div><div class="faint" style="font-size:11.5px">${w}</div></div><button class="icon-btn">${ic('more')}</button></div>`).join('')}</div>
+    <div class="chain">${[['Admin', 'Approves all amounts'], ['Finance', 'Executes the payout after approval']].map(([r, w], i) => `<div class="ch-item"><span class="ch-dot">${i + 1}</span><div><div>${r}</div><div class="faint" style="font-size:11.5px">${w}</div></div><button class="icon-btn">${ic('more')}</button></div>`).join('')}</div>
     <div class="check-row"><span style="flex:1">Approval mode</span><div class="seg"><button class="on">Physical signature + scan</button><button>In-app e-approval</button></div></div>
     <div class="check-row"><span style="flex:1">Executor must differ from approvers</span><button class="switch on"></button></div></div></div>
   <div class="card"><div class="card-h"><h3>Maker–checker thresholds</h3></div><div class="card-b">${[['Payment reversal', 'Always'], ['Fee override on a student', 'Always'], ['Concession', 'Above ₹10,000'], ['Refund', 'Per chain'], ['Duplicate reference override', 'Reason required']].map(([a, t]) => `<div class="check-row"><span style="flex:1">${a}</span><span class="muted">${t}</span><button class="switch on" data-toggle></button></div>`).join('')}</div></div></div>`;
@@ -1044,29 +1278,13 @@ SETTINGS.numbering = () => `<div class="card"><div class="card-b" style="padding
   </tbody></table><div style="margin-top:12px" class="faint">Tokens: <span class="token">{INST}</span> <span class="token">{YEAR}</span> <span class="token">{YY}</span> <span class="token">{PROG}</span> <span class="token">{QUOTA}</span> <span class="token">{SEQ:n}</span></div></div></div>`;
 SETTINGS.branding = () => `<div class="grid-2"><div class="card"><div class="card-b" style="padding-top:16px">
   <div class="field"><label>Logo</label><div style="display:flex;gap:12px;align-items:center"><span class="logo" style="width:48px;height:48px;font-size:24px;border-radius:12px">T</span><button class="btn sm">${ic('upload', 13)}Replace</button></div></div>
-  <div class="field" style="margin-top:14px"><label>Brand colours</label><div style="display:flex;gap:8px">${['#0082FB', '#3399FC', '#1C2B33', '#5B6B73', '#DDE3E8', '#E6F3FF', '#F1F5F8'].map(c => `<span title="${c}" style="width:36px;height:36px;border-radius:9px;background:${c};border:1px solid var(--line)"></span>`).join('')}</div></div>
+  <div class="field" style="margin-top:14px"><label>Brand colours</label><div style="display:flex;gap:8px">${['#C10007', '#FB2C36', '#0A0A0A', '#737373', '#E5E5E5', '#FEF2F2', '#F5F5F5'].map(c => `<span title="${c}" style="width:36px;height:36px;border-radius:9px;background:${c};border:1px solid var(--line)"></span>`).join('')}</div></div>
   <div class="field" style="margin-top:14px"><label>Subdomain</label><div style="display:flex;align-items:center;gap:6px"><input class="input" value="thejus" style="width:140px"><span class="muted">.eduadmit.app</span></div></div>
   <div class="field" style="margin-top:14px"><label>Custom domain (optional)</label><input class="input" placeholder="admissions.thejus.edu.in"></div>
   <div class="field" style="margin-top:14px"><label>Signatures</label><div class="list-row"><span class="grow">Principal · Dr. Suma Rajan</span>${chip('Uploaded')}</div><div class="list-row"><span class="grow">Cashier · Joby Mathew</span>${chip('Uploaded')}</div></div>
   <div class="field" style="margin-top:14px"><label>Receipt footer</label><textarea class="input" rows="2">Fees once paid are not refundable except as per university norms.</textarea></div>
   </div></div><div class="card"><div class="card-h"><h3>Letterhead preview</h3></div><div class="card-b" style="background:var(--bg);border-radius:0 0 10px 10px;padding-top:16px">${receiptPaper(payments[5])}</div></div></div>`;
-SETTINGS.integrations = () => `<div class="grid-3">${[['Payment links', 'Razorpay · links only', 'Connected', 'Links go to guardians; Finance marks payments received manually', 'link'], ['SMS provider', 'MSG91 · DLT', 'Connected', 'Sender ID THEJUS · 14 templates', 'sms'], ['WhatsApp Business', 'Gupshup', 'Connected', 'Opt-in captured per contact', 'chat'], ['Email domain', 'thejus.edu.in', 'Connected', 'SPF + DKIM verified', 'mail'], ['Single sign-on', 'Google Workspace', 'Not connected', 'Optional for staff', 'lock']].map(([t, n, s, d, i]) => `<div class="card"><div class="card-b" style="padding-top:16px"><div style="display:flex;gap:10px;align-items:center"><span class="dotico">${ic(i, 15)}</span><div style="flex:1"><div class="faint" style="font-size:11.5px">${t}</div><div>${n}</div></div>${chip(s === 'Connected' ? 'Active' : 'On hold')}</div><div class="faint" style="margin-top:12px">${d}</div><button class="btn sm" style="margin-top:12px">${s === 'Connected' ? 'Manage' : 'Connect'}</button></div></div>`).join('')}</div>`;
-SETTINGS.import = () => `<div class="grid-2"><div class="card"><div class="card-h"><h3>Import from Excel or CSV</h3></div><div class="card-b">
-  <div style="border:2px dashed var(--line-2);border-radius:10px;padding:28px;text-align:center;color:var(--muted)">${ic('upload', 22).replace('class="ic"', 'class="ic" style="margin:0 auto 8px"')}Drop your old admission or fee sheet here<div class="faint" style="margin-top:4px">.xlsx, .csv · up to 20 MB</div></div>
-  <div class="field" style="margin-top:12px"><label>What are you importing?</label><div class="seg"><button class="on">Students</button><button>Fee balances</button><button>Past payments</button></div></div>
-  <a class="btn sm" style="margin-top:12px">${ic('download', 13)}Download template</a></div></div>
-  <div class="card"><div class="card-h"><h3>Dry run · fees_2026_final.xlsx</h3></div><div class="card-b">
-  <table class="simple"><tbody><tr><td>Rows read</td><td class="r">1,412</td></tr><tr><td style="color:var(--ok)">Ready to import</td><td class="r">1,371</td></tr><tr><td style="color:var(--warn)">Possible duplicates</td><td class="r">23</td></tr><tr><td style="color:var(--bad)">Errors (missing DOB, bad mobile)</td><td class="r">18</td></tr></tbody></table>
-  <div class="section-t">Column mapping</div>${[['Name of Student', 'student.name'], ['DOB', 'student.dob'], ['Ph No', 'student.mobile'], ['Branch', 'programme'], ['Quota', 'quota'], ['Fee Paid', 'opening_paid']].map(([a, b]) => `<div class="list-row"><span class="grow">${a}</span>${ic('right', 14)}<span class="token">${b}</span></div>`).join('')}
-  <div style="display:flex;gap:8px;margin-top:12px"><button class="btn">${ic('download', 13)}Error report</button><button class="btn primary" data-toast="1,371 rows imported · 41 held for review">Import 1,371 rows</button></div></div></div></div>`;
-SETTINGS.subscription = () => `<div class="grid-3"><div class="card"><div class="card-b" style="padding-top:16px"><div class="faint">Current plan</div><div style="font-size:22px;margin:6px 0;color:var(--navy-800)">Growth</div><div class="muted">Renews 31 Mar 2027 · up to 5 institutions</div><div class="section-t">Modules</div>${['Organisation, users, roles', 'Admissions, fees, payments, refunds', 'Documents, notifications, reports, audit', 'Online payments', 'WhatsApp'].map(m => `<div class="list-row"><span style="color:var(--ok)">${ic('check', 14)}</span><span class="grow">${m}</span></div>`).join('')}<button class="btn primary" style="margin-top:12px">Change plan</button></div></div>
-  <div class="card span-2"><div class="card-h"><h3>Usage</h3></div><div class="card-b">${[['Active students', 1412, 2000, ''], ['SMS credits used', 21760, 40000, ''], ['WhatsApp credits used', 15880, 20000, '#E37400'], ['Storage', 18.4, 50, '']].map(([l, u, t, c]) => `<div class="usage-row" style="font-size:13px"><span>${l}</span><span class="num">${u.toLocaleString('en-IN')} / ${t.toLocaleString('en-IN')}${l === 'Storage' ? ' GB' : ''}</span></div><div class="meter" style="height:8px;margin-bottom:10px"><i style="width:${u / t * 100}%;${c ? 'background:' + c : ''}"></i></div>`).join('')}
-  <div class="section-t">Invoices</div><table class="simple"><tbody>${[['INV-EA-2026-0411', '01 Apr 2026', '₹4,12,000 + GST'], ['INV-EA-2026-0702', '02 Jul 2026', '₹18,000 + GST · SMS top-up']].map(([n, d, a]) => `<tr><td>${n}</td><td class="muted">${d}</td><td class="r">${a}</td><td class="r"><button class="btn sm">PDF</button></td></tr>`).join('')}</tbody></table></div></div></div>`;
-SETTINGS.golive = () => {
-  const items = [['Organisation details & GSTIN', 1], ['Institution type template: Engineering college', 1], ['Institutions, departments, programmes, seat capacity', 1], ['Academic calendar & admission window', 1], ['Fee heads, templates, instalments, late-fee rules', 1], ['Numbering formats', 1], ['Branding, letterhead, signatures', 1], ['Payment gateway, SMS, WhatsApp, email', 1], ['Invite users and assign roles', 1], ['Import students, balances and past payments', 1], ['Final review & switch sandbox → live', 1]];
-  return `<div class="card"><div class="card-h"><h3>Go-live checklist</h3><span class="chip ok" style="margin-left:auto">Live since 18 May 2026</span></div><div class="card-b"><div class="meter" style="height:8px;margin:6px 0 14px"><i style="width:100%;background:var(--ok)"></i></div>${items.map(([t, d], i) => `<div class="check-row"><span class="cbox ${d ? 'on' : ''}">${d ? ic('check', 12) : ''}</span><span style="flex:1">${i + 1}. ${t}</span><span class="faint">${fd(addDays('2026-05-04', i))}</span></div>`).join('')}</div></div>`;
-};
-
+SETTINGS.integrations = () => `<div class="grid-3">${[['SMS provider', 'MSG91 · DLT', 'Connected', 'Sender ID THEJUS · 14 templates', 'sms'], ['WhatsApp Business', 'Gupshup', 'Connected', 'Opt-in captured per contact', 'chat'], ['Email domain', 'thejus.edu.in', 'Connected', 'SPF + DKIM verified', 'mail'], ['Single sign-on', 'Google Workspace', 'Not connected', 'Optional for staff', 'lock']].map(([t, n, s, d, i]) => `<div class="card"><div class="card-b" style="padding-top:16px"><div style="display:flex;gap:10px;align-items:center"><span class="dotico">${ic(i, 15)}</span><div style="flex:1"><div class="faint" style="font-size:11.5px">${t}</div><div>${n}</div></div>${chip(s === 'Connected' ? 'Active' : 'On hold')}</div><div class="faint" style="margin-top:12px">${d}</div><button class="btn sm" style="margin-top:12px">${s === 'Connected' ? 'Manage' : 'Connect'}</button></div></div>`).join('')}</div>`;
 /* ================= router ================= */
 function route() {
   const h = (location.hash || '#dashboard').slice(1);
@@ -1118,9 +1336,26 @@ document.addEventListener('click', e => {
   if ((el = q('[data-report]'))) return openReport(el.dataset.report);
   if ((el = q('[data-doc-edit]'))) return docEditor(el.dataset.docEdit);
   if ((el = q('[data-doc-preview]'))) return docEditor(el.dataset.docPreview);
+  if ((el = q('[data-sm-active]'))) { const p = PROGS.find(x => x.code === el.dataset.smActive); p.active = p.active === false; smRender(); return toast(`${p.name} is now ${p.active ? 'active — open for booking' : 'inactive — hidden from booking'}`); }
   if ((el = q('[data-toggle]')) || (el = q('.switch'))) return el.classList.toggle('on');
   if ((el = q('[data-verify]'))) { const row = el.closest('.check-row'); row.querySelector('.chip').outerHTML = chip('Verified'); el.textContent = 'View'; el.classList.add('ghost'); return toast('Document verified'); }
   if ((el = q('.seg button')) && !q('#pMode')) { $$('button', el.parentElement).forEach(b => b.classList.toggle('on', b === el)); }
+  if ((el = q('[data-sm-add]'))) return smAddModal();
+  if ((el = q('[data-st-rename]'))) { if (stEdit) stSave(true); stEdit = el.dataset.stRename; return stRender(); }
+  if ((el = q('[data-st-add]'))) {
+    if (stEdit) stSave(true);
+    const parent = stGet(el.dataset.stAdd), lvl = ST_NEXT[parent.lvl];
+    const n = { name: 'New ' + stLbl(lvl).toLowerCase(), lvl };
+    if (lvl === 'Programme') n.meta = PROG_META; else n.kids = [];
+    if (lvl === 'Institution') n.tag = 'Institution';
+    parent.kids.push(n); stEdit = el.dataset.stAdd + '.' + (parent.kids.length - 1); return stRender();
+  }
+  if ((el = q('[data-st-del]'))) {
+    const path = el.dataset.stDel, n = stGet(path), parent = stGet(path.split('.').slice(0, -1).join('.'));
+    const under = n.kids && n.kids.length ? ` and the ${n.kids.length} ${n.kids.length === 1 ? 'item' : 'items'} under it` : '';
+    if (!confirm(`Delete ${stLbl(n.lvl).toLowerCase()} "${n.name}"${under}?`)) return;
+    parent.kids.splice(+path.split('.').pop(), 1); stEdit = null; stRender(); return toast(`Deleted ${n.name}`);
+  }
   if ((el = q('[data-fdrop]'))) return el.parentElement.classList.toggle('open');
   if ((el = q('[data-fchip]')) && chipHandler) {
     const id = el.dataset.fchip;
@@ -1135,15 +1370,12 @@ document.addEventListener('click', e => {
   }
   if ((el = q('[data-action]'))) {
     const a = el.dataset.action;
-    if (a === 'new-admission') return bookingWizard();
+    if (a === 'new-admission') { location.hash = 'admissions/new'; return; }
     if (a === 'remind') return toast('Reminders sent · SMS + WhatsApp with the fee slip to ' + (el.dataset.n || 'selected') + ' guardians');
     if (a === 'record-payment') return recordPayment(el.dataset.sid);
     if (a === 'bulk-fee') return bulkFee();
-    if (a === 'import') { location.hash = 'settings/import'; return; }
-    if (a === 'pay-link') return toast('Payment links sent by SMS and WhatsApp to 14 guardians');
     if (a === 'new-refund') { const s = students.find(x => x.status === 'Confirmed'); return toast('Pick a student, then choose “Cancel admission” to raise a refund'); }
     if (a === 'cancel-adm') { closeDrawer(); return toast('Cancellation request created · refund form ready to print'); }
-    if (a === 'reverse') { closeModal(); return toast('Reversal requested · waiting for Finance manager (checker)'); }
   }
   // sheet interactions
   if ((el = q('[data-pg]'))) { S.page = +el.dataset.pg; renderSheet(); $('#sheet').scrollTop = 0; return; }
@@ -1167,7 +1399,7 @@ $('#meBtn').addEventListener('click', e => {
 });
 $('#menu').addEventListener('click', e => {
   const r = e.target.closest('[data-role]'); const i = e.target.closest('[data-inst]');
-  if (r) { state.role = r.dataset.role; $('#meRole').textContent = state.role; document.body.classList.toggle('readonly', state.role === 'Auditor'); closeMenu(); route(); toast('Viewing as ' + state.role); }
+  if (r) { state.role = r.dataset.role; $('#meRole').textContent = state.role;  closeMenu(); route(); toast('Viewing as ' + state.role); }
   if (i) { $('#instName').textContent = i.dataset.inst; closeMenu(); toast('Switched to ' + i.dataset.inst); }
 });
 
@@ -1185,6 +1417,7 @@ document.addEventListener('keydown', e => { if (e.key === '[' && !/INPUT|TEXTARE
 // icons in static header
 $$('[data-ic]').forEach(el => el.innerHTML = ic(el.dataset.ic, el.classList.contains('ic-wrap') ? 15 : 18));
 document.addEventListener('change', e => { if (e.target.id === 'aySel') { state.ay = e.target.value; route(); } });
+window.addEventListener('resize', () => window.fitCol && window.fitCol());
 window.addEventListener('hashchange', () => { closeDrawer(); closeModal(); route(); });
 route();
 })();
