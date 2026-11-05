@@ -1128,3 +1128,25 @@ body,.topbar{background:#FFFFFF}
 .subnav .subnav-h{font-size:11.5px;font-weight:600;letter-spacing:.6px;color:#404040;opacity:1;padding:12px 12px 6px}
 .subnav .subnav-h:first-child{padding-top:6px}
 .subnav .subnav-h:not(:first-child){margin-top:6px;border-top:1px solid #E5E5E5;padding-top:14px}
+/* sidebar brand: organisation badge + name (DoYourDesign style) */
+.side-brand .brand.org{display:flex;align-items:center;gap:10px;min-width:0;width:100%}
+.side-brand .org-av{width:32px;height:32px;flex:none;border-radius:50%;background:#0A3C6E;color:#fff;display:grid;place-items:center;font-size:14px;font-weight:600}
+.side-brand .org-name{font-size:15px;font-weight:600;color:#0A0A0A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.1px}
+.nav-collapsed .side-brand .org-name{display:none}
+.side-brand .org-name{font-size:14px;line-height:1.25;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.nav-collapsed .side-brand .org-name{display:none}
+/* collapsed sidebar: centred org badge, small corner counts that don't cover icons */
+.nav-collapsed .side-brand{padding:8px 0;justify-content:center}
+.nav-collapsed .side-brand .brand.org{width:auto;justify-content:center;gap:0}
+.nav-collapsed .nav-item{justify-content:center}
+.nav-collapsed .nav-item .badge,.nav-collapsed .nav-item.active .badge{position:absolute;top:3px;left:calc(50% + 4px);right:auto;min-width:15px;height:15px;padding:0 4px;border-radius:8px;font-size:9px;font-weight:600;line-height:11px;display:grid;place-items:center;background:#0A3C6E;color:#fff;border:2px solid #fff;box-sizing:content-box;margin:0}
+.nav-collapsed .nav-item.active .badge{border-color:#E8F2FA}
+.nav-collapsed .nav-item .badge,.nav-collapsed .nav-item.active .badge{top:0;left:calc(50% + 8px)}
+/* Messages → Campaigns */
+.camp-kpis{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+/* Reports & analytics */
+.rep-grid{margin-top:16px;gap:14px}
+.rep-grid .hbar{grid-template-columns:200px 1fr 120px}
+.rep-grid .hbar .lbl .chip{font-size:11.5px}
+.rep-sub{font-size:11.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#404040;margin:16px 0 6px;padding-top:12px;border-top:1px solid #E5E5E5}
+.rep-note{margin:0 0 12px}

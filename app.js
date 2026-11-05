@@ -154,7 +154,7 @@ const sById = id => students.find(s => s.id === id);
   refunds.filter(r => ['Approved', 'Completed', 'Processing'].includes(r.status)).forEach((r, i) => ev.push({ at: t(addDays(r.raised, 2) > TODAY ? TODAY : addDays(r.raised, 2), i + 1), user: 'Manoj Pillai', role: 'Finance', module: 'Refunds', action: 'refund.approve', record: r.no, detail: `Level 1 approved · ${inr(r.amount)}`, before: 'Awaiting approval', after: 'Approved', ip: '10.12.4.9' }));
   ev.push({ at: '2026-11-03 17:42', user: 'George Varghese', role: 'Finance', module: 'Fees', action: 'template.publish', record: 'FT-26-BTECH-MGMT v3', detail: 'Published new version; 0 assigned plans changed', before: 'v2 active', after: 'v3 active', ip: '10.12.4.2' });
   ev.push({ at: '2026-11-03 11:05', user: 'Anita Joseph', role: 'Admin', module: 'Settings', action: 'role.permission', record: 'Finance', detail: 'Enabled payment.record for Initial fee', before: 'No', after: 'Yes', ip: '10.12.4.1' });
-  ev.push({ at: '2026-11-02 16:20', user: 'Support · Rahul (EduAdmit)', role: 'Platform support', module: 'Platform access', action: 'support.session', record: 'Ticket #4182', detail: 'Read-only session with tenant consent, 30 min', before: '—', after: 'Ended 16:50', ip: '13.232.8.14' });
+  ev.push({ at: '2026-11-02 16:20', user: 'Platform support · Rahul', role: 'Platform support', module: 'Platform access', action: 'support.session', record: 'Ticket #4182', detail: 'Read-only session with tenant consent, 30 min', before: '—', after: 'Ended 16:50', ip: '13.232.8.14' });
   ev.push({ at: '2026-11-01 10:14', user: 'K. R. Associates', role: 'Finance', module: 'Reports', action: 'export', record: 'Fee collection register', detail: 'Excel export · Oct 2026', before: '—', after: '—', ip: '49.37.12.88' });
   ev.push({ at: '2026-11-04 08:58', user: 'Joby Mathew', role: 'Finance', module: 'Auth', action: 'login', record: '—', detail: 'Password + OTP', before: '—', after: '—', ip: '10.12.4.31' });
   ev.sort((a, b) => b.at.localeCompare(a.at));
@@ -172,7 +172,7 @@ const NAV = [
   ['Overview', [['dashboard', 'Dashboard']]],
   ['Admissions', [['admissions', 'Admissions']]],
   ['Finance', [['payments', 'Payments']]],
-  ['Operations', [['notifications', 'Messages'], ['reports', 'Reports'], ['audit', 'Audit log']]],
+  ['Operations', [['notifications', 'Messages'], ['reports', 'Reports & analytics'], ['audit', 'Audit log']]],
   ['Organisation', [['settings', 'Settings']]],
 ];
 const allowed = p => !ROLES[state.role] || ROLES[state.role].includes(p);
@@ -188,7 +188,7 @@ function renderNav(active) {
 }
 
 /* ================= UI primitives ================= */
-const STATUS_CLS = { 'Seat booked': '', 'Details collected': 'warn', Overdue: 'bad', 'Due this week': 'warn', Upcoming: 'grey', 'Awaiting first payment': '', 'Policy accepted': 'ok', 'Pay now': '', Confirmed: 'ok', Cancelled: 'bad', Withdrawn: 'bad', Submitted: 'grey', 'Awaiting approval': 'warn', Approved: '', Processing: 'violet', Completed: 'ok', Rejected: 'bad', 'On hold': 'grey', Posted: 'ok', Reversed: 'bad', Verified: 'ok', Uploaded: '', Pending: 'warn', Delivered: 'ok', Failed: 'bad', Queued: 'grey', Sent: '', New: '', Contacted: 'violet', 'Visit scheduled': 'warn', 'Application started': '', Converted: 'ok', Lost: 'grey', Active: 'ok', Invited: 'warn', Draft_: 'grey', Archived: 'grey', Running: 'violet', Ready: 'ok', 'Signed · scanned': 'ok', Printed: '', 'Awaiting signature': 'warn' };
+const STATUS_CLS = { 'Fully paid': 'ok', Scheduled: '', 'Partly failed': 'warn', 'Seat booked': '', 'Details collected': 'warn', Overdue: 'bad', 'Due this week': 'warn', Upcoming: 'grey', 'Awaiting first payment': '', 'Policy accepted': 'ok', 'Pay now': '', Confirmed: 'ok', Cancelled: 'bad', Withdrawn: 'bad', Submitted: 'grey', 'Awaiting approval': 'warn', Approved: '', Processing: 'violet', Completed: 'ok', Rejected: 'bad', 'On hold': 'grey', Posted: 'ok', Reversed: 'bad', Verified: 'ok', Uploaded: '', Pending: 'warn', Delivered: 'ok', Failed: 'bad', Queued: 'grey', Sent: '', New: '', Contacted: 'violet', 'Visit scheduled': 'warn', 'Application started': '', Converted: 'ok', Lost: 'grey', Active: 'ok', Invited: 'warn', Draft_: 'grey', Archived: 'grey', Running: 'violet', Ready: 'ok', 'Signed · scanned': 'ok', Printed: '', 'Awaiting signature': 'warn' };
 const chip = s => `<span class="chip ${STATUS_CLS[s] ?? 'grey'}">${esc(s)}</span>`;
 
 function toast(msg) {
@@ -225,12 +225,12 @@ function settingsShell(cur, inner) {
 
 /* ================= DataTable (PrimeReact style) ================= */
 const S = { cols: [], rows: [], view: [], sort: null, q: '', filter: null, onOpen: null, col: null, page: 0, rpp: 25 };
-function sheet({ cols, rows, onOpen, toolbar = '', chips = '', chipLabel = 'Status', tabs = '', lead = '' }) {
+function sheet({ cols, rows, onOpen, toolbar = '', chips = '', chipLabel = 'Status', tabs = '', lead = '', search = true }) {
   Object.assign(S, { cols, rows, onOpen, sort: null, q: '', filter: null, col: null, view: rows, page: 0, sel: [] });
   return `<div class="sheet-card">
     ${tabs}
     <div class="toolbar">
-      <div class="tsearch">${ic('search', 14)}<input id="sheetSearch" placeholder="Keyword search"></div>
+      ${search ? `<div class="tsearch">${ic('search', 14)}<input id="sheetSearch" placeholder="Keyword search"></div>` : ''}
       ${chips ? `<div class="fdrop" id="fdrop"><button class="fdrop-btn" data-fdrop>${ic('filter', 13)}<span class="fdrop-k">${chipLabel}:</span><span id="fdropLabel">All</span><b id="fdropCount"></b><i class="pi pi-chevron-down fdrop-chev"></i></button><div class="fdrop-menu" id="fchips">${chips}</div></div>` : ''}
       ${lead ? `<div class="tlead">${lead}</div>` : ''}
       <div style="margin-left:auto;display:flex;gap:6px;align-items:center">${toolbar}
@@ -337,7 +337,7 @@ PAGES.dashboard = () => {
       <button class="kpi hero" data-go="reports"><div class="k-l">${ic('seats', 14)}Seats filled</div><div class="k-v">${occ.length}<span style="font-size:14px;color:rgba(255,255,255,.72)"> / ${cap}</span></div><div class="k-s">${Math.round(occ.length / cap * 100)}% of capacity · <span style="color:#fff">+14 this week</span></div></button>
       <button class="kpi" data-go="admset/fees"><div class="k-l">${ic('fees', 14)}Assessed</div><div class="k-v">${inrS(assessed)}</div><div class="k-s">Net of ${inr(occ.reduce((t, s) => t + s.conc, 0))} concessions</div></button>
       <button class="kpi" data-go="payments"><div class="k-l">${ic('payments', 14)}Collected</div><div class="k-v">${inrS(collected)}</div><div class="k-s">${Math.round(collected / assessed * 100)}% of assessed · 100% receipted</div></button>
-      <button class="kpi" data-go="dues"><div class="k-l">${ic('clock', 14)}Overdue</div><div class="k-v" style="color:#D93025">${inrS(overdue)}</div><div class="k-s">${overdueS.length} students · outstanding ${inrS(outstanding)}</div></button>
+      <button class="kpi" data-go="payments/students" data-preset='{"f":"Overdue"}'><div class="k-l">${ic('clock', 14)}Overdue</div><div class="k-v" style="color:#D93025">${inrS(overdue)}</div><div class="k-s">${overdueS.length} students · outstanding ${inrS(outstanding)}</div></button>
       <button class="kpi" data-go="refunds"><div class="k-l">${ic('refunds', 14)}Refunds pending</div><div class="k-v">${refPend.length}</div><div class="k-s">${inr(refPend.reduce((t, r) => t + r.amount, 0))} awaiting action</div></button>
     </div>
     <div class="grid-3" style="margin-bottom:14px">
@@ -375,15 +375,15 @@ const admCols = () => [
 ];
 const progCourse = p => p.name.split(' ')[0];                          // B.Tech · M.Tech · MBA
 const progBranch = p => p.name.slice(progCourse(p).length).trim() || p.dept; // Computer Science …
-PAGES.admissions = () => {
-  const yr = students.filter(inAy);
-  const counts = st => yr.filter(s => s.status === st).length;
-  const chips = fchip('all', 'All', yr.length, true) + STATUSES.map(s => fchip(s, s, counts(s))).join('') + fchip('overdue', 'Overdue', yr.filter(s => s.overdue).length);
-  const html = `<div class="fill">${pageHead('Admissions', 'One row per student. Same columns as your old admission register — now with live fees, seats and audit.',
-    `<button class="btn primary act-write" data-action="new-admission">${ic('plus', 14)}Book seat</button>`)}
-    <div class="content">${sheet({ cols: admCols(), rows: yr, onOpen: r => openStudent(r.id), chips,
-      lead: `<select class="input tsel" id="crsFilter" aria-label="Course"><option value="">All courses</option>${[...new Set(PROGS.map(progCourse))].map(c => `<option>${esc(c)}</option>`).join('')}</select><select class="input tsel" id="brFilter" aria-label="Branch"></select>`,
-      tabs: admTabs('register') })}</div></div>`;
+/* Admissions tabs share the same filters: Status (multi-select) · Course · Branch */
+function admFilterUI(rows) {
+  const counts = st => rows.filter(s => s.status === st).length;
+  return {
+    chips: fchip('all', 'All', rows.length, true) + STATUSES.map(s => fchip(s, s, counts(s))).join('') + fchip('overdue', 'Overdue', rows.filter(s => s.overdue).length),
+    lead: `<select class="input tsel" id="crsFilter" aria-label="Course"><option value="">All courses</option>${[...new Set(PROGS.map(progCourse))].map(c => `<option>${esc(c)}</option>`).join('')}</select><select class="input tsel" id="brFilter" aria-label="Branch"></select>`,
+  };
+}
+function admFilterBind() {
   let status = [], crs = '', prog = '';
   const courseOf = code => { const p = PROGS.find(x => x.code === code); return p ? progCourse(p) : ''; };
   const apply = () => { S.filter = r => (!status.length || status.some(id => id === 'overdue' ? r.overdue > 0 : r.status === id)) && (!crs || courseOf(r.prog) === crs) && (!prog || r.prog === prog); S.page = 0; renderSheet(); };
@@ -394,21 +394,31 @@ PAGES.admissions = () => {
   };
   chipHandler = ids => { status = ids; apply(); };
   setTimeout(() => {
+    if (!$('#crsFilter')) return;
     fillBranches();
     $('#crsFilter').onchange = e => { crs = e.target.value; fillBranches(); apply(); };
     $('#brFilter').onchange = e => { prog = e.target.value; apply(); };
     if (state.preset) { const p = state.preset; state.preset = null; if (p.status) setChips([p.status]); if (p.f) setChips([p.f]); if (p.prog) { crs = courseOf(p.prog); prog = p.prog; $('#crsFilter').value = crs; fillBranches(); apply(); } }
   });
+}
+PAGES.admissions = () => {
+  const yr = students.filter(inAy), F = admFilterUI(yr);
+  const html = `<div class="fill">${pageHead('Admissions', 'One row per student. Same columns as your old admission register — now with live fees, seats and audit.',
+    `<button class="btn primary act-write" data-action="new-admission">${ic('plus', 14)}Book seat</button>`)}
+    <div class="content">${sheet({ cols: admCols(), rows: yr, onOpen: r => openStudent(r.id), chips: F.chips, lead: F.lead, tabs: admTabs('register') })}</div></div>`;
+  admFilterBind();
   return html;
 };
 PAGES['admissions/docs'] = () => {
-  const rows = students.filter(s => s.adm && inAy(s)).map(s => ({ ...s, ...Object.fromEntries(Object.entries(s.docs).map(([k, v]) => ['d_' + k, v])) }));
-  return `<div class="fill">${pageHead('Admissions', 'Document checklist — upload and verify certificates per student.', `<button class="btn primary act-write">${ic('upload', 14)}Bulk upload</button>`)}
+  const rows = students.filter(s => s.adm && inAy(s)).map(s => ({ ...s, ...Object.fromEntries(Object.entries(s.docs).map(([k, v]) => ['d_' + k, v])) })), F = admFilterUI(rows);
+  const html = `<div class="fill">${pageHead('Admissions', 'Document checklist — upload and verify certificates per student.', `<button class="btn primary act-write">${ic('upload', 14)}Bulk upload</button>`)}
   <div class="content">${sheet({ cols: [
     { key: 'adm', label: 'Admission no.', w: 128, render: r => `<span class="lnk" data-open>${r.adm}</span>` }, { key: 'name', label: 'Student name', w: 170 }, { key: 'progName', label: 'Programme', w: 190 },
     ...Object.keys(students[0].docs).map(d => ({ key: 'd_' + d, label: d, w: 150, render: r => chip(r['d_' + d]) })),
     { key: 'status', label: 'Admission status', w: 140, render: r => chip(r.status) }], rows, onOpen: r => openStudent(r.id, 'docs'),
-    tabs: admTabs('docs') })}</div></div>`;
+    chips: F.chips, lead: F.lead, tabs: admTabs('docs') })}</div></div>`;
+  admFilterBind();
+  return html;
 };
 
 /* ---------- Student drawer ---------- */
@@ -934,25 +944,30 @@ function showPolicy(sid) {
 }
 
 /* ---------- Due payments (Finance) ---------- */
-PAGES['payments/dues'] = PAGES.dues = () => {
-  const rows = students.filter(s => OCCUPY.includes(s.status) && s.due > 0 && inAy(s)).map(s => {
-    const n = nextDue(s), days = Math.round((Date.parse(n.due) - Date.parse(TODAY)) / 864e5);
+PAGES['payments/students'] = PAGES['payments/dues'] = PAGES.dues = () => {
+  const rows = students.filter(s => OCCUPY.includes(s.status) && inAy(s)).map(s => {
+    const n = s.due > 0 ? nextDue(s) : null;
+    if (!n) return { ...s, inst: '—', ndue: '', nbal: 0, days: 9999, dst: 'Fully paid', when: '—' };
+    const days = Math.round((Date.parse(n.due) - Date.parse(TODAY)) / 864e5);
     const dst = s.status !== 'Confirmed' ? 'Awaiting first payment' : days < 0 ? 'Overdue' : days <= 7 ? 'Due this week' : 'Upcoming';
     return { ...s, inst: n.n, ndue: n.due, nbal: dst === 'Overdue' ? s.overdue : n.bal, days, dst, when: s.status !== 'Confirmed' ? 'At admission' : days < 0 ? `${-days} days late` : days === 0 ? 'Today' : `in ${days} days` };
-  }).sort((a, b) => a.ndue.localeCompare(b.ndue));
-  const sum = st => rows.filter(r => r.dst === st).reduce((t, r) => t + r.nbal, 0), cnt = st => rows.filter(r => r.dst === st).length;
-  const ST = ['Overdue', 'Due this week', 'Upcoming', 'Awaiting first payment'];
-  const html = `<div class="fill">${pageHead('Payments', '', `<button class="btn act-write" data-action="remind" data-n="${cnt('Overdue') + cnt('Due this week')}">${ic('send', 14)}Send reminders</button><button class="btn primary act-write" data-action="record-payment">${ic('plus', 14)}Collect payment</button>`)}
-  <div class="content"><div class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
-    ${[['Overdue', 'clock', 'color:var(--bad)'], ['Due this week', 'calendar', ''], ['Upcoming', 'calendar-plus', ''], ['Awaiting first payment', 'user', '']].map(([st, i, c]) => `<button class="kpi" data-fchip="${st}"><div class="k-l">${ic(i)}${st}</div><div class="k-v" style="${c}">${inrS(sum(st))}</div><div class="k-s">${cnt(st)} students</div></button>`).join('')}
+  }).sort((a, b) => (a.ndue || '9999').localeCompare(b.ndue || '9999') || a.name.localeCompare(b.name));
+  const sum = st => rows.filter(r => r.dst === st).reduce((t, r) => t + (st === 'Fully paid' ? r.paid : r.nbal), 0), cnt = st => rows.filter(r => r.dst === st).length;
+  const ST = ['Overdue', 'Due this week', 'Upcoming', 'Awaiting first payment', 'Fully paid'];
+  const html = `<div class="fill">${pageHead('Payments', '', `<button class="btn act-write" data-action="remind" data-n="${cnt('Overdue') + cnt('Due this week')}">${ic('send', 14)}Send reminders</button><button class="btn primary act-write" data-action="record-payment">${ic('plus', 14)}Record payment</button>`)}
+  <div class="content"><div class="kpis" style="grid-template-columns:repeat(5,minmax(0,1fr))">
+    ${[['Overdue', 'clock', 'color:var(--bad)'], ['Due this week', 'calendar', ''], ['Upcoming', 'calendar-plus', ''], ['Awaiting first payment', 'user', ''], ['Fully paid', 'check', 'color:var(--ok)']].map(([st, i, c]) => `<button class="kpi" data-fchip="${st}"><div class="k-l">${ic(i)}${st}</div><div class="k-v" style="${c}">${inrS(sum(st))}</div><div class="k-s">${cnt(st)} students${st === 'Fully paid' ? ' · collected' : ''}</div></button>`).join('')}
   </div>
   ${sheet({ cols: [
-    { key: 'adm', label: 'Admission no.', w: 136, render: r => `<span class="lnk">${r.adm}</span>` }, { key: 'name', label: 'Student', w: 170 }, { key: 'guardian', label: 'Booked by', w: 160 }, { key: 'gm', label: 'Mobile', w: 120, render: r => r.gmobile || r.mobile },
-    { key: 'inst', label: 'Instalment', w: 200 }, { key: 'ndue', label: 'Due date', w: 110, fmt: fd }, { key: 'days', label: 'When', w: 110, render: r => `<span style="${r.dst === 'Overdue' ? 'color:var(--bad);font-weight:400' : ''}">${r.when}</span>` },
-    { key: 'nbal', label: 'Amount due', w: 116, align: 'r', fmt: inr, sum: 'inr' }, { key: 'due', label: 'Total balance', w: 116, align: 'r', fmt: inr, sum: 'inr' }, { key: 'dst', label: 'Status', w: 170, render: r => chip(r.dst) },
-    { key: 'act', label: '', w: 100, render: r => `<button class="btn sm act-write">Collect</button>` }], rows, onOpen: r => recordPayment(r.id),
-    chips: fchip('all', 'All', rows.length, true) + ST.map(s => fchip(s, s, cnt(s))).join(''), tabs: payTabs('dues') })}</div></div>`;
+    { key: 'adm', label: 'Admission no.', w: 136, render: r => `<span class="lnk" data-open>${r.adm}</span>` }, { key: 'name', label: 'Student', w: 170 }, { key: 'progName', label: 'Programme', w: 190 }, { key: 'quota', label: 'Quota', w: 110 },
+    { key: 'net', label: 'Assessed', w: 108, align: 'r', fmt: inr, sum: 'inr' }, { key: 'paid', label: 'Paid', w: 108, align: 'r', fmt: v => v ? inr(v) : '—', sum: 'inr' }, { key: 'due', label: 'Balance', w: 108, align: 'r', fmt: v => v ? inr(v) : '—', sum: 'inr' },
+    { key: 'inst', label: 'Next instalment', w: 190 }, { key: 'ndue', label: 'Due date', w: 110, fmt: v => v ? fd(v) : '—' }, { key: 'days', label: 'When', w: 110, render: r => `<span style="${r.dst === 'Overdue' ? 'color:var(--bad)' : ''}">${r.when}</span>` },
+    { key: 'nbal', label: 'Amount due', w: 116, align: 'r', fmt: v => v ? inr(v) : '—', sum: 'inr' }, { key: 'dst', label: 'Fee status', w: 170, render: r => chip(r.dst) },
+    { key: 'gm', label: 'Guardian mobile', w: 130, render: r => r.gmobile || r.mobile },
+    { key: 'act', label: '', w: 100, render: r => r.due > 0 ? `<button class="btn sm act-write" data-action="record-payment" data-sid="${r.id}">Collect</button>` : '' }], rows, onOpen: r => openStudent(r.id, 'fees'),
+    chips: fchip('all', 'All', rows.length, true) + ST.map(s => fchip(s, s, cnt(s))).join(''), chipLabel: 'Fee status', tabs: payTabs('students') })}</div></div>`;
   chipHandler = ids => { S.filter = ids.length ? r => ids.includes(r.dst) : null; renderSheet(); };
+  setTimeout(() => { if (state.preset && state.preset.f) { const f = state.preset.f; state.preset = null; setChips([f]); } });
   return html;
 };
 
@@ -1012,7 +1027,7 @@ function receiptPaper(p) {
     <div style="display:flex;justify-content:space-between;margin-bottom:14px"><div><div style="font-size:14px;color:var(--navy-800)">FEE RECEIPT</div><div class="faint">${p.rcpt}</div></div><div style="text-align:right"><div class="faint">Date</div>${fd(p.date)}</div></div>
     <div class="kv" style="margin-bottom:12px"><div><span>Received from</span>${esc(s.guardian)}</div><div><span>Student</span>${esc(s.name)}</div><div><span>Admission no.</span>${s.adm}</div><div><span>Programme</span>${s.progName} · ${s.quota}</div><div><span>Mode</span>${p.mode}</div><div><span>Reference</span>${esc(p.ref)}</div></div>
     <table class="simple"><thead><tr><th>Allocated to</th><th class="r">Amount</th></tr></thead><tbody><tr><td>${p.alloc || 'Fee instalment as per payment schedule'}</td><td class="r">${inr(p.amt)}</td></tr></tbody><tfoot><tr><td>Total received</td><td class="r">${inr(p.amt)}</td></tr></tfoot></table>
-    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:28px"><div class="faint">Balance: ${inr(s.due)}${s.nextDue ? ` · next due ${fd(s.nextDue)}` : ''}<br>Refund policy ${s.policy.ver} accepted by ${esc(s.guardian)}.<br>Computer-generated receipt. Verify at thejus.eduadmit.app/v</div><div style="text-align:center"><div style="font-family:cursive;color:var(--blue-600);font-size:16px">${p.cashier.split(' ')[0]}</div><div class="faint" style="border-top:1px solid var(--line-2);padding-top:3px">Cashier</div></div></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:28px"><div class="faint">Balance: ${inr(s.due)}${s.nextDue ? ` · next due ${fd(s.nextDue)}` : ''}<br>Refund policy ${s.policy.ver} accepted by ${esc(s.guardian)}.<br>Computer-generated receipt. Verify at thejus.edu.in/verify</div><div style="text-align:center"><div style="font-family:cursive;color:var(--blue-600);font-size:16px">${p.cashier.split(' ')[0]}</div><div class="faint" style="border-top:1px solid var(--line-2);padding-top:3px">Cashier</div></div></div>
   </div>`;
 }
 function showReceipt(pid) {
@@ -1163,7 +1178,7 @@ function bulkFee() {
 }
 
 /* ---------- Payments ---------- */
-const PAY_TABS = [['daybook', 'Day book'], ['dues', 'Due payments'], ['refunds', 'Refunds'], ['counter', 'Cash counter']];
+const PAY_TABS = [['daybook', 'Recent payments'], ['students', 'Students'], ['refunds', 'Refunds']];
 /* academic year: a record belongs to its student's intake year */
 const AYS = ['2026–27', '2025–26', '2024–25'];
 const ayOf = sid => sById(sid)?.ay || '2026–27';
@@ -1171,7 +1186,7 @@ const inAy = r => ayOf(r.sid ?? r.id) === state.ay;
 const ayPick = () => `<label class="ay-pick">Academic year<select class="input" id="aySel">${AYS.map(y => `<option ${y === state.ay ? 'selected' : ''}>${y}</option>`).join('')}</select></label>`;
 const admTabs = cur => sheetTabs('admissions', [['register', 'Register ' + state.ay], ['docs', 'Document checklist']], cur).replace(/<\/div>$/, ayPick() + '</div>');
 const payTabs = (cur, withAy = true) => {
-  const t = sheetTabs('payments', PAY_TABS.filter(([k]) => k === 'dues' ? allowed('dues') : k === 'refunds' ? allowed('refunds') : true), cur);
+  const t = sheetTabs('payments', PAY_TABS.filter(([k]) => k === 'students' ? allowed('dues') : k === 'refunds' ? allowed('refunds') : true), cur);
   return withAy ? t.replace(/<\/div>$/, ayPick() + '</div>') : t;
 };
 const payCols = () => [
@@ -1182,7 +1197,7 @@ const payCols = () => [
 const payRows = () => payments.filter(inAy).map(p => { const s = sById(p.sid); return { ...p, sname: s.name, sadm: s.adm, _strike: p.status === 'Reversed' }; }).sort((a, b) => b.date.localeCompare(a.date) || b.rcpt.localeCompare(a.rcpt));
 PAGES.payments = PAGES['payments/daybook'] = () => {
   const modes = PAY_MODES, pr = payRows();
-  const html = `<div class="fill">${pageHead('Payments', 'Every payment posts to the ledger, issues a numbered receipt and notifies the guardian in one step.', `<button class="btn primary act-write" data-action="record-payment">${ic('plus', 14)}Record payment</button>`)}
+  const html = `<div class="fill">${pageHead('Payments', 'Recent payments, newest first. Every payment posts to the ledger, issues a numbered receipt and notifies the guardian.', `<button class="btn primary act-write" data-action="record-payment">${ic('plus', 14)}Record payment</button>`)}
   <div class="content">${sheet({ cols: payCols(), rows: pr, onOpen: r => showReceipt(r.id), chips: fchip('all', 'All', pr.length, true) + modes.map(m => fchip(m, m, pr.filter(p => p.mode === m).length)).join(''), chipLabel: 'Mode', tabs: payTabs('daybook') })}</div></div>`;
   chipHandler = ids => { S.filter = ids.length ? r => ids.includes(r.mode) : null; renderSheet(); };
   return html;
@@ -1263,8 +1278,100 @@ function docEditor(name) {
 }
 
 /* ---------- Notifications ---------- */
-const NOTE_TABS = [['events', 'Events & channels'], ['log', 'Delivery log'], ['templates', 'Templates']];
-PAGES.notifications = PAGES['notifications/events'] = () => {
+const NOTE_TABS = [['campaigns', 'Campaigns'], ['events', 'Events & channels'], ['log', 'Delivery log'], ['templates', 'Templates']];
+
+/* ---------- Messages → Campaigns: every campaign run ---------- */
+const CAMP_AUD = {
+  overdue: ['Guardians with overdue fees', () => students.filter(s => s.overdue > 0)],
+  due7: ['Instalment due in the next 7 days', () => students.filter(s => OCCUPY.includes(s.status) && s.nextDue && s.nextDue >= TODAY && s.nextDue <= addDays(TODAY, 7))],
+  docs: ['Documents still pending', () => students.filter(s => OCCUPY.includes(s.status) && Object.values(s.docs).includes('Pending'))],
+  details: ['Seat booked · details pending', () => students.filter(s => s.status === 'Seat booked')],
+  all: ['All active admissions 2026–27', () => students.filter(s => OCCUPY.includes(s.status))],
+};
+const CAMP_TPL = { 'Fee reminder': 'FEE_DUE_EN + ML', 'Overdue reminder': 'FEE_OVERDUE_EN + ML', 'Document reminder': 'DOC_PENDING_EN', 'Announcement': 'ANNOUNCE_EN + ML', 'Fee slip': 'FEE_SLIP_EN' };
+const CAMPAIGNS = [
+  ['Instalment 2 due · 7-day reminder', 'Fee reminder', 'Automatic', ['SMS', 'WhatsApp'], 'due7', 64, '2026-11-03 09:00', 'System', 'Completed', 2],
+  ['Overdue fees · weekly reminder', 'Overdue reminder', 'Automatic', ['SMS', 'WhatsApp', 'Email'], 'overdue', 41, '2026-11-02 10:00', 'System', 'Completed', 5],
+  ['Orientation day · 10 Nov', 'Announcement', 'Manual', ['SMS', 'WhatsApp'], 'all', 168, '2026-11-01 16:30', 'Anita Joseph', 'Completed', 3],
+  ['Pending certificates · TC and community', 'Document reminder', 'Manual', ['WhatsApp'], 'docs', 52, '2026-10-29 11:15', 'Bindu Thomas', 'Completed', 1],
+  ['Overdue fees · weekly reminder', 'Overdue reminder', 'Automatic', ['SMS', 'WhatsApp', 'Email'], 'overdue', 38, '2026-10-26 10:00', 'System', 'Completed', 4],
+  ['Complete your admission details', 'Document reminder', 'Manual', ['SMS'], 'details', 23, '2026-10-22 12:40', 'Reshma P.', 'Completed', 0],
+  ['Fee slip · Year 1 schedule', 'Fee slip', 'Manual', ['WhatsApp', 'Email'], 'all', 161, '2026-10-15 15:05', 'George Varghese', 'Partly failed', 19],
+  ['Instalment 2 due · 7-day reminder', 'Fee reminder', 'Automatic', ['SMS', 'WhatsApp'], 'due7', 47, '2026-10-06 09:00', 'System', 'Completed', 1],
+  ['Diwali holiday · office closed', 'Announcement', 'Manual', ['SMS'], 'all', 166, '2026-10-30 18:20', 'Anita Joseph', 'Completed', 2],
+  ['Hostel allotment list published', 'Announcement', 'Manual', ['WhatsApp', 'Email'], 'all', 150, '2026-09-18 14:00', 'Anita Joseph', 'Completed', 6],
+  ['Overdue fees · weekly reminder', 'Overdue reminder', 'Automatic', ['SMS', 'WhatsApp', 'Email'], 'overdue', 41, '2026-11-09 10:00', 'System', 'Scheduled', 0],
+  ['Semester exam fee notice', 'Announcement', 'Manual', ['SMS', 'Email'], 'all', 168, '—', 'George Varghese', 'Draft', 0],
+].map(([name, type, trigger, ch, aud, n, at, by, status, failed], i) => ({ id: 'c' + i, name, type, trigger, ch, aud, n, at, by, status, failed, tpl: CAMP_TPL[type] }));
+const campSent = c => c.status === 'Draft' || c.status === 'Scheduled' ? 0 : c.n * c.ch.length;
+const campDel = c => { const sent = campSent(c); return sent ? Math.round((sent - c.failed) / sent * 1000) / 10 : null; };
+PAGES.notifications = PAGES['notifications/campaigns'] = () => {
+  const done = CAMPAIGNS.filter(c => campSent(c)), month = done.filter(c => c.at.startsWith('2026-11'));
+  const sent = done.reduce((t, c) => t + campSent(c), 0), failed = done.reduce((t, c) => t + c.failed, 0);
+  const rows = [...CAMPAIGNS].sort((a, b) => (b.at === '—' ? '9' : b.at).localeCompare(a.at === '—' ? '9' : a.at));
+  const st = ['Completed', 'Running', 'Scheduled', 'Partly failed', 'Draft'];
+  const html = `<div class="fill">${pageHead('Messages', '', `<button class="btn primary act-write" data-action="new-campaign">${ic('plus', 14)}New campaign</button>`)}
+  <div class="content"><div class="kpis camp-kpis">
+    <div class="kpi"><div class="k-l">Campaigns this month</div><div class="k-v">${month.length}</div><div class="k-s">${CAMPAIGNS.filter(c => c.status === 'Scheduled').length} scheduled · ${CAMPAIGNS.filter(c => c.status === 'Draft').length} draft</div></div>
+    <div class="kpi"><div class="k-l">Messages sent</div><div class="k-v">${sent.toLocaleString('en-IN')}</div><div class="k-s">across ${done.length} runs</div></div>
+    <div class="kpi"><div class="k-l">Delivered</div><div class="k-v" style="color:var(--ok)">${sent ? (Math.round((sent - failed) / sent * 1000) / 10) : 0}%</div><div class="k-s">SMS, WhatsApp and email</div></div>
+    <div class="kpi"><div class="k-l">Failed</div><div class="k-v">${failed}</div><div class="k-s">retried automatically once</div></div>
+  </div>
+  ${sheet({ cols: [
+    { key: 'at', label: 'Run date', w: 132, render: r => r.at === '—' ? '<span class="faint">Not sent</span>' : fd(r.at.slice(0, 10)) + ' <span class="faint">' + r.at.slice(11) + '</span>' },
+    { key: 'name', label: 'Campaign', w: 250, render: r => `<span class="lnk" data-open>${esc(r.name)}</span>` },
+    { key: 'type', label: 'Type', w: 140 },
+    { key: 'trigger', label: 'Trigger', w: 100 },
+    { key: 'ch', label: 'Channels', w: 190, render: r => r.ch.map(c => `<span class="tag">${c}</span>`).join(' '), text: r => r.ch.join(' ') },
+    { key: 'aud', label: 'Audience', w: 230, render: r => esc(CAMP_AUD[r.aud][0]), text: r => CAMP_AUD[r.aud][0] },
+    { key: 'n', label: 'Recipients', w: 96, align: 'r', sum: 'num' },
+    { key: 'sent', label: 'Messages', w: 96, align: 'r', render: r => campSent(r) ? campSent(r).toLocaleString('en-IN') : '<span class="faint">—</span>' },
+    { key: 'del', label: 'Delivered', w: 96, align: 'r', render: r => campDel(r) == null ? '<span class="faint">—</span>' : `<span style="color:${campDel(r) < 95 ? 'var(--warn)' : 'var(--ok)'}">${campDel(r)}%</span>` },
+    { key: 'failed', label: 'Failed', w: 76, align: 'r', render: r => r.failed ? `<span class="neg">${r.failed}</span>` : '<span class="faint">0</span>' },
+    { key: 'status', label: 'Status', w: 120, render: r => chip(r.status) },
+    { key: 'by', label: 'Run by', w: 140 }],
+    rows, onOpen: r => openCampaign(r.id),
+    chips: fchip('all', 'All', rows.length, true) + st.map(x => fchip(x, x, rows.filter(c => c.status === x).length)).join(''),
+    tabs: sheetTabs('notifications', NOTE_TABS, 'campaigns') })}</div></div>`;
+  chipHandler = ids => { S.filter = ids.length ? r => ids.includes(r.status) : null; renderSheet(); };
+  return html;
+};
+function openCampaign(id) {
+  const c = CAMPAIGNS.find(x => x.id === id), people = CAMP_AUD[c.aud][1]().slice(0, 8), sent = campSent(c);
+  const per = c.ch.map((ch, i) => { const f = Math.round(c.failed * (i === 0 ? .6 : .4 / Math.max(1, c.ch.length - 1))); return [ch, sent ? c.n : 0, sent ? c.n - f : 0, sent ? f : 0]; });
+  openModal(`${mHead(esc(c.name) + ' ' + chip(c.status))}<div class="m-body">
+    <div class="kv"><div><span>Type</span>${c.type}</div><div><span>Trigger</span>${c.trigger}${c.trigger === 'Automatic' ? ' · from Events & channels' : ''}</div><div><span>Audience</span>${esc(CAMP_AUD[c.aud][0])}</div><div><span>Template</span>${c.tpl}</div><div><span>${c.status === 'Scheduled' ? 'Scheduled for' : 'Run'}</span>${c.at === '—' ? 'Not sent' : fd(c.at.slice(0, 10)) + ' · ' + c.at.slice(11)}</div><div><span>Run by</span>${esc(c.by)}</div></div>
+    <div class="section-t">Delivery by channel</div>
+    <table class="simple"><thead><tr><th>Channel</th><th class="r">Sent</th><th class="r">Delivered</th><th class="r">Failed</th></tr></thead><tbody>${per.map(([ch, a, d, f]) => `<tr><td>${ch}</td><td class="r">${a || '—'}</td><td class="r">${a ? d : '—'}</td><td class="r">${f ? `<span class="neg">${f}</span>` : (a ? 0 : '—')}</td></tr>`).join('')}</tbody>
+    <tfoot><tr><td>Total</td><td class="r">${sent || '—'}</td><td class="r">${sent ? sent - c.failed : '—'}</td><td class="r">${sent ? c.failed : '—'}</td></tr></tfoot></table>
+    <div class="section-t">Recipients · first ${people.length} of ${c.n}</div>
+    ${people.map(s => `<div class="list-row" style="cursor:pointer" data-student="${s.id}"><span class="grow"><span class="t">${esc(s.guardian)}</span> <span class="faint">· for ${esc(s.name)} · ${s.adm}</span></span><span class="faint">+91 ${s.gmobile || s.mobile}</span></div>`).join('') || '<div class="empty">No one matches this audience today.</div>'}
+  </div>
+  <div class="m-foot">${c.failed && sent ? `<button class="btn" data-close-modal data-toast="Retrying ${c.failed} failed messages">${ic('replay', 14)}Retry failed</button>` : ''}<button class="btn" data-close-modal data-toast="Campaign copied as a draft">${ic('copy', 14)}Duplicate</button><button class="btn primary act-write" data-close-modal data-toast="${esc(c.name)} queued · ${c.n} recipients">${ic('send', 14)}Run again</button></div>`, true);
+}
+function newCampaignModal() {
+  openModal(`${mHead('New campaign')}<div class="m-body"><form id="cmpForm" autocomplete="off">
+    <div class="form-grid" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+      <div class="field" style="grid-column:1/-1"><label>Campaign name <span class="req">*</span></label><input class="input" id="cmpName" placeholder="e.g. Orientation day reminder"></div>
+      <div class="field"><label>Type</label><select class="input" id="cmpType">${Object.keys(CAMP_TPL).map(t => `<option>${t}</option>`).join('')}</select></div>
+      <div class="field"><label>Audience</label><select class="input" id="cmpAud">${Object.entries(CAMP_AUD).map(([k, [l, f]]) => `<option value="${k}">${l} · ${f().length}</option>`).join('')}</select></div>
+      <div class="field" style="grid-column:1/-1"><label>Channels <span class="req">*</span></label><div style="display:flex;gap:16px">${['SMS', 'WhatsApp', 'Email'].map((c, i) => `<label class="doc-check"><input type="checkbox" name="cmpCh" value="${c}" ${i < 2 ? 'checked' : ''}><span>${c}</span></label>`).join('')}</div></div>
+      <div class="field"><label>When</label><select class="input" id="cmpWhen"><option value="now">Send now</option><option value="later">Schedule</option></select></div>
+      <div class="field hidden" id="cmpAtF"><label>Date and time</label><input class="input" id="cmpAt" type="datetime-local" value="${addDays(TODAY, 1)}T09:00"></div>
+    </div><div id="cmpErr"></div></form></div>
+    <div class="m-foot"><button class="btn" data-close-modal>Cancel</button><button class="btn" id="cmpDraft">Save draft</button><button class="btn primary" id="cmpGo">${ic('send', 14)}Send</button></div>`);
+  $('#cmpWhen').onchange = e => { $('#cmpAtF').classList.toggle('hidden', e.target.value !== 'later'); $('#cmpGo').innerHTML = `${ic('send', 14)}${e.target.value === 'later' ? 'Schedule' : 'Send'}`; };
+  const save = draft => {
+    const name = $('#cmpName').value.trim(), ch = $$('[name="cmpCh"]:checked').map(x => x.value), aud = $('#cmpAud').value, type = $('#cmpType').value, later = $('#cmpWhen').value === 'later';
+    if (!name || !ch.length) { $('#cmpErr').innerHTML = `<div class="notice bad" style="margin-top:12px">${ic('alert', 14)}<div>Required: ${[!name && 'campaign name', !ch.length && 'at least one channel'].filter(Boolean).join(', ')}.</div></div>`; return; }
+    const n = CAMP_AUD[aud][1]().length, at = draft ? '—' : later ? $('#cmpAt').value.replace('T', ' ') : TODAY + ' ' + new Date().toTimeString().slice(0, 5);
+    CAMPAIGNS.unshift({ id: 'c' + Date.now(), name, type, trigger: 'Manual', ch, aud, n, at, by: 'Anita Joseph', status: draft ? 'Draft' : later ? 'Scheduled' : 'Running', failed: 0, tpl: CAMP_TPL[type] });
+    closeModal(); location.hash === '#notifications/campaigns' ? route() : (location.hash = 'notifications/campaigns');
+    toast(draft ? 'Campaign saved as draft' : later ? `Scheduled · ${n} recipients` : `Sending to ${n} recipients on ${ch.join(', ')}`);
+  };
+  $('#cmpGo').onclick = () => save(false); $('#cmpDraft').onclick = () => save(true);
+}
+PAGES['notifications/events'] = () => {
   const ev = [['Seat booked', 1, 1, 1], ['Payment received', 1, 1, 1], ['Instalment due (3 days before)', 1, 1, 0], ['Instalment overdue', 1, 1, 1], ['Refund status changed', 1, 0, 1], ['Document ready', 0, 1, 1], ['Admission cancelled', 1, 0, 1]];
   return `<div class="fill">${pageHead('Messages', 'Pick a channel for each event. Templates are per language and use your own sender IDs and DLT template IDs.', `<button class="btn">${ic('clock', 14)}Quiet hours 21:00–08:00</button>`)}
   <div class="content" style="overflow:auto"><div class="grid-3"><div class="card span-2"><table class="perm"><thead><tr><th>Event</th><th>SMS</th><th>WhatsApp <span class="p1">P1</span></th><th>Email</th><th>Languages</th><th>Reminder</th></tr></thead><tbody>
@@ -1300,8 +1407,35 @@ const REPORTS = {
   'Fees & collections': ['Fee collection register', 'Mode-wise collection summary', 'Assessed vs collected', 'Outstanding dues by student', 'Overdue instalments ageing', 'Concessions & scholarships granted'],
   'Payments & refunds': ['Day book', 'Receipt cancellation & reversal register', 'Cashier-wise collection', 'Refund register', 'Refunds pending approval', 'Caution deposit liability'],
 };
-PAGES.reports = () => `<div>${pageHead('Reports', 'The 18 standard reports, filtered to your role. Large exports run in the background and you get a download link.')}
-  <div class="content"><div class="rep-h">Seat occupancy</div>${seatOccupancy()}<div class="rep-h">Standard reports</div><div class="grid-3">${Object.entries(REPORTS).map(([g, list]) => `<div class="card"><div class="card-h"><h3>${g}</h3><span class="muted">${list.length}</span></div><div class="card-b">${list.map(r => `<div class="list-row" style="cursor:pointer" data-report="${r}"><span class="dotico">${ic('sheet', 14)}</span><span class="grow t">${r}</span><button class="icon-btn" title="Export">${ic('download', 14)}</button></div>`).join('')}</div></div>`).join('')}</div>
+/* ---------- Reports & analytics: two sections ---------- */
+const REP_TABS = [['analytics', 'Analytics'], ['list', 'Reports']];
+const repTabs = cur => `<div class="sheet-tabs sv-tabs">${REP_TABS.map(([k, l]) => `<a class="sheet-tab ${k === cur ? 'on' : ''}" href="#reports/${k}">${l}</a>`).join('')}</div>`;
+PAGES.reports = PAGES['reports/analytics'] = () => {
+  const yr = students.filter(inAy), occ = yr.filter(s => OCCUPY.includes(s.status));
+  const progs = PROGS.map(p => { const a = occ.filter(s => s.prog === p.code); const as = a.reduce((t, s) => t + s.net, 0), pd = a.reduce((t, s) => t + s.paid, 0); return { p, n: a.length, as, pd, pct: as ? Math.round(pd / as * 100) : 0 }; }).filter(r => r.n);
+  const totA = progs.reduce((t, r) => t + r.as, 0), totP = progs.reduce((t, r) => t + r.pd, 0);
+  const byStatus = STATUSES.map(st => [st, yr.filter(s => s.status === st).length]), maxS = Math.max(1, ...byStatus.map(x => x[1]));
+  const byQuota = QUOTAS.map(q => [q, occ.filter(s => s.quota === q).length]), maxQ = Math.max(1, ...byQuota.map(x => x[1]));
+  const bar = (v, max, color) => `<span class="track"><i style="width:${v / max * 100}%;background:${color}"></i></span>`;
+  return `<div>${pageHead('Reports & analytics', '')}
+  <div class="content">${repTabs('analytics')}
+    <div class="rep-h">Seat occupancy · ${state.ay}</div>${seatOccupancy()}
+    <div class="grid-2 rep-grid">
+      <div class="card"><div class="card-h"><h3>Fee collection by programme</h3><span class="muted num">${inrS(totP)} of ${inrS(totA)} · ${totA ? Math.round(totP / totA * 100) : 0}%</span></div><div class="card-b">
+        ${progs.map(r => `<div class="hbar"><span class="lbl">${esc(r.p.name)}</span>${bar(r.pd, r.as || 1, '#0A3C6E')}<span class="val">${r.pct}% <span class="faint">· ${inrS(r.pd)}</span></span></div>`).join('')}
+      </div></div>
+      <div class="card"><div class="card-h"><h3>Admissions by status</h3><span class="muted num">${yr.length} admissions</span></div><div class="card-b">
+        ${byStatus.map(([st, n]) => `<div class="hbar" data-go="admissions" data-preset='{"status":"${st}"}' style="cursor:pointer"><span class="lbl">${chip(st)}</span>${bar(n, maxS, st === 'Cancelled' || st === 'Withdrawn' ? '#D4D4D4' : '#1783C1')}<span class="val">${n} <span class="faint">· ${yr.length ? Math.round(n / yr.length * 100) : 0}%</span></span></div>`).join('')}
+        <div class="rep-sub">Seats filled by quota</div>
+        ${byQuota.map(([q, n]) => `<div class="hbar"><span class="lbl">${q}</span>${bar(n, maxQ, '#0A3C6E')}<span class="val">${n}</span></div>`).join('')}
+      </div></div>
+    </div>
+  </div></div>`;
+};
+PAGES['reports/list'] = () => `<div>${pageHead('Reports & analytics', '')}
+  <div class="content">${repTabs('list')}
+  <p class="muted rep-note">The standard reports, filtered to your role. Large exports run in the background and you get a download link.</p>
+  <div class="grid-3">${Object.entries(REPORTS).map(([g, list]) => `<div class="card"><div class="card-h"><h3>${g}</h3><span class="muted">${list.length}</span></div><div class="card-b">${list.map(r => `<div class="list-row" style="cursor:pointer" data-report="${r}"><span class="dotico">${ic('sheet', 14)}</span><span class="grow t">${r}</span><button class="icon-btn" title="Export">${ic('download', 14)}</button></div>`).join('')}</div></div>`).join('')}</div>
   <div class="card" style="margin-top:14px"><div class="card-h"><h3>Background exports</h3></div><div class="card-b">
   ${[['Fee collection register · Apr–Oct 2026', 'Excel · 14,882 rows', 'Running'], ['Outstanding dues by student', 'PDF · 196 students', 'Ready'], ['Daily admission register · Oct', 'CSV · 512 rows', 'Ready']].map(([n, m, s]) => `<div class="list-row"><span class="dotico">${ic('download', 14)}</span><div class="grow"><div class="t">${n}</div><div class="s">${m} · requested by Anita Joseph</div></div>${chip(s)}${s === 'Ready' ? '<button class="btn sm">Download</button>' : ''}</div>`).join('')}
   </div></div></div></div>`;
@@ -1316,7 +1450,7 @@ function openReport(name) {
 /* ---------- Audit ---------- */
 PAGES.audit = () => {
   const html = `<div class="fill">${pageHead('Audit log', 'An append-only record of every change, approval, export, login and permission change. Entries can never be edited.')}
-  <div class="content">${sheet({ cols: [{ key: 'at', label: 'Timestamp', w: 140 }, { key: 'user', label: 'User', w: 170 }, { key: 'role', label: 'Role', w: 150 }, { key: 'action', label: 'Action', w: 140, render: r => `<span class="tag">${r.action}</span>` }, { key: 'record', label: 'Record', w: 160 }, { key: 'detail', label: 'Detail', w: 280 }, { key: 'before', label: 'Before', w: 120 }, { key: 'after', label: 'After', w: 130 }, { key: 'ip', label: 'IP', w: 110 }], rows: audit, onOpen: openAudit })}</div></div>`;
+  <div class="content">${sheet({ cols: [{ key: 'at', label: 'Timestamp', w: 140 }, { key: 'user', label: 'User', w: 170 }, { key: 'role', label: 'Role', w: 150 }, { key: 'action', label: 'Action', w: 140, render: r => `<span class="tag">${r.action}</span>` }, { key: 'record', label: 'Record', w: 160 }, { key: 'detail', label: 'Detail', w: 280 }, { key: 'before', label: 'Before', w: 120 }, { key: 'after', label: 'After', w: 130 }, { key: 'ip', label: 'IP', w: 110 }], rows: audit, onOpen: openAudit, search: false })}</div></div>`;
   return html;
 };
 function openAudit(a) {
@@ -1422,7 +1556,7 @@ SETTINGS.numbering = () => `<div class="card"><div class="card-b" style="padding
 SETTINGS.branding = () => `<div class="grid-2"><div class="card"><div class="card-b" style="padding-top:16px">
   <div class="field"><label>Logo</label><div style="display:flex;gap:12px;align-items:center"><span class="logo" style="width:48px;height:48px;font-size:24px;border-radius:12px">T</span><button class="btn sm">${ic('upload', 13)}Replace</button></div></div>
   <div class="field" style="margin-top:14px"><label>Brand colours</label><div style="display:flex;gap:8px">${['#0A3C6E', '#1783C1', '#0A0A0A', '#737373', '#E5E5E5', '#E8F2FA', '#F5F5F5'].map(c => `<span title="${c}" style="width:36px;height:36px;border-radius:9px;background:${c};border:1px solid var(--line)"></span>`).join('')}</div></div>
-  <div class="field" style="margin-top:14px"><label>Subdomain</label><div style="display:flex;align-items:center;gap:6px"><input class="input" value="thejus" style="width:140px"><span class="muted">.eduadmit.app</span></div></div>
+  <div class="field" style="margin-top:14px"><label>Portal address</label><input class="input" value="admissions.thejus.edu.in" style="width:280px"></div>
   <div class="field" style="margin-top:14px"><label>Custom domain (optional)</label><input class="input" placeholder="admissions.thejus.edu.in"></div>
   <div class="field" style="margin-top:14px"><label>Signatures</label><div class="list-row"><span class="grow">Principal · Dr. Suma Rajan</span>${chip('Uploaded')}</div><div class="list-row"><span class="grow">Cashier · Joby Mathew</span>${chip('Uploaded')}</div></div>
   <div class="field" style="margin-top:14px"><label>Receipt footer</label><textarea class="input" rows="2">Fees once paid are not refundable except as per university norms.</textarea></div>
@@ -1432,8 +1566,9 @@ SETTINGS.integrations = () => `<div class="grid-3">${[['SMS provider', 'MSG91 ·
 function route() {
   const h = (location.hash || '#dashboard').slice(1);
   let [page, sub] = h.split('/');
-  if (page === 'dues' || page === 'refunds') { location.replace('#payments/' + page); return; }
-  if (page === 'payments' && (sub === 'dues' || sub === 'refunds') && !allowed(sub)) sub = '';
+  if (page === 'dues' || page === 'refunds') { location.replace('#payments/' + (page === 'dues' ? 'students' : page)); return; }
+  if (page === 'payments' && (sub === 'dues' || sub === 'counter')) { location.replace('#payments/' + (sub === 'dues' ? 'students' : 'daybook')); return; }
+  if (page === 'payments' && ((sub === 'students' && !allowed('dues')) || (sub === 'refunds' && !allowed('refunds')))) sub = '';
   if (page === 'settings' && !allowed('settings') && allowed('admset')) { page = 'admset'; sub = ''; }
   if (!allowed(page)) page = 'dashboard';
   chipHandler = null;
@@ -1514,7 +1649,8 @@ document.addEventListener('click', e => {
   if ((el = q('[data-action]'))) {
     const a = el.dataset.action;
     if (a === 'new-admission') { location.hash = 'admissions/new'; return; }
-    if (a === 'remind') return toast('Reminders sent · SMS + WhatsApp with the fee slip to ' + (el.dataset.n || 'selected') + ' guardians');
+    if (a === 'new-campaign') return newCampaignModal();
+    if (a === 'remind') { CAMPAIGNS.unshift({ id: 'c' + Date.now(), name: 'Fee reminder · from Due payments', type: 'Fee reminder', trigger: 'Manual', ch: ['SMS', 'WhatsApp'], aud: 'overdue', n: +(el.dataset.n || 0), at: TODAY + ' ' + new Date().toTimeString().slice(0, 5), by: 'Anita Joseph', status: 'Running', failed: 0, tpl: CAMP_TPL['Fee reminder'] }); return toast('Reminders sent · SMS + WhatsApp with the fee slip to ' + (el.dataset.n || 'selected') + ' guardians · see Messages → Campaigns'); }
     if (a === 'record-payment') return recordPayment(el.dataset.sid);
     if (a === 'bulk-fee') return bulkFee();
     if (a === 'new-refund') { const s = students.find(x => x.status === 'Confirmed'); return toast('Pick a student, then choose “Cancel admission” to raise a refund'); }
