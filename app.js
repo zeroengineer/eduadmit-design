@@ -18,7 +18,7 @@ const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 const pick = a => a[Math.floor(rnd() * a.length)];
 const wpick = pairs => { let t = rnd() * pairs.reduce((s, p) => s + p[1], 0); for (const [v, w] of pairs) { if ((t -= w) <= 0) return v; } return pairs[0][0]; };
 
-const PI = { admset: 'sliders-h', dashboard: 'th-large', admissions: 'user-plus', dues: 'calendar-clock', seats: 'table', fees: 'indian-rupee', payments: 'credit-card', refunds: 'replay', documents: 'file', notifications: 'comments', bell: 'bell', reports: 'chart-bar', audit: 'shield', settings: 'cog', search: 'search', plus: 'plus', download: 'download', upload: 'upload', filter: 'filter', x: 'times', check: 'check', chevron: 'chevron-down', right: 'chevron-right', help: 'question-circle', printer: 'print', send: 'send', clock: 'clock', user: 'user', lock: 'lock', rotate: 'refresh', alert: 'exclamation-triangle', link: 'link', eye: 'eye', sms: 'mobile', mail: 'envelope', chat: 'whatsapp', building: 'building', more: 'ellipsis-h', grip: 'bars', copy: 'copy', layers: 'clone', sheet: 'file-excel', hand: 'pen-to-square', info: 'info-circle' };
+const PI = { left: 'arrow-left', admset: 'sliders-h', dashboard: 'th-large', admissions: 'user-plus', dues: 'calendar-clock', seats: 'table', fees: 'indian-rupee', payments: 'credit-card', refunds: 'replay', documents: 'file', notifications: 'comments', bell: 'bell', reports: 'chart-bar', audit: 'shield', settings: 'cog', search: 'search', plus: 'plus', download: 'download', upload: 'upload', filter: 'filter', x: 'times', check: 'check', chevron: 'chevron-down', right: 'chevron-right', help: 'question-circle', printer: 'print', send: 'send', clock: 'clock', user: 'user', lock: 'lock', rotate: 'refresh', alert: 'exclamation-triangle', link: 'link', eye: 'eye', sms: 'mobile', mail: 'envelope', chat: 'whatsapp', building: 'building', more: 'ellipsis-h', grip: 'bars', copy: 'copy', layers: 'clone', sheet: 'file-excel', hand: 'pen-to-square', info: 'info-circle' };
 const ic = (n, s = 14) => `<i class="ic pi pi-${PI[n] || n}" style="font-size:${s}px"></i>`;
 
 /* ================= sample data ================= */
@@ -188,7 +188,7 @@ function renderNav(active) {
 }
 
 /* ================= UI primitives ================= */
-const STATUS_CLS = { 'Fully paid': 'ok', Scheduled: '', 'Partly failed': 'warn', 'Seat booked': '', 'Details collected': 'warn', Overdue: 'bad', 'Due this week': 'warn', Upcoming: 'grey', 'Awaiting first payment': '', 'Policy accepted': 'ok', 'Pay now': '', Confirmed: 'ok', Cancelled: 'bad', Withdrawn: 'bad', Submitted: 'grey', 'Awaiting approval': 'warn', Approved: '', Processing: 'violet', Completed: 'ok', Rejected: 'bad', 'On hold': 'grey', Posted: 'ok', Reversed: 'bad', Verified: 'ok', Uploaded: '', Pending: 'warn', Delivered: 'ok', Failed: 'bad', Queued: 'grey', Sent: '', New: '', Contacted: 'violet', 'Visit scheduled': 'warn', 'Application started': '', Converted: 'ok', Lost: 'grey', Active: 'ok', Invited: 'warn', Draft_: 'grey', Archived: 'grey', Running: 'violet', Ready: 'ok', 'Signed · scanned': 'ok', Printed: '', 'Awaiting signature': 'warn' };
+const STATUS_CLS = { 'Up to date': 'ok', Paid: 'ok', 'Part paid': 'warn', 'Due soon': 'warn', 'Fully paid': 'ok', Scheduled: '', 'Partly failed': 'warn', 'Seat booked': '', 'Details collected': 'warn', Overdue: 'bad', 'Due this week': 'warn', Upcoming: 'grey', 'Awaiting first payment': '', 'Policy accepted': 'ok', 'Pay now': '', Confirmed: 'ok', Cancelled: 'bad', Withdrawn: 'bad', Submitted: 'grey', 'Awaiting approval': 'warn', Approved: '', Processing: 'violet', Completed: 'ok', Rejected: 'bad', 'On hold': 'grey', Posted: 'ok', Reversed: 'bad', Verified: 'ok', Uploaded: '', Pending: 'warn', Delivered: 'ok', Failed: 'bad', Queued: 'grey', Sent: '', New: '', Contacted: 'violet', 'Visit scheduled': 'warn', 'Application started': '', Converted: 'ok', Lost: 'grey', Active: 'ok', Invited: 'warn', Draft_: 'grey', Archived: 'grey', Running: 'violet', Ready: 'ok', 'Signed · scanned': 'ok', Printed: '', 'Awaiting signature': 'warn' };
 const chip = s => `<span class="chip ${STATUS_CLS[s] ?? 'grey'}">${esc(s)}</span>`;
 
 function toast(msg) {
@@ -196,10 +196,17 @@ function toast(msg) {
   const t = document.createElement('div'); t.className = 'toast'; t.innerHTML = `<i class="pi pi-check-circle"></i><div><div class="t-s">${sum}</div>${rest.length ? `<div class="t-d">${rest.join(' · ')}</div>` : ''}</div>`;
   $('#toasts').appendChild(t); setTimeout(() => t.remove(), 3200);
 }
-function openDrawer(html) { $('#drawer').innerHTML = html; $('#drawer').classList.add('on'); $('#scrim').classList.add('on'); }
-function closeDrawer() { $('#drawer').classList.remove('on'); $('#scrim').classList.remove('on'); }
-function openModal(html, wide) { const m = $('#modal'); m.className = 'modal' + (wide ? ' wide' : ''); m.innerHTML = html; $('#modalWrap').classList.add('on'); }
-function closeModal() { $('#modalWrap').classList.remove('on'); }
+/* no overlays: what used to be a modal or a drawer opens as a full page; Back returns to the page underneath */
+let pageView = false;
+function openPage(html, kind) {
+  const main = $('#main'); pageView = true;
+  main.innerHTML = `<div class="mp-page mp-${kind}"><div class="mp-back"><button class="btn ghost" data-close-modal>${ic('left', 14)}Back</button></div><div class="mp-card">${html}</div></div>`;
+  main.scrollTop = 0;
+}
+function openDrawer(html) { openPage(html, 'drawer'); }
+function openModal(html) { openPage(html, 'modal'); }
+function closeModal() { if (!pageView) return; pageView = false; route(); }
+function closeDrawer() { closeModal(); }
 function openMenu(anchor, html) {
   const m = $('#menu'); m.innerHTML = html; m.classList.add('on');
   const r = anchor.getBoundingClientRect();
@@ -373,8 +380,8 @@ const admCols = () => [
   { key: 'officer', label: 'Handled by', w: 130 },
   { key: 'created', label: 'Created', w: 104, fmt: fd },
 ];
-const progCourse = p => p.name.split(' ')[0];                          // B.Tech · M.Tech · MBA
-const progBranch = p => p.name.slice(progCourse(p).length).trim() || p.dept; // Computer Science …
+const progCourse = p => p.course || p.name.split(' ')[0];                          // B.Tech · M.Tech · MBA
+const progBranch = p => p.branch || p.name.slice(progCourse(p).length).trim() || p.dept; // Computer Science …
 /* Admissions tabs share the same filters: Status (multi-select) · Course · Branch */
 function admFilterUI(rows) {
   const counts = st => rows.filter(s => s.status === st).length;
@@ -866,7 +873,7 @@ PAGES['admissions/view'] = () => {
   const parts = location.hash.slice(1).split('/'), s = sById(parts[2] || ''), tab = parts[3] || 'overview';
   if (!s) return `<div>${pageHead('Admission not found')}<div class="content"><a class="btn" href="#admissions">Back to Admissions</a></div></div>`;
   const pays = payments.filter(x => x.sid === s.id), bp = bookingPay(s), m = feeModel(s);
-  const TABS = [['overview', 'Overview'], ['fees', 'Fee plan'], ['payments', `Payments (${pays.length})`], ['docs', 'Documents'], ['print', 'Print documents'], ['activity', 'Activity']];
+  const TABS = [['overview', 'Overview'], ['fees', 'Fee plan'], ['payments', 'Fees & payments'], ['docs', 'Documents'], ['print', 'Print documents'], ['activity', 'Activity']];
   const kv = rows => `<div class="sum-kv">${rows.map(([k, v]) => `<div><span>${k}</span><b>${v || '—'}</b></div>`).join('')}</div>`;
   const card = (t, body) => `<div class="card sum-card"><div class="card-h"><h3>${t}</h3></div><div class="card-b">${body}</div></div>`;
   let body;
@@ -882,6 +889,7 @@ PAGES['admissions/view'] = () => {
     </div>`;
   else if (tab === 'print') body = `<div class="seg" id="docSeg" style="margin:0 0 12px"><button class="on" data-d="r" type="button">Admission fee receipt</button><button data-d="f" type="button">Fee structure slip</button></div>
       <div id="docR" class="sum-prev">${admReceiptDoc(s)}</div><div id="docF" class="sum-prev hidden">${feeStructureDoc(s)}</div>`;
+  else if (tab === 'payments') body = feeAccountView(s);
   else body = `<div class="card"><div class="card-b sv-body">${studentTabBody(s.id, tab)}</div></div>`;
   const primary = s.status === 'Seat booked' ? `<button class="btn primary act-write" data-wizard="${s.id}" data-step="2">${ic('user', 14)}Collect details</button>`
     : s.status === 'Details collected' ? `<button class="btn primary act-write" data-wizard="${s.id}" data-step="3">${ic('payments', 14)}Take payment</button>`
@@ -918,6 +926,139 @@ PAGES['admissions/view'] = () => {
     </div>
   </div></div>`;
 };
+
+/* ---------- Fee account: instalments as invoices, receipts applied oldest first ---------- */
+const invNo = (s, k) => `INV/26/${(s.adm || s.app).slice(-5)}-${k + 1}`;
+function feeAccount(s) {
+  const inv = instPlan(s).map((i, k) => ({ ...i, k, no: invNo(s, k), issued: k === 0 ? s.created : addDays(i.due, -15) < s.created ? s.created : addDays(i.due, -15), paid: 0, recs: [] }));
+  const pays = payments.filter(x => x.sid === s.id && x.kind === 'Payment').sort((a, b) => a.date.localeCompare(b.date) || a.rcpt.localeCompare(b.rcpt));
+  const apply = new Map();
+  pays.forEach(x => {
+    const parts = []; let left = x.status === 'Reversed' ? 0 : x.amt;
+    for (const i of inv) { if (left <= 0) break; const room = i.amt - i.paid; if (room <= 0) continue; const a = Math.min(room, left); i.paid += a; i.recs.push({ x, a }); parts.push({ i, a }); left -= a; }
+    if (left > 0) parts.push({ i: null, a: left });
+    apply.set(x.id, parts);
+  });
+  inv.forEach(i => { const bal = i.amt - i.paid, days = Math.round((Date.parse(i.due) - Date.parse(TODAY)) / 864e5); i.bal = bal; i.st = bal <= 0 ? 'Paid' : days < 0 ? 'Overdue' : i.paid > 0 ? 'Part paid' : days <= 7 ? 'Due soon' : 'Upcoming'; i.days = days; });
+  return { inv, pays, apply };
+}
+function invoicePaper(s, i) {
+  return `<div class="paper cd">${COLLEGE}
+    <div class="cd-title">Fee Invoice · Demand Note</div>
+    ${cdTable([['Invoice no.', i.no], ['Issued', dmy(i.issued)], ['Due on or before', `<b>${dmy(i.due)}</b>`], ['Student', esc(s.name)], ['Admission no.', s.adm || s.app], ['Course · branch', `${docCourse(s)} · ${esc(docBranch(s))}`], ['Admission category', CATEGORY[s.quota] || s.quota]])}
+    <div class="cd-h">Particulars</div>
+    <table class="cd-t cd-fee"><thead><tr><th>Description</th><th class="r">Amount</th></tr></thead><tbody>
+      <tr><td>${esc(i.n)} · Year 1 fees ${state.ay}</td><td class="r">${inr(i.amt)}</td></tr></tbody>
+      <tfoot><tr><td>Invoice total</td><td class="r">${inr(i.amt)}</td></tr></tfoot></table>
+    <div class="cd-h">Payments received against this invoice</div>
+    <table class="cd-t cd-fee"><thead><tr><th>Receipt</th><th>Date</th><th>Mode</th><th class="r">Applied</th></tr></thead><tbody>
+      ${i.recs.length ? i.recs.map(({ x, a }) => `<tr><td>${x.rcpt}</td><td>${dmy(x.date)}</td><td>${x.mode}</td><td class="r">${inr(a)}</td></tr>`).join('') : '<tr><td colspan="4">No payment yet</td></tr>'}</tbody>
+      <tfoot><tr><td colspan="3">Balance due</td><td class="r">${inr(i.bal)}</td></tr></tfoot></table>
+    <div class="cd-sig">Accounts in charge</div></div>`;
+}
+function showInvoice(sid, k) {
+  const s = sById(sid), i = feeAccount(s).inv[k];
+  openModal(`${mHead('Invoice ' + i.no + ' ' + chip(i.st))}<div class="m-body" style="background:var(--bg)">${invoicePaper(s, i)}</div>
+  <div class="m-foot"><button class="btn" id="invPrint">${ic('printer', 14)}Print</button>${i.bal > 0 ? `<button class="btn primary act-write" data-action="record-payment" data-sid="${s.id}">${ic('payments', 14)}Collect ${inr(i.bal)}</button>` : ''}</div>`, true);
+  $('#invPrint').onclick = () => printDocs(invoicePaper(s, i));
+}
+function feeAccountView(s) {
+  const { inv, pays, apply } = feeAccount(s), hl = state.hlPay; state.hlPay = null;
+  const hlInv = hl ? new Set((apply.get(hl) || []).filter(x => x.i).map(x => x.i.no)) : new Set();
+  const next = inv.find(i => i.bal > 0);
+  let run = s.net;
+  setTimeout(() => { const r = $('.fa-pay.hl'); if (r) r.scrollIntoView({ block: 'center' }); });
+  return `<div class="fa">
+    <div class="card fa-sum"><div class="card-b">
+      <div><span>Assessed</span><b>${inr(s.net)}</b></div><div><span>Paid</span><b style="color:var(--ok)">${inr(s.paid)}</b></div>
+      <div><span>Balance</span><b>${inr(s.due)}</b></div><div><span>Overdue</span><b style="color:${s.overdue ? 'var(--bad)' : 'inherit'}">${s.overdue ? inr(s.overdue) : '—'}</b></div>
+      <div><span>Next due</span><b>${next ? `${inr(next.bal)} <em>on ${fd(next.due)}</em>` : 'Fully paid'}</b></div>
+    </div></div>
+    <div class="card"><div class="card-h"><h3>Invoices · Year 1 ${state.ay}</h3><span class="muted" style="margin-left:auto">payments are applied to the oldest invoice first</span></div><div class="card-b fa-inv">
+      ${inv.map(i => `<div class="fa-i ${hlInv.has(i.no) ? 'hl' : ''}">
+        <div class="fa-i-h"><div><button class="lnk fa-no" data-invoice="${s.id}" data-k="${i.k}">${i.no}</button><div class="sm-sub">${esc(i.n)} · issued ${fd(i.issued)}</div></div>
+          <div class="fa-due"><span>Due</span>${fd(i.due)}${i.st === 'Overdue' ? `<em>${-i.days} days late</em>` : ''}</div>
+          <div class="fa-amt"><span>Amount</span>${inr(i.amt)}</div><div class="fa-amt"><span>Paid</span>${i.paid ? inr(i.paid) : '—'}</div><div class="fa-amt"><span>Balance</span><b>${i.bal > 0 ? inr(i.bal) : '—'}</b></div>
+          <div>${chip(i.st)}</div></div>
+        <div class="fa-bar"><i style="width:${Math.min(100, i.paid / i.amt * 100)}%"></i></div>
+        ${i.recs.length ? `<div class="fa-recs">${i.recs.map(({ x, a }) => `<button class="fa-rec ${x.id === hl ? 'hl' : ''}" data-receipt="${x.id}">${ic('check', 12)}${x.rcpt} · ${fd(x.date)} · ${x.mode}<b>${inr(a)}</b></button>`).join('')}</div>` : '<div class="fa-none">No payment received yet</div>'}
+      </div>`).join('')}
+    </div></div>
+    <div class="card"><div class="card-h"><h3>Payment history</h3><span class="muted" style="margin-left:auto">${pays.length} receipt${pays.length === 1 ? '' : 's'}</span></div><div class="card-b">
+      ${pays.length ? `<table class="simple fa-hist"><thead><tr><th>Receipt</th><th>Date</th><th>Mode</th><th>Reference</th><th>Applied to</th><th class="r">Amount</th><th class="r">Balance after</th></tr></thead><tbody>
+      ${pays.map(x => { if (x.status !== 'Reversed') run -= x.amt; return `<tr class="fa-pay ${x.id === hl ? 'hl' : ''}"><td><button class="lnk" data-receipt="${x.id}">${x.rcpt}</button>${x.alloc === 'Booking fee' ? ' <span class="tag">Booking fee</span>' : ''}</td><td>${fd(x.date)}</td><td>${x.mode}</td><td class="faint">${esc(x.ref)}</td>
+        <td>${(apply.get(x.id) || []).map(({ i, a }) => i ? `<button class="lnk" data-invoice="${s.id}" data-k="${i.k}">${i.no}</button> <span class="faint">${inr(a)}</span>` : `<span class="faint">Advance ${inr(a)}</span>`).join('<br>')}</td>
+        <td class="r">${inr(x.amt)}</td><td class="r">${inr(Math.max(0, run))}</td></tr>`; }).join('')}</tbody></table>` : '<div class="empty">No payments recorded yet.</div>'}
+    </div></div></div>`;
+}
+
+/* ---------- Payments → one student's payment page (timeline + invoices + history) ---------- */
+PAGES['payments/student'] = () => {
+  const s = sById(location.hash.slice(1).split('/')[2] || '');
+  if (!s) return `<div>${pageHead('Payments')}<div class="content"><a class="btn" href="#payments">Back to Payments</a></div></div>`;
+  const { inv, pays, apply } = feeAccount(s), hl = state.hlPay; state.hlPay = null;
+  const next = inv.find(i => i.bal > 0), overdueInv = inv.filter(i => i.st === 'Overdue');
+  const overall = !OCCUPY.includes(s.status) ? s.status : s.due <= 0 ? 'Fully paid' : overdueInv.length ? 'Overdue' : next && next.st === 'Due soon' ? 'Due soon' : 'Up to date';
+  const ev = [];
+  inv.forEach(i => {
+    ev.push({ d: i.issued, o: 0, kind: 'inv', icon: 'file', t: `Invoice ${i.no} issued`, sub: `${esc(i.n)} · ${inr(i.amt)} due by ${fd(i.due)}`, inv: i });
+    i.recs.forEach(({ x, a }) => ev.push({ d: x.date, o: 1, kind: 'pay', icon: 'check', t: `Payment received · ${inr(a)}${a !== x.amt ? ` <span class="faint">of ${inr(x.amt)}</span>` : ''}`, sub: `${x.rcpt} · ${x.mode}${x.ref && x.ref !== '—' ? ' · ' + esc(x.ref) : ''} · applied to ${i.no}${x.alloc === 'Booking fee' ? ' · booking fee' : ''}`, x }));
+    if (i.bal <= 0 && i.recs.length) ev.push({ d: i.recs[i.recs.length - 1].x.date, o: 2, kind: 'done', icon: 'check-circle', t: `${i.no} paid in full`, sub: esc(i.n) });
+    else if (i.st === 'Overdue') ev.push({ d: i.due, o: 3, kind: 'late', icon: 'exclamation-circle', t: `${i.no} overdue · ${inr(i.bal)}`, sub: `Due ${fd(i.due)} · ${-i.days} days late`, inv: i });
+    else if (i.bal > 0) ev.push({ d: i.due, o: 3, kind: 'due', icon: 'clock', t: `${i.no} due · ${inr(i.bal)}`, sub: `${i.st === 'Due soon' ? 'Due soon' : 'Upcoming'} · ${fd(i.due)}${i.paid ? ` · ${inr(i.paid)} already paid` : ''}`, inv: i });
+  });
+  ev.sort((a, b) => a.d.localeCompare(b.d) || a.o - b.o);
+  const ti = ev.findIndex(e => e.d > TODAY); if (ti >= 0) ev.splice(ti, 0, { d: TODAY, kind: 'today', t: 'Today' }); else ev.push({ d: TODAY, kind: 'today', t: 'Today' });
+  let run = s.net;
+  setTimeout(() => { const r = $('.it-table tr.hl'); if (r) r.scrollIntoView({ block: 'center' }); });
+  return `<div class="pp-page">${pageHead(esc(s.name), '', `<a class="btn" href="#payments">Back to Payments</a><button class="btn act-write" data-action="remind" data-n="1">${ic('send', 14)}Send reminder</button><button class="btn" id="ppPrint">${ic('printer', 14)}Print statement</button>${s.due > 0 ? `<button class="btn primary act-write" data-action="record-payment" data-sid="${s.id}">${ic('payments', 14)}Record payment</button>` : ''}`, `<a href="#payments">Payments</a> / ${s.adm || s.app}`)}
+  <div class="content">
+    <div class="pp-meta">${s.adm || s.app} · ${esc(docCourse(s))} ${esc(docBranch(s))} · ${s.quota} · Guardian ${esc(s.guardian)} · +91 ${s.gmobile || s.mobile}</div>
+    <div class="card pp-strip"><div class="card-b">
+      <div><span>Payment status</span>${chip(overall)}</div>
+      <div><span>Assessed</span><b>${inr(s.net)}</b></div>
+      <div><span>Paid</span><b style="color:var(--ok)">${s.paid ? inr(s.paid) : '—'}</b></div>
+      <div><span>Balance</span><b>${s.due > 0 ? inr(s.due) : '—'}</b></div>
+      <div><span>Overdue</span><b style="color:${s.overdue ? 'var(--bad)' : 'inherit'}">${s.overdue ? inr(s.overdue) : '—'}</b></div>
+      <div><span>Next due</span><b>${next ? `${inr(next.bal)}<em>${fd(next.due)}</em>` : '—'}</b></div>
+    </div></div>
+    <div class="card"><div class="card-h"><h3>Instalments</h3><span class="muted" style="margin-left:auto">${inv.length} instalments · payments are applied to the oldest first</span></div><div class="card-b" style="overflow:auto">
+      <table class="simple it-table"><thead><tr><th>Instalment</th><th>Invoice</th><th class="it-tl-h">Timeline</th><th class="r">Amount</th><th class="r">Paid</th><th class="r">Balance</th><th>Receipts</th><th>Status</th></tr></thead><tbody>
+      ${inv.map(i => {
+        const paidOn = i.bal <= 0 && i.recs.length ? i.recs[i.recs.length - 1].x.date : '';
+        const step = (cls, lbl, date) => `<span class="it-step ${cls}"><i></i><b>${lbl}</b><em>${date}</em></span>`;
+        const s1 = step(i.issued <= TODAY ? 'done' : 'future', 'Issued', fd(i.issued));
+        const s2 = step(i.bal <= 0 ? 'done' : i.st === 'Overdue' ? 'late' : i.due <= TODAY ? 'done' : 'future', 'Due', fd(i.due));
+        const s3 = i.bal <= 0 ? step('done paid', 'Paid', fd(paidOn)) : i.st === 'Overdue' ? step('late', 'Overdue', `${-i.days} days late`) : i.paid > 0 ? step('part', 'Part paid', `${inr(i.paid)} so far`) : step('future', i.st === 'Due soon' ? 'Due soon' : 'Upcoming', i.days > 0 ? `in ${i.days} days` : 'today');
+        const isHl = hl && i.recs.some(r => r.x.id === hl);
+        return `<tr class="${isHl ? 'hl' : ''} ${i.st === 'Overdue' ? 'late' : ''}">
+          <td><div class="it-name">${esc(i.n)}</div></td>
+          <td><button class="lnk" data-invoice="${s.id}" data-k="${i.k}">${i.no}</button></td>
+          <td><div class="it-tl">${s1}<span class="it-ln ${i.issued <= TODAY ? 'on' : ''}"></span>${s2}<span class="it-ln ${i.bal <= 0 ? 'on' : i.st === 'Overdue' ? 'late' : ''}"></span>${s3}</div></td>
+          <td class="r">${inr(i.amt)}</td><td class="r">${i.paid ? inr(i.paid) : '—'}</td><td class="r"><b>${i.bal > 0 ? inr(i.bal) : '—'}</b></td>
+          <td>${i.recs.length ? i.recs.map(({ x, a }) => `<button class="lnk it-rc ${x.id === hl ? 'hl' : ''}" data-receipt="${x.id}">${x.rcpt}</button> <span class="faint">${inr(a)}</span>`).join('<br>') : '<span class="faint">—</span>'}</td>
+          <td>${chip(i.st)}${i.bal > 0 ? `<button class="btn sm act-write it-collect" data-action="record-payment" data-sid="${s.id}">Collect</button>` : ''}</td></tr>`;
+      }).join('')}</tbody>
+      <tfoot><tr><td colspan="3">Total</td><td class="r">${inr(s.net)}</td><td class="r">${inr(s.paid)}</td><td class="r">${inr(s.due)}</td><td colspan="2"></td></tr></tfoot></table>
+    </div></div>
+    <div class="card" style="margin-top:14px"><div class="card-h"><h3>Payment history</h3></div><div class="card-b">
+      ${pays.length ? `<table class="simple fa-hist"><thead><tr><th>Receipt</th><th>Date</th><th>Mode</th><th>Reference</th><th>Applied to</th><th class="r">Amount</th><th class="r">Balance after</th></tr></thead><tbody>
+      ${pays.map(x => { if (x.status !== 'Reversed') run -= x.amt; return `<tr class="${x.id === hl ? 'hl' : ''}"><td><button class="lnk" data-receipt="${x.id}">${x.rcpt}</button>${x.alloc === 'Booking fee' ? ' <span class="tag">Booking fee</span>' : ''}</td><td>${fd(x.date)}</td><td>${x.mode}</td><td class="faint">${esc(x.ref)}</td>
+        <td>${(apply.get(x.id) || []).map(({ i, a }) => i ? `<button class="lnk" data-invoice="${s.id}" data-k="${i.k}">${i.no}</button> <span class="faint">${inr(a)}</span>` : `<span class="faint">Advance ${inr(a)}</span>`).join('<br>')}</td>
+        <td class="r">${inr(x.amt)}</td><td class="r">${inr(Math.max(0, run))}</td></tr>`; }).join('')}</tbody></table>` : '<div class="empty">No payments recorded yet.</div>'}
+    </div></div>
+  </div></div>`;
+};
+function statementPaper(s) {
+  const { inv, pays, apply } = feeAccount(s); let run = s.net;
+  return `<div class="paper cd">${COLLEGE}<div class="cd-title">Fee Statement · ${state.ay}</div>
+    ${cdTable([['Student', esc(s.name)], ['Admission no.', s.adm || s.app], ['Course · branch', `${docCourse(s)} · ${esc(docBranch(s))}`], ['Statement date', dmy(TODAY)]])}
+    <div class="cd-h">Invoices</div><table class="cd-t cd-fee"><thead><tr><th>Invoice</th><th>Due</th><th class="r">Amount</th><th class="r">Paid</th><th class="r">Balance</th></tr></thead><tbody>${inv.map(i => `<tr><td>${i.no}</td><td>${dmy(i.due)}</td><td class="r">${inr(i.amt)}</td><td class="r">${inr(i.paid)}</td><td class="r">${inr(i.bal)}</td></tr>`).join('')}</tbody>
+    <tfoot><tr><td colspan="2">Total</td><td class="r">${inr(s.net)}</td><td class="r">${inr(s.paid)}</td><td class="r">${inr(s.due)}</td></tr></tfoot></table>
+    <div class="cd-h">Payments</div><table class="cd-t cd-fee"><thead><tr><th>Receipt</th><th>Date</th><th>Mode</th><th>Applied to</th><th class="r">Amount</th><th class="r">Balance</th></tr></thead><tbody>${pays.map(x => { run -= x.amt; return `<tr><td>${x.rcpt}</td><td>${dmy(x.date)}</td><td>${x.mode}</td><td>${(apply.get(x.id) || []).map(({ i }) => i ? i.no : 'Advance').join(', ')}</td><td class="r">${inr(x.amt)}</td><td class="r">${inr(Math.max(0, run))}</td></tr>`; }).join('') || '<tr><td colspan="6">No payments</td></tr>'}</tbody></table>
+    <div class="cd-sig">Accounts in charge</div></div>`;
+}
+document.addEventListener('click', e => { if (e.target.closest('#ppPrint')) { const s = sById(location.hash.slice(1).split('/')[2]); if (s) printDocs(statementPaper(s)); } });
 function feeSlipPaper(s) {
   const nd = nextDue(s);
   return `<div class="paper">
@@ -964,7 +1105,7 @@ PAGES['payments/students'] = PAGES['payments/dues'] = PAGES.dues = () => {
     { key: 'inst', label: 'Next instalment', w: 190 }, { key: 'ndue', label: 'Due date', w: 110, fmt: v => v ? fd(v) : '—' }, { key: 'days', label: 'When', w: 110, render: r => `<span style="${r.dst === 'Overdue' ? 'color:var(--bad)' : ''}">${r.when}</span>` },
     { key: 'nbal', label: 'Amount due', w: 116, align: 'r', fmt: v => v ? inr(v) : '—', sum: 'inr' }, { key: 'dst', label: 'Fee status', w: 170, render: r => chip(r.dst) },
     { key: 'gm', label: 'Guardian mobile', w: 130, render: r => r.gmobile || r.mobile },
-    { key: 'act', label: '', w: 100, render: r => r.due > 0 ? `<button class="btn sm act-write" data-action="record-payment" data-sid="${r.id}">Collect</button>` : '' }], rows, onOpen: r => openStudent(r.id, 'fees'),
+    { key: 'act', label: '', w: 100, render: r => r.due > 0 ? `<button class="btn sm act-write" data-action="record-payment" data-sid="${r.id}">Collect</button>` : '' }], rows, onOpen: r => { location.hash = 'payments/student/' + r.id; },
     chips: fchip('all', 'All', rows.length, true) + ST.map(s => fchip(s, s, cnt(s))).join(''), chipLabel: 'Fee status', tabs: payTabs('students') })}</div></div>`;
   chipHandler = ids => { S.filter = ids.length ? r => ids.includes(r.dst) : null; renderSheet(); };
   setTimeout(() => { if (state.preset && state.preset.f) { const f = state.preset.f; state.preset = null; setChips([f]); } });
@@ -1026,7 +1167,7 @@ function receiptPaper(p) {
     <div class="lh"><span class="logo">T</span><div style="flex:1"><h4>Thejus Engineering College</h4><div class="faint">Vellarakkad, Thrissur, Kerala 680584 · Affiliated to APJ Abdul Kalam Technological University</div></div><div class="qr" title="Scan to verify"></div></div>
     <div style="display:flex;justify-content:space-between;margin-bottom:14px"><div><div style="font-size:14px;color:var(--navy-800)">FEE RECEIPT</div><div class="faint">${p.rcpt}</div></div><div style="text-align:right"><div class="faint">Date</div>${fd(p.date)}</div></div>
     <div class="kv" style="margin-bottom:12px"><div><span>Received from</span>${esc(s.guardian)}</div><div><span>Student</span>${esc(s.name)}</div><div><span>Admission no.</span>${s.adm}</div><div><span>Programme</span>${s.progName} · ${s.quota}</div><div><span>Mode</span>${p.mode}</div><div><span>Reference</span>${esc(p.ref)}</div></div>
-    <table class="simple"><thead><tr><th>Allocated to</th><th class="r">Amount</th></tr></thead><tbody><tr><td>${p.alloc || 'Fee instalment as per payment schedule'}</td><td class="r">${inr(p.amt)}</td></tr></tbody><tfoot><tr><td>Total received</td><td class="r">${inr(p.amt)}</td></tr></tfoot></table>
+    <table class="simple"><thead><tr><th>Applied to</th><th class="r">Amount</th></tr></thead><tbody>${(feeAccount(s).apply.get(p.id) || [{ i: null, a: p.amt }]).map(({ i, a }) => `<tr><td>${i ? `${i.no} · ${esc(i.n)}${p.alloc === 'Booking fee' ? ' (booking fee)' : ''}` : 'Advance / unallocated'}</td><td class="r">${inr(a)}</td></tr>`).join('')}</tbody><tfoot><tr><td>Total received</td><td class="r">${inr(p.amt)}</td></tr></tfoot></table>
     <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:28px"><div class="faint">Balance: ${inr(s.due)}${s.nextDue ? ` · next due ${fd(s.nextDue)}` : ''}<br>Refund policy ${s.policy.ver} accepted by ${esc(s.guardian)}.<br>Computer-generated receipt. Verify at thejus.edu.in/verify</div><div style="text-align:center"><div style="font-family:cursive;color:var(--blue-600);font-size:16px">${p.cashier.split(' ')[0]}</div><div class="faint" style="border-top:1px solid var(--line-2);padding-top:3px">Cashier</div></div></div>
   </div>`;
 }
@@ -1037,75 +1178,165 @@ function showReceipt(pid) {
 }
 
 /* ---------- Seat matrix ---------- */
-const seatOccupancy = () => {
-  const PROGS_A = actProgs();
-  const stat = (p, q) => { const n = st => students.filter(s => s.prog === p.code && s.quota === q && s.status === st).length; const cf = n('Confirmed'), dc = n('Details collected'), sb = n('Seat booked'); return { cap: p.cap[q] || 0, cf, dc, sb, used: cf + dc + sb }; };
+/* ---------- Seat occupancy (Reports → Analytics): Table · Bar chart · Pie chart, filterable by quota ---------- */
+const SM_COL = { cf: '#0A3C6E', dc: '#1783C1', sb: '#A2CDE6', av: '#EBEBEB' };
+const SM_LBL = { cf: 'Confirmed', dc: 'Details collected', sb: 'Seat booked', av: 'Available' };
+const seatOccupancy = () => `<div id="smOcc">${smInner()}</div><div class="sm-tip" id="smTip" role="tooltip"></div>`;
+function smInner() {
+  const view = state.smView || 'table', qf = state.smQuota || '';
+  const QS = qf ? [qf] : QUOTAS, PROGS_A = actProgs();
+  const stat = (p, q) => { const n = st => students.filter(s => s.prog === p.code && s.quota === q && s.status === st && inAy(s)).length; const cf = n('Confirmed'), dc = n('Details collected'), sb = n('Seat booked'); return { cap: p.cap[q] || 0, cf, dc, sb, used: cf + dc + sb }; };
   const add = (a, b) => ({ cap: a.cap + b.cap, cf: a.cf + b.cf, dc: a.dc + b.dc, sb: a.sb + b.sb, used: a.used + b.used });
   const Z = { cap: 0, cf: 0, dc: 0, sb: 0, used: 0 };
-  const byQ = QUOTAS.map(q => PROGS_A.reduce((a, p) => add(a, stat(p, q)), Z)), all = byQ.reduce(add, Z);
+  const sumQ = (p, qs) => qs.map(q => stat(p, q)).reduce(add, Z);
+  const byQAll = QUOTAS.map(q => PROGS_A.reduce((a, p) => add(a, stat(p, q)), Z));
+  const all = (qf ? [byQAll[QUOTAS.indexOf(qf)]] : byQAll).reduce(add, Z);
   const pct = (v, c) => c ? v / c * 100 : 0;
-  const bar = (s, big) => `<div class="sm-bar ${big ? 'big' : ''}" title="${s.cf} confirmed · ${s.dc} details collected · ${s.sb} seat booked · ${Math.max(0, s.cap - s.used)} available"><i class="cf" style="width:${pct(s.cf, s.cap)}%"></i><i class="dc" style="width:${pct(s.dc, s.cap)}%"></i><i class="sb" style="width:${pct(s.sb, s.cap)}%"></i></div>`;
-  const badge = s => { const left = s.cap - s.used; return left <= 0 ? '<span class="chip bad">Full</span>' : left / s.cap <= .15 ? `<span class="chip warn">${left} left</span>` : `<span class="sm-left">${left} left</span>`; };
-  const cell = s => s.cap ? `<div class="sm-cell"><div class="sm-top"><span class="sm-num">${s.used}<span> / ${s.cap}</span></span>${badge(s)}</div>${bar(s)}</div>` : '<span class="sm-na">Not offered</span>';
-  const card = (label, s, hero) => `<div class="card sm-card ${hero ? 'hero' : ''}"><div class="sm-card-l">${label}</div><div class="sm-card-v">${s.used}<span> / ${s.cap}</span></div>${bar(s, true)}<div class="sm-card-s"><span>${Math.round(pct(s.used, s.cap))}% filled</span><span>${s.cap - s.used} left</span></div></div>`;
-  return `  <div class="sm-cards">${card('All quotas', all, true)}${QUOTAS.map((q, k) => card(q, byQ[k])).join('')}</div>
-  <div class="card sm-wrap"><div class="sm-legend"><span><i class="cf"></i>Confirmed</span><span><i class="dc"></i>Details collected</span><span><i class="sb"></i>Seat booked</span><span><i class="av"></i>Available</span><span class="sm-legend-note">Hover a bar for the exact split</span></div>
-  <table class="sm-table"><thead><tr><th>Programme</th>${QUOTAS.map(q => `<th>${q}</th>`).join('')}<th class="r">Total</th></tr></thead>
-  <tbody>${PROGS_A.map(p => { const row = QUOTAS.map(q => stat(p, q)), t = row.reduce(add, Z); return `<tr><td><div class="sm-prog">${p.name}</div><div class="sm-sub">${p.dept} · ${p.code}</div></td>${row.map(s => `<td>${cell(s)}</td>`).join('')}<td class="r"><div class="sm-num">${t.used}<span> / ${t.cap}</span></div><div class="sm-sub">${Math.round(pct(t.used, t.cap))}% filled</div></td></tr>`; }).join('')}</tbody>
-  <tfoot><tr><td>All programmes</td>${byQ.map(s => `<td>${cell(s)}</td>`).join('')}<td class="r"><div class="sm-num">${all.used}<span> / ${all.cap}</span></div></td></tr></tfoot></table></div>`;
-};
+  const av = s => Math.max(0, s.cap - s.used);
+  const tip = (title, s) => `${esc(title)}|${s.cf} confirmed · ${s.dc} details collected · ${s.sb} seat booked · ${av(s)} available`;
+  const bar = (s, big, title = '') => `<div class="sm-bar ${big ? 'big' : ''}" data-tip="${tip(title, s)}"><i class="cf" style="width:${pct(s.cf, s.cap)}%"></i><i class="dc" style="width:${pct(s.dc, s.cap)}%"></i><i class="sb" style="width:${pct(s.sb, s.cap)}%"></i></div>`;
+  const badge = s => { const left = av(s); return left <= 0 ? '<span class="chip bad">Full</span>' : left / s.cap <= .15 ? `<span class="chip warn">${left} left</span>` : `<span class="sm-left">${left} left</span>`; };
+  const cell = (s, title) => s.cap ? `<div class="sm-cell"><div class="sm-top"><span class="sm-num">${s.used}<span> / ${s.cap}</span></span>${badge(s)}</div>${bar(s, false, title)}</div>` : '<span class="sm-na">Not offered</span>';
+  const card = (key, label, s) => `<button type="button" class="card sm-card ${qf === key ? 'on' : ''}" data-smquota="${key}"><div class="sm-card-l">${label}</div><div class="sm-card-v">${s.used}<span> / ${s.cap}</span></div>${bar(s, true, label)}<div class="sm-card-s"><span>${Math.round(pct(s.used, s.cap))}% filled</span><span>${av(s)} left</span></div></button>`;
+  const legend = `<div class="sm-legend">${['cf', 'dc', 'sb', 'av'].map(k => `<span><i style="background:${SM_COL[k]}"></i>${SM_LBL[k]} <b>${k === 'av' ? av(all) : all[k]}</b></span>`).join('')}</div>`;
+  const controls = `<div class="sm-ctl"><div class="seg" role="radiogroup" aria-label="View">${[['table', 'Table', 'table'], ['bar', 'Bar chart', 'chart-bar'], ['pie', 'Pie chart', 'chart-pie']].map(([k, l, i]) => `<button type="button" class="${view === k ? 'on' : ''}" data-smview="${k}"><i class="pi pi-${i}"></i>${l}</button>`).join('')}</div>
+    <label class="sm-qf">Quota<select class="input" id="smQuota"><option value="">All quotas</option>${QUOTAS.map(q => `<option ${q === qf ? 'selected' : ''}>${q}</option>`).join('')}</select></label></div>`;
+  let body = '';
+  if (view === 'table') {
+    body = `<div class="card sm-wrap">${legend}<table class="sm-table"><thead><tr><th>Programme</th>${QS.map(q => `<th>${q}</th>`).join('')}<th class="r">Total</th></tr></thead>
+    <tbody>${PROGS_A.map(p => { const row = QS.map(q => stat(p, q)), t = row.reduce(add, Z); return t.cap ? `<tr><td><div class="sm-prog">${p.name}</div><div class="sm-sub">${p.dept} · ${p.code}</div></td>${row.map((x, i) => `<td>${cell(x, p.name + ' · ' + QS[i])}</td>`).join('')}<td class="r"><div class="sm-num">${t.used}<span> / ${t.cap}</span></div><div class="sm-sub">${Math.round(pct(t.used, t.cap))}% filled</div></td></tr>` : ''; }).join('')}</tbody>
+    <tfoot><tr><td>All programmes</td>${QS.map(q => { const x = PROGS_A.reduce((a, p) => add(a, stat(p, q)), Z); return `<td>${cell(x, 'All programmes · ' + q)}</td>`; }).join('')}<td class="r"><div class="sm-num">${all.used}<span> / ${all.cap}</span></div><div class="sm-sub">${Math.round(pct(all.used, all.cap))}% filled</div></td></tr></tfoot></table></div>`;
+  }
+  if (view === 'bar') {
+    const rows = PROGS_A.map(p => ({ p, s: sumQ(p, QS) })).filter(r => r.s.cap), maxCap = Math.max(1, ...rows.map(r => r.s.cap));
+    const seg = (r, k) => r.s[k] ? `<i style="width:${r.s[k] / r.s.cap * 100}%;background:${SM_COL[k]}" data-tip="${esc(r.p.name)}|${SM_LBL[k]}: ${r.s[k]} of ${r.s.cap} seats"></i>` : '';
+    body = `<div class="card sm-chart">${legend}<div class="sm-bars">${rows.map(r => `<div class="sm-brow"><div class="sm-blbl"><div class="sm-prog">${esc(r.p.name)}</div><div class="sm-sub">${esc(r.p.dept)}</div></div>
+      <div class="sm-btrack-wrap"><div class="sm-btrack" style="width:${r.s.cap / maxCap * 100}%" data-tip="${tip(r.p.name, r.s)}">${['cf', 'dc', 'sb'].map(k => seg(r, k)).join('')}</div></div>
+      <div class="sm-bval"><b>${r.s.used}</b> / ${r.s.cap}<span>${Math.round(pct(r.s.used, r.s.cap))}%</span></div></div>`).join('')}</div>
+      <div class="sm-note">Bar length = seats available in the programme${qf ? ' for ' + qf : ''}; filled part split by status. Hover a segment for the exact count.</div></div>`;
+  }
+  if (view === 'pie') {
+    const donut = (s, r, w, big, title) => {
+      const C = 2 * Math.PI * r, tot = Math.max(1, s.cap), parts = [['cf', s.cf], ['dc', s.dc], ['sb', s.sb], ['av', av(s)]].filter(x => x[1] > 0);
+      const gap = parts.length > 1 ? 2 : 0; let off = 0;
+      const arcs = parts.map(([k, v]) => { const len = Math.max(0, v / tot * C - gap); const el = `<circle r="${r}" cx="0" cy="0" fill="none" stroke="${SM_COL[k]}" stroke-width="${w}" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-off}" data-tip="${esc(title)}|${SM_LBL[k]}: ${v} (${Math.round(v / tot * 100)}%)"/>`; off += v / tot * C; return el; }).join('');
+      const R = r + w / 2 + 2;
+      return `<svg viewBox="${-R} ${-R} ${2 * R} ${2 * R}" width="${2 * R}" height="${2 * R}" class="sm-donut" role="img" aria-label="${esc(title)}: ${s.used} of ${s.cap} seats filled"><g transform="rotate(-90)">${arcs}</g>
+        <text class="d-v" y="${big ? 2 : 4}" text-anchor="middle">${big ? s.used : Math.round(pct(s.used, s.cap)) + '%'}</text>${big ? `<text class="d-s" y="22" text-anchor="middle">of ${s.cap} seats</text>` : ''}</svg>`;
+    };
+    const rows = PROGS_A.map(p => ({ p, s: sumQ(p, QS) })).filter(r => r.s.cap);
+    body = `<div class="sm-pies"><div class="card sm-chart sm-pie-main"><div class="card-h"><h3>${qf || 'All quotas'} · all programmes</h3></div><div class="card-b sm-pie-body">${donut(all, 70, 22, true, 'All programmes')}
+        <div class="sm-pie-legend">${['cf', 'dc', 'sb', 'av'].map(k => { const v = k === 'av' ? av(all) : all[k]; return `<div><i style="background:${SM_COL[k]}"></i><span>${SM_LBL[k]}</span><b>${v}</b><em>${Math.round(pct(v, all.cap))}%</em></div>`; }).join('')}</div></div></div>
+      <div class="card sm-chart"><div class="card-h"><h3>By programme</h3><span class="muted">% of seats filled</span></div><div class="card-b sm-pie-grid">${rows.map(r => `<div class="sm-mini">${donut(r.s, 30, 10, false, r.p.name)}<div class="sm-prog">${esc(r.p.name)}</div><div class="sm-sub">${r.s.used} / ${r.s.cap} · ${av(r.s)} left</div></div>`).join('')}</div></div></div>`;
+  }
+  return `<div class="sm-cards">${card('', 'All quotas', byQAll.reduce(add, Z))}${QUOTAS.map((q, k) => card(q, q, byQAll[k])).join('')}</div>${controls}${body}`;
+}
+function smRerender() { const el = $('#smOcc'); if (el) el.innerHTML = smInner(); }
+document.addEventListener('click', e => {
+  const v = e.target.closest('[data-smview]'); if (v) { state.smView = v.dataset.smview; try { localStorage.setItem('ta.smView', state.smView); } catch (x) { /* storage unavailable */ } return smRerender(); }
+  const q = e.target.closest('[data-smquota]'); if (q) { state.smQuota = q.dataset.smquota === state.smQuota ? '' : q.dataset.smquota; return smRerender(); }
+});
+document.addEventListener('change', e => { if (e.target.id === 'smQuota') { state.smQuota = e.target.value; smRerender(); } });
+document.addEventListener('mousemove', e => {
+  const t = $('#smTip'); if (!t) return;
+  const el = e.target.closest('#smOcc [data-tip]');
+  if (!el) { t.style.display = 'none'; return; }
+  const [h, b] = el.dataset.tip.split('|');
+  t.innerHTML = `<b>${h}</b>${b ? `<span>${b}</span>` : ''}`; t.style.display = 'block';
+  const x = Math.min(e.clientX + 14, window.innerWidth - t.offsetWidth - 8), y = e.clientY + 16 + t.offsetHeight > window.innerHeight ? e.clientY - t.offsetHeight - 10 : e.clientY + 16;
+  t.style.left = x + 'px'; t.style.top = y + 'px';
+});
+try { state.smView = localStorage.getItem('ta.smView') || 'table'; } catch (x) { /* storage unavailable */ }
 
 /* ---------- Seat matrix (Settings): capacity editor ---------- */
 const actProgs = () => PROGS.filter(p => p.active !== false);
 const seatsUsed = (code, q) => students.filter(s => s.prog === code && (!q || s.quota === q) && OCCUPY.includes(s.status)).length;
 const deptList = () => [...new Set([...PROGS.map(p => p.dept), ...((STRUCT.kids[0] || {}).kids || []).map(d => d.name)])];
 const capTotal = p => QUOTAS.reduce((t, q) => t + (p.cap[q] || 0), 0);
+/* courses first, departments inside each course */
+let COURSES = null;
+const courseList = () => COURSES || (COURSES = [...new Set(PROGS.map(progCourse))]);
+const progsOf = c => PROGS.filter(p => progCourse(p) === c);
 function smRows() {
-  return PROGS.map(p => {
-    const off = p.active === false;
-    return `<tr class="${off ? 'sm-off' : ''}">
-      <td><input class="input sm-name" data-sm-name="${p.code}" value="${esc(p.name)}" aria-label="Programme name"><div class="sm-sub">${p.code}${off ? ' · inactive' : ''}</div></td>
-      <td><select class="input" data-sm-dept="${p.code}" aria-label="Department">${deptList().map(d => `<option ${d === p.dept ? 'selected' : ''}>${esc(d)}</option>`).join('')}</select></td>
-      ${QUOTAS.map(q => `<td class="r"><input class="input num sm-cap" type="number" min="0" step="1" data-sm-cap="${p.code}|${q}" value="${p.cap[q] || 0}" aria-label="${q} seats"></td>`).join('')}
-      <td class="r sm-tot">${capTotal(p)}</td>
-      <td><button class="switch ${off ? '' : 'on'}" data-sm-active="${p.code}" title="${off ? 'Inactive — click to activate' : 'Active — click to deactivate'}"></button></td></tr>`;
+  return courseList().map(c => {
+    const ps = progsOf(c);
+    const head = `<tr class="sm-course"><td colspan="${QUOTAS.length + 3}"><div class="sm-ch"><span class="sm-cic"><i class="pi pi-book"></i></span><input class="input sm-cname" data-sm-course="${esc(c)}" value="${esc(c)}" aria-label="Course name"><button class="btn sm act-write sm-adddept" data-sm-add="${esc(c)}">${ic('plus', 12)}Add department</button></div></td></tr>`;
+    const rows = ps.map((p, i) => {
+      const off = p.active === false;
+      return `<tr class="sm-dept ${off ? 'sm-off' : ''} ${i === ps.length - 1 ? 'last' : ''}">
+        <td><div class="sm-dn"><span class="sm-tl"></span><input class="input sm-name" data-sm-branch="${p.code}" value="${esc(progBranch(p))}" aria-label="Department name"></div></td>
+        <td><span class="sm-code">${p.code}</span>${off ? '<div class="sm-sub">inactive</div>' : ''}</td>
+        ${QUOTAS.map(q => `<td class="r"><input class="input num sm-cap" type="number" min="0" step="1" data-sm-cap="${p.code}|${q}" value="${p.cap[q] || 0}" aria-label="${q} seats"></td>`).join('')}
+        <td><button class="switch ${off ? '' : 'on'}" data-sm-active="${p.code}" title="${off ? 'Inactive — click to activate' : 'Active — click to deactivate'}"></button></td></tr>`;
+    }).join('') || `<tr class="sm-dept sm-empty last"><td colspan="${QUOTAS.length + 3}"><div class="sm-dn"><span class="sm-tl"></span><span class="faint">No departments yet ·</span> <button class="lnk" data-sm-add="${esc(c)}">add the first department</button></div></td></tr>`;
+    return head + rows;
   }).join('');
 }
-const smFoot = () => { const A = actProgs(); return `<tr><td colspan="2">Active programmes · ${A.length}</td>${QUOTAS.map(q => `<td class="r">${A.reduce((t, p) => t + (p.cap[q] || 0), 0)}</td>`).join('')}<td class="r">${A.reduce((t, p) => t + capTotal(p), 0)}</td><td></td></tr>`; };
-function smRender() { const b = $('#smBody'); if (!b) return; b.innerHTML = smRows(); $('#smFoot').innerHTML = smFoot(); }
-PAGES.seats = () => `<div class="fill">${admHead('seats', `<button class="btn primary act-write" data-sm-add>${ic('plus', 14)}Add programme</button>`)}
-  <div class="content"><div class="card"><div class="card-h"><h3>Seats per programme and quota</h3><span class="muted" style="margin-left:auto">0 = quota not offered · inactive programmes can't be booked</span></div>
-  <div class="card-b" style="overflow:auto"><table class="simple sm-edit"><thead><tr><th style="min-width:230px">Programme</th><th style="min-width:170px">Department</th>${QUOTAS.map(q => `<th class="r">${q}</th>`).join('')}<th class="r">Total</th><th>Active</th></tr></thead>
-  <tbody id="smBody">${smRows()}</tbody><tfoot id="smFoot">${smFoot()}</tfoot></table></div></div>
-  <p class="faint" style="margin-top:10px">Changes save as you go. Seat occupancy (confirmed, details collected, booked, available) is in <a class="lnk" href="#reports">Reports</a>.</p></div></div>`;
-function smAddModal() {
-  openModal(`${mHead('Add programme')}<div class="m-body"><form id="npForm" autocomplete="off">
+const smFoot = () => { const A = actProgs(); return `<tr><td colspan="2">${courseList().length} courses · ${A.length} active departments</td>${QUOTAS.map(q => `<td class="r">${A.reduce((t, p) => t + (p.cap[q] || 0), 0)}</td>`).join('')}<td class="r">${A.reduce((t, p) => t + capTotal(p), 0)}</td><td></td></tr>`; };
+function smRender() { const b = $('#smBody'); if (!b) return; b.innerHTML = smRows(); }
+PAGES.seats = () => `<div class="fill">${admHead('seats', `<button class="btn primary act-write" data-sm-addcourse>${ic('plus', 14)}Add course</button>`)}
+  <div class="content"><div class="card"><div class="card-h"><h3>Seats by course and department</h3><span class="muted" style="margin-left:auto">Create a course, then add its departments · 0 = quota not offered</span></div>
+  <div class="card-b" style="overflow:auto"><table class="simple sm-edit"><thead><tr><th style="min-width:280px">Course / department</th><th style="min-width:90px">Code</th>${QUOTAS.map(q => `<th class="r">${q} seats</th>`).join('')}<th>Active</th></tr></thead>
+  <tbody id="smBody">${smRows()}</tbody></table></div></div>
+  <p class="faint" style="margin-top:10px">Changes save as you go. Inactive departments can't be booked. Seats filled, totals and availability are in <a class="lnk" href="#reports">Reports &amp; analytics</a>.</p></div></div>`;
+function smAddCourse() {
+  openModal(`${mHead('Add course')}<div class="m-body"><form id="ncForm" autocomplete="off">
     <div class="form-grid" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+      <div class="field"><label>Course name <span class="req">*</span></label><input class="input" id="ncName" placeholder="e.g. B.Arch, BCA, M.Tech"></div>
+      <div class="field"><label>Duration</label><select class="input" id="ncYears">${[1, 2, 3, 4, 5].map(y => `<option value="${y}" ${y === 4 ? 'selected' : ''}>${y} year${y > 1 ? 's' : ''}</option>`).join('')}</select></div>
+    </div>
+    <p class="faint" style="margin-top:10px">After creating the course, add its departments (branches) with seats per quota.</p>
+    <div id="ncErr"></div></form></div>
+  <div class="m-foot"><button class="btn" data-close-modal>Cancel</button><button class="btn primary" id="ncSave">Create course</button></div>`);
+  $('#ncSave').onclick = () => {
+    const name = $('#ncName').value.trim();
+    const err = !name ? 'Enter a course name.' : courseList().some(c => c.toLowerCase() === name.toLowerCase()) ? `${name} already exists.` : '';
+    if (err) { $('#ncErr').innerHTML = `<div class="notice bad" style="margin-top:12px">${ic('alert', 14)}<div>${err}</div></div>`; return; }
+    courseList().push(name);
+    audit.unshift({ id: 'a' + Date.now(), at: TODAY + ' 11:05', user: 'Anita Joseph', role: state.role, action: 'seats.course_add', record: name, detail: `${name} · ${$('#ncYears').value} years`, before: '—', after: 'Created', ip: '10.12.4.1' });
+    closeModal(); toast(`${name} created · now add its departments`);
+  };
+}
+function smAddModal(course) {
+  const cs = courseList(), c0 = course && cs.includes(course) ? course : cs[0];
+  openModal(`${mHead('Add department')}<div class="m-body"><form id="npForm" autocomplete="off">
+    <div class="form-grid" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+      <div class="field"><label>Course <span class="req">*</span></label><select class="input" id="npCourse">${cs.map(c => `<option ${c === c0 ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select></div>
       <div class="field"><label>Department <span class="req">*</span></label><select class="input" id="npDept">${deptList().map(d => `<option>${esc(d)}</option>`).join('')}<option value="__new">+ New department…</option></select></div>
       <div class="field hidden" id="npNewF"><label>New department name <span class="req">*</span></label><input class="input" id="npNew" placeholder="e.g. Artificial Intelligence"></div>
-      <div class="field"><label>Programme name <span class="req">*</span></label><input class="input" id="npName" placeholder="e.g. B.Tech Artificial Intelligence"></div>
       <div class="field"><label>Code <span class="req">*</span></label><input class="input" id="npCode" placeholder="e.g. BT-AI" style="text-transform:uppercase"></div>
     </div>
+    <div class="np-preview" id="npPrev"></div>
     <div class="form-sec">Seats per quota</div>
     <div class="form-grid" style="grid-template-columns:repeat(4,minmax(0,1fr))">${QUOTAS.map(q => `<div class="field"><label>${q}</label><input class="input num" type="number" min="0" step="1" value="0" data-np-q="${q}"></div>`).join('')}</div>
     <div class="check-row" style="margin-top:14px"><span style="flex:1">Active — open for booking</span><button type="button" class="switch on" id="npActive"></button></div>
     <div id="npErr"></div></form></div>
-  <div class="m-foot"><button class="btn" data-close-modal>Cancel</button><button class="btn primary" id="npSave">Add programme</button></div>`);
-  $('#npDept').onchange = e => $('#npNewF').classList.toggle('hidden', e.target.value !== '__new');
+  <div class="m-foot"><button class="btn" data-close-modal>Cancel</button><button class="btn primary" id="npSave">Add department</button></div>`);
+  let codeTouched = false;
+  const dept = () => $('#npDept').value === '__new' ? $('#npNew').value.trim() : $('#npDept').value;
+  const initials = w => w.replace(/[^A-Za-z ]/g, ' ').split(/\s+/).filter(Boolean).map(x => x[0]).join('').toUpperCase();
+  const preview = () => {
+    const c = $('#npCourse').value, d = dept();
+    $('#npPrev').innerHTML = d ? `Programme will appear as <b>${esc(c)} ${esc(d)}</b> · in Book seat: course <b>${esc(c)}</b>, branch <b>${esc(d)}</b>` : '';
+    if (!codeTouched && d) $('#npCode').value = `${initials(c.replace('.', ' ')).slice(0, 2)}-${initials(d).slice(0, 4)}`;
+  };
+  $('#npCode').oninput = () => { codeTouched = true; };
+  $('#npCourse').onchange = preview; $('#npNew').oninput = preview;
+  $('#npDept').onchange = e => { $('#npNewF').classList.toggle('hidden', e.target.value !== '__new'); preview(); };
   $('#npActive').onclick = e => { e.stopPropagation(); e.currentTarget.classList.toggle('on'); };
+  preview();
   $('#npSave').onclick = () => {
-    const isNew = $('#npDept').value === '__new', dept = isNew ? $('#npNew').value.trim() : $('#npDept').value;
-    const name = $('#npName').value.trim(), code = $('#npCode').value.trim().toUpperCase();
+    const c = $('#npCourse').value, d = dept(), isNew = $('#npDept').value === '__new', code = $('#npCode').value.trim().toUpperCase();
     const cap = Object.fromEntries($$('[data-np-q]').map(i => [i.dataset.npQ, Math.max(0, Math.floor(+i.value || 0))]));
-    const err = [!dept && 'department', !name && 'programme name', !code && 'code', code && PROGS.some(x => x.code === code) && `a unique code (${code} is taken)`, !Object.values(cap).some(Boolean) && 'at least one seat'].filter(Boolean);
+    const err = [!d && 'department', !code && 'code', code && PROGS.some(x => x.code === code) && `a unique code (${code} is taken)`, progsOf(c).some(p => progBranch(p).toLowerCase() === (d || '').toLowerCase()) && `${d} already exists in ${c}`, !Object.values(cap).some(Boolean) && 'at least one seat'].filter(Boolean);
     if (err.length) { $('#npErr').innerHTML = `<div class="notice bad" style="margin-top:12px">${ic('alert', 14)}<div>Required: ${err.join(', ')}.</div></div>`; return; }
-    PROGS.push({ code, name, dept, m: 1, cap, active: $('#npActive').classList.contains('on') });
-    // keep Settings → Structure in step
-    const inst = STRUCT.kids[0]; let d = inst.kids.find(k => k.name === dept);
-    if (!d) { d = { name: dept, lvl: 'Department', kids: [] }; inst.kids.push(d); }
-    d.kids.push(prog(name));
-    audit.unshift({ id: 'a' + Date.now(), at: TODAY + ' 11:05', user: 'Anita Joseph', role: state.role, module: 'Settings', action: 'seats.programme_add', record: code, detail: `${name} · ${dept} · ${QUOTAS.map(q => `${q} ${cap[q]}`).join(', ')}`, before: '—', after: `${Object.values(cap).reduce((a, b) => a + b, 0)} seats`, ip: '10.12.4.1' });
-    closeModal(); smRender(); toast(`${name} added${isNew ? ` under new department ${dept}` : ''}`);
+    const name = `${c} ${d}`;
+    PROGS.push({ code, name, course: c, branch: d, dept: d, m: 1, cap, active: $('#npActive').classList.contains('on') });
+    const inst = STRUCT.kids[0]; let dn = inst.kids.find(k => k.name === d);
+    if (!dn) { dn = { name: d, lvl: 'Department', kids: [] }; inst.kids.push(dn); }
+    dn.kids.push(prog(name));
+    audit.unshift({ id: 'a' + Date.now(), at: TODAY + ' 11:05', user: 'Anita Joseph', role: state.role, action: 'seats.department_add', record: code, detail: `${name} · ${QUOTAS.map(q => `${q} ${cap[q]}`).join(', ')}`, before: '—', after: `${Object.values(cap).reduce((x, y) => x + y, 0)} seats`, ip: '10.12.4.1' });
+    closeModal(); toast(`${d} added to ${c}${isNew ? ' (new department)' : ''}`);
   };
 }
 document.addEventListener('change', e => {
@@ -1117,8 +1348,18 @@ document.addEventListener('change', e => {
     const was = p.cap[q] || 0; p.cap[q] = v; smRender();
     if (v !== was) toast(`${p.name} · ${q}: ${was} → ${v} seats`);
   }
-  if (d.smName) { const p = P(d.smName), v = t.value.trim(); if (!v) { t.value = p.name; return; } p.name = v; students.filter(x => x.prog === p.code).forEach(x => { x.progName = v; }); toast('Programme renamed'); }
-  if (d.smDept) { const p = P(d.smDept); p.dept = t.value; students.filter(x => x.prog === p.code).forEach(x => { x.dept = t.value; }); toast(`${p.name} moved to ${t.value}`); }
+  if (d.smCourse !== undefined) {
+    const old = d.smCourse, v = t.value.trim();
+    if (!v || (v !== old && courseList().includes(v))) { t.value = old; return toast(v ? `${v} already exists` : 'Course name can\'t be empty'); }
+    progsOf(old).forEach(p => { const br = progBranch(p), single = p.name === old; p.course = v; p.branch = br; p.name = single ? v : `${v} ${br}`; students.filter(x => x.prog === p.code).forEach(x => { x.progName = p.name; }); });
+    COURSES[COURSES.indexOf(old)] = v; smRender(); toast(`Course renamed to ${v}`);
+  }
+  if (d.smBranch) {
+    const p = P(d.smBranch), v = t.value.trim(); if (!v) { t.value = progBranch(p); return; }
+    const c = progCourse(p), single = p.name === c;
+    p.course = c; p.branch = v; p.dept = v; if (!single) p.name = `${c} ${v}`;
+    students.filter(x => x.prog === p.code).forEach(x => { x.progName = p.name; x.dept = v; }); toast(`Department renamed · ${p.name}`);
+  }
 });
 
 /* ---------- Fees ---------- */
@@ -1198,7 +1439,7 @@ const payRows = () => payments.filter(inAy).map(p => { const s = sById(p.sid); r
 PAGES.payments = PAGES['payments/daybook'] = () => {
   const modes = PAY_MODES, pr = payRows();
   const html = `<div class="fill">${pageHead('Payments', 'Recent payments, newest first. Every payment posts to the ledger, issues a numbered receipt and notifies the guardian.', `<button class="btn primary act-write" data-action="record-payment">${ic('plus', 14)}Record payment</button>`)}
-  <div class="content">${sheet({ cols: payCols(), rows: pr, onOpen: r => showReceipt(r.id), chips: fchip('all', 'All', pr.length, true) + modes.map(m => fchip(m, m, pr.filter(p => p.mode === m).length)).join(''), chipLabel: 'Mode', tabs: payTabs('daybook') })}</div></div>`;
+  <div class="content">${sheet({ cols: payCols(), rows: pr, onOpen: r => { state.hlPay = r.id; location.hash = 'payments/student/' + r.sid; }, chips: fchip('all', 'All', pr.length, true) + modes.map(m => fchip(m, m, pr.filter(p => p.mode === m).length)).join(''), chipLabel: 'Mode', tabs: payTabs('daybook') })}</div></div>`;
   chipHandler = ids => { S.filter = ids.length ? r => ids.includes(r.mode) : null; renderSheet(); };
   return html;
 };
@@ -1305,18 +1546,24 @@ const CAMPAIGNS = [
 ].map(([name, type, trigger, ch, aud, n, at, by, status, failed], i) => ({ id: 'c' + i, name, type, trigger, ch, aud, n, at, by, status, failed, tpl: CAMP_TPL[type] }));
 const campSent = c => c.status === 'Draft' || c.status === 'Scheduled' ? 0 : c.n * c.ch.length;
 const campDel = c => { const sent = campSent(c); return sent ? Math.round((sent - c.failed) / sent * 1000) / 10 : null; };
+/* Messages: the same KPI row on every tab */
+function msgKpis() {
+  const done = CAMPAIGNS.filter(c => campSent(c)), month = done.filter(c => c.at.startsWith('2026-11'));
+  const sent = done.reduce((t, c) => t + campSent(c), 0), failed = done.reduce((t, c) => t + c.failed, 0);
+  return `<div class="kpis camp-kpis">
+    <div class="kpi"><div class="k-l">Campaigns this month</div><div class="k-v">${month.length}</div><div class="k-s">${CAMPAIGNS.filter(c => c.status === 'Scheduled').length} scheduled · ${CAMPAIGNS.filter(c => c.status === 'Draft').length} draft</div></div>
+    <div class="kpi"><div class="k-l">Messages sent</div><div class="k-v">${sent.toLocaleString('en-IN')}</div><div class="k-s">across ${done.length} runs</div></div>
+    <div class="kpi"><div class="k-l">Delivered</div><div class="k-v" style="color:var(--ok)">${sent ? (Math.round((sent - failed) / sent * 1000) / 10) : 0}%</div><div class="k-s">SMS, WhatsApp and email</div></div>
+    <div class="kpi"><div class="k-l">Failed</div><div class="k-v">${failed}</div><div class="k-s">retried automatically once</div></div>
+  </div>`;
+}
 PAGES.notifications = PAGES['notifications/campaigns'] = () => {
   const done = CAMPAIGNS.filter(c => campSent(c)), month = done.filter(c => c.at.startsWith('2026-11'));
   const sent = done.reduce((t, c) => t + campSent(c), 0), failed = done.reduce((t, c) => t + c.failed, 0);
   const rows = [...CAMPAIGNS].sort((a, b) => (b.at === '—' ? '9' : b.at).localeCompare(a.at === '—' ? '9' : a.at));
   const st = ['Completed', 'Running', 'Scheduled', 'Partly failed', 'Draft'];
   const html = `<div class="fill">${pageHead('Messages', '', `<button class="btn primary act-write" data-action="new-campaign">${ic('plus', 14)}New campaign</button>`)}
-  <div class="content"><div class="kpis camp-kpis">
-    <div class="kpi"><div class="k-l">Campaigns this month</div><div class="k-v">${month.length}</div><div class="k-s">${CAMPAIGNS.filter(c => c.status === 'Scheduled').length} scheduled · ${CAMPAIGNS.filter(c => c.status === 'Draft').length} draft</div></div>
-    <div class="kpi"><div class="k-l">Messages sent</div><div class="k-v">${sent.toLocaleString('en-IN')}</div><div class="k-s">across ${done.length} runs</div></div>
-    <div class="kpi"><div class="k-l">Delivered</div><div class="k-v" style="color:var(--ok)">${sent ? (Math.round((sent - failed) / sent * 1000) / 10) : 0}%</div><div class="k-s">SMS, WhatsApp and email</div></div>
-    <div class="kpi"><div class="k-l">Failed</div><div class="k-v">${failed}</div><div class="k-s">retried automatically once</div></div>
-  </div>
+  <div class="content">${msgKpis()}
   ${sheet({ cols: [
     { key: 'at', label: 'Run date', w: 132, render: r => r.at === '—' ? '<span class="faint">Not sent</span>' : fd(r.at.slice(0, 10)) + ' <span class="faint">' + r.at.slice(11) + '</span>' },
     { key: 'name', label: 'Campaign', w: 250, render: r => `<span class="lnk" data-open>${esc(r.name)}</span>` },
@@ -1374,7 +1621,7 @@ function newCampaignModal() {
 PAGES['notifications/events'] = () => {
   const ev = [['Seat booked', 1, 1, 1], ['Payment received', 1, 1, 1], ['Instalment due (3 days before)', 1, 1, 0], ['Instalment overdue', 1, 1, 1], ['Refund status changed', 1, 0, 1], ['Document ready', 0, 1, 1], ['Admission cancelled', 1, 0, 1]];
   return `<div class="fill">${pageHead('Messages', 'Pick a channel for each event. Templates are per language and use your own sender IDs and DLT template IDs.', `<button class="btn">${ic('clock', 14)}Quiet hours 21:00–08:00</button>`)}
-  <div class="content" style="overflow:auto"><div class="grid-3"><div class="card span-2"><table class="perm"><thead><tr><th>Event</th><th>SMS</th><th>WhatsApp <span class="p1">P1</span></th><th>Email</th><th>Languages</th><th>Reminder</th></tr></thead><tbody>
+  <div class="content" style="overflow:auto">${msgKpis()}<div class="grid-3"><div class="card span-2"><table class="perm"><thead><tr><th>Event</th><th>SMS</th><th>WhatsApp <span class="p1">P1</span></th><th>Email</th><th>Languages</th><th>Reminder</th></tr></thead><tbody>
   ${ev.map(([e, a, b, c]) => `<tr><td>${e}</td>${[a, b, c].map(v => `<td><button class="switch ${v ? 'on' : ''}" data-toggle></button></td>`).join('')}<td><span class="tag">EN</span> <span class="tag">ML</span></td><td class="faint">${e.includes('due') ? '3 days before' : e.includes('overdue') ? 'Every 5 days' : '—'}</td></tr>`).join('')}
   </tbody></table></div>
   <div class="card"><div class="card-h"><h3>Credits &amp; delivery</h3></div><div class="card-b">
@@ -1390,10 +1637,10 @@ PAGES['notifications/events'] = () => {
 PAGES['notifications/log'] = () => {
   const rows = payments.slice(-60).reverse().map((p, i) => { const s = sById(p.sid); return { at: p.date, to: '+91 ' + s.mobile, name: s.guardian, ev: 'Payment received', ch: i % 3 === 0 ? 'WhatsApp' : 'SMS', tpl: 'PAY_RCVD_EN', st: i % 23 === 7 ? 'Failed' : i < 2 ? 'Queued' : 'Delivered', ref: p.rcpt }; });
   return `<div class="fill">${pageHead('Messages', 'Every message with its delivery status. Sending is idempotent, so a retry never sends the same message twice.')}
-  <div class="content">${sheet({ cols: [{ key: 'at', label: 'Date', w: 104, fmt: fd }, { key: 'name', label: 'Recipient', w: 160 }, { key: 'to', label: 'Number', w: 130 }, { key: 'ev', label: 'Event', w: 150 }, { key: 'ch', label: 'Channel', w: 96 }, { key: 'tpl', label: 'Template', w: 120 }, { key: 'ref', label: 'Related', w: 140 }, { key: 'st', label: 'Status', w: 100, render: r => chip(r.st) }], rows, onOpen: () => { }, tabs: sheetTabs('notifications', NOTE_TABS, 'log') })}</div></div>`;
+  <div class="content">${msgKpis()}${sheet({ cols: [{ key: 'at', label: 'Date', w: 104, fmt: fd }, { key: 'name', label: 'Recipient', w: 160 }, { key: 'to', label: 'Number', w: 130 }, { key: 'ev', label: 'Event', w: 150 }, { key: 'ch', label: 'Channel', w: 96 }, { key: 'tpl', label: 'Template', w: 120 }, { key: 'ref', label: 'Related', w: 140 }, { key: 'st', label: 'Status', w: 100, render: r => chip(r.st) }], rows, onOpen: () => { }, tabs: sheetTabs('notifications', NOTE_TABS, 'log') })}</div></div>`;
 };
 PAGES['notifications/templates'] = () => `<div class="fill">${pageHead('Messages', 'One message template per event, channel and language.', `<button class="btn primary act-write">${ic('plus', 14)}New template</button>`)}
-  <div class="content">${sheet({ cols: [{ key: 'c', label: 'Code', w: 140 }, { key: 'e', label: 'Event', w: 160 }, { key: 'ch', label: 'Channel', w: 90 }, { key: 'l', label: 'Lang', w: 60 }, { key: 'dlt', label: 'DLT template ID', w: 160 }, { key: 'b', label: 'Body', w: 420 }], rows: [
+  <div class="content">${msgKpis()}${sheet({ cols: [{ key: 'c', label: 'Code', w: 140 }, { key: 'e', label: 'Event', w: 160 }, { key: 'ch', label: 'Channel', w: 90 }, { key: 'l', label: 'Lang', w: 60 }, { key: 'dlt', label: 'DLT template ID', w: 160 }, { key: 'b', label: 'Body', w: 420 }], rows: [
     { c: 'SEAT_BKD_EN', e: 'Seat booked', ch: 'SMS', l: 'EN', dlt: '1107169xxxx2231', b: 'Dear {guardian}, seat booked for {student} in {programme}. Adm no {adm_no}. -THEJUS' },
     { c: 'PAY_RCVD_EN', e: 'Payment received', ch: 'SMS', l: 'EN', dlt: '1107169xxxx2240', b: 'Received Rs {amount} for {student}. Receipt {receipt_no}. Balance Rs {balance}. -THEJUS' },
     { c: 'PAY_RCVD_ML', e: 'Payment received', ch: 'WhatsApp', l: 'ML', dlt: '—', b: '{student} ന്റെ ഫീസ് Rs {amount} ലഭിച്ചു. രസീത് {receipt_no}.' },
@@ -1459,7 +1706,7 @@ function openAudit(a) {
 }
 
 /* ---------- Settings ---------- */
-const SET = [['organisation', 'Organisation'], ['structure', 'Structure'], ['users', 'Users'], ['roles', 'Roles & permissions'], ['branding', 'Branding'], ['integrations', 'Integrations']];
+const SET = [['organisation', 'Organisation'], ['users', 'Users'], ['roles', 'Roles & permissions'], ['branding', 'Branding'], ['integrations', 'Integrations']];
 function settingsPage(sub) {
   const body = SETTINGS[sub] ? SETTINGS[sub]() : '';
   return settingsShell('settings/' + sub, setTitle(SET.find(x => x[0] === sub)[1]) + body);
@@ -1490,23 +1737,30 @@ const ST_LABEL = {};           // renamed level labels, e.g. { Department: 'Scho
 let stEdit = null;             // path of the node being renamed, e.g. '0.1.2'
 const stLbl = l => ST_LABEL[l] || l;
 const stGet = path => path.split('.').slice(1).reduce((n, i) => n.kids[+i], STRUCT);
+const ST_CLOSED = new Set();       // collapsed branches (paths)
+const ST_ICON = { Organisation: 'building', Institution: 'building', Department: 'sitemap', Programme: 'book' };
+const stPlural = (lvl, n) => { const w = stLbl(lvl).toLowerCase(); return `${n} ${n === 1 ? w : w + 's'}`; };
 function stNode(n, path) {
-  const next = ST_NEXT[n.lvl];
+  const next = ST_NEXT[n.lvl], kids = n.kids || [], open = !ST_CLOSED.has(path);
   const name = stEdit === path
     ? `<input class="input st-in" id="stIn" data-st-path="${path}" value="${esc(n.name)}" aria-label="${esc(stLbl(n.lvl))} name">`
-    : `<span class="st-name" data-st-rename="${path}" title="Click to rename">${n.lvl === 'Organisation' ? ic('building', 14) + ' ' : ''}${esc(n.name)}</span>`;
-  const right = n.meta ? `<span class="faint">${esc(n.meta)}</span>` : n.tag ? `<span class="chip plain">${esc(n.tag)}</span>` : '';
+    : `<span class="st-name" data-st-rename="${path}" title="Click to rename">${esc(n.name)}</span>`;
+  const right = n.meta ? `<span class="tr-meta">${esc(n.meta)}</span>` : n.tag ? `<span class="chip plain">${esc(n.tag)}</span>` : '';
   const acts = `<span class="st-acts">`
     + `<button class="st-btn" data-st-rename="${path}" title="Rename">${ic('pencil', 13)}</button>`
     + (next ? `<button class="st-btn" data-st-add="${path}" title="Add ${esc(stLbl(next).toLowerCase())}">${ic('plus', 13)}</button>` : '')
     + (n.lvl !== 'Organisation' ? `<button class="st-btn danger" data-st-del="${path}" title="Delete">${ic('trash', 13)}</button>` : '')
     + `</span>`;
-  return `<div class="node"><span class="lvl">${esc(stLbl(n.lvl))}</span>${name}<span class="st-right">${right}</span>${acts}</div>`
-    + (n.kids && n.kids.length ? `<div class="ch">${n.kids.map((k, i) => stNode(k, path + '.' + i)).join('')}</div>` : '');
+  const caret = kids.length ? `<button class="tr-caret ${open ? 'open' : ''}" data-st-toggle="${path}" aria-expanded="${open}" aria-label="${open ? 'Collapse' : 'Expand'} ${esc(n.name)}"><i class="pi pi-chevron-right"></i></button>` : '<span class="tr-caret-sp"></span>';
+  return `<li class="tr-li tr-${n.lvl.toLowerCase()}"><div class="tr-row">${caret}<span class="tr-ic"><i class="pi pi-${ST_ICON[n.lvl] || 'circle'}"></i></span>
+      <div class="tr-main">${name}<span class="tr-lvl">${esc(stLbl(n.lvl))}</span>${kids.length && next ? `<span class="tr-count">${stPlural(next, kids.length)}</span>` : ''}</div>
+      <span class="st-right">${right}</span>${acts}</div>`
+    + (kids.length && open ? `<ul>${kids.map((k, i) => stNode(k, path + '.' + i)).join('')}</ul>` : '') + `</li>`;
 }
+function stAllPaths(n = STRUCT, path = '0', out = []) { if ((n.kids || []).length) { out.push(path); n.kids.forEach((k, i) => stAllPaths(k, path + '.' + i, out)); } return out; }
 function stRender() {
   const t = $('#stTree'); if (!t) return;
-  t.innerHTML = stNode(STRUCT, '0');
+  t.innerHTML = `<ul class="tr">${stNode(STRUCT, '0')}</ul>`;
   const i = $('#stIn'); if (i) { i.focus(); i.select(); }
 }
 function stSave(commit) {
@@ -1519,7 +1773,7 @@ function stSave(commit) {
 document.addEventListener('keydown', e => { if (e.target.id === 'stIn') { if (e.key === 'Enter') { e.preventDefault(); stSave(true); } if (e.key === 'Escape') stSave(false); } });
 document.addEventListener('focusout', e => { if (e.target.id !== 'stIn') return; const path = e.target.dataset.stPath; setTimeout(() => { const i = $('#stIn'); if (i && i.dataset.stPath === path && document.activeElement !== i) stSave(true); }); });
 document.addEventListener('input', e => { const l = e.target.dataset && e.target.dataset.stLabel; if (l) { ST_LABEL[l] = e.target.value.trim() || l; stRender(); } });
-SETTINGS.structure = () => { setTimeout(stRender); return `<div class="grid-3"><div class="card span-2"><div class="card-h"><h3>Hierarchy</h3><span class="muted" style="margin-left:auto;margin-right:10px">Click a name to rename</span><button class="btn sm act-write" data-st-add="0">${ic('plus', 13)}Add institution</button></div><div class="card-b tree" id="stTree"></div></div>
+SETTINGS.structure = () => { setTimeout(stRender); return `<div class="grid-3"><div class="card span-2"><div class="card-h"><h3>Hierarchy</h3><span class="muted" style="margin-left:auto;margin-right:10px">Click a name to rename</span><button class="btn sm ghost" data-st-expand="1">Expand all</button><button class="btn sm ghost" data-st-expand="0" style="margin-right:6px">Collapse all</button><button class="btn sm act-write" data-st-add="0">${ic('plus', 13)}Add institution</button></div><div class="card-b tree" id="stTree"></div></div>
   <div class="card"><div class="card-h"><h3>Level labels</h3></div><div class="card-b">${['Institution', 'Department', 'Programme', 'Branch', 'Batch', 'Section'].map((l, i) => `<div class="check-row"><span style="flex:1">${l}</span><input class="input" style="width:120px;height:28px" value="${esc(stLbl(l))}" data-st-label="${l}"><button class="switch ${i === 3 ? '' : 'on'}" data-toggle title="Use this level"></button></div>`).join('')}
   <div class="section-t" style="margin-top:14px">Academic calendar</div><div class="list-row"><span class="grow">2026–27</span><span class="muted">01 Jun 2026 – 31 May 2027</span></div><div class="list-row"><span class="grow">Admission window</span><span class="muted">01 Jun – 30 Nov</span></div></div></div></div>`; };
 SETTINGS.users = () => `<div class="card"><div class="card-h"><h3>${USERS.length} users</h3><button class="btn primary sm" style="margin-left:auto">${ic('plus', 13)}Invite user</button></div><div class="card-b"><table class="simple"><thead><tr><th>Name</th><th>Role</th><th>Scope</th><th>2FA</th><th>Last active</th><th>Status</th></tr></thead><tbody>
@@ -1564,6 +1818,7 @@ SETTINGS.branding = () => `<div class="grid-2"><div class="card"><div class="car
 SETTINGS.integrations = () => `<div class="grid-3">${[['SMS provider', 'MSG91 · DLT', 'Connected', 'Sender ID THEJUS · 14 templates', 'sms'], ['WhatsApp Business', 'Gupshup', 'Connected', 'Opt-in captured per contact', 'chat'], ['Email domain', 'thejus.edu.in', 'Connected', 'SPF + DKIM verified', 'mail'], ['Single sign-on', 'Google Workspace', 'Not connected', 'Optional for staff', 'lock']].map(([t, n, s, d, i]) => `<div class="card"><div class="card-b" style="padding-top:16px"><div style="display:flex;gap:10px;align-items:center"><span class="dotico">${ic(i, 15)}</span><div style="flex:1"><div class="faint" style="font-size:11.5px">${t}</div><div>${n}</div></div>${chip(s === 'Connected' ? 'Active' : 'On hold')}</div><div class="faint" style="margin-top:12px">${d}</div><button class="btn sm" style="margin-top:12px">${s === 'Connected' ? 'Manage' : 'Connect'}</button></div></div>`).join('')}</div>`;
 /* ================= router ================= */
 function route() {
+  pageView = false;
   const h = (location.hash || '#dashboard').slice(1);
   let [page, sub] = h.split('/');
   if (page === 'dues' || page === 'refunds') { location.replace('#payments/' + (page === 'dues' ? 'students' : page)); return; }
@@ -1607,6 +1862,7 @@ document.addEventListener('click', e => {
   if ((el = q('[data-student]'))) { closeModal(); return openStudent(el.dataset.student); }
   if ((el = q('[data-refund]'))) return openRefund(el.dataset.refund);
   if ((el = q('[data-stab]'))) return openStudent(el.dataset.sid, el.dataset.stab);
+  if ((el = q('[data-invoice]'))) return showInvoice(el.dataset.invoice, +el.dataset.k);
   if ((el = q('[data-receipt]'))) return showReceipt(el.dataset.receipt);
   if ((el = q('[data-feeslip]'))) return showFeeSlip(el.dataset.feeslip);
   if ((el = q('[data-policy]'))) return showPolicy(el.dataset.policy);
@@ -1618,11 +1874,14 @@ document.addEventListener('click', e => {
   if ((el = q('[data-toggle]')) || (el = q('.switch'))) return el.classList.toggle('on');
   if ((el = q('[data-verify]'))) { const row = el.closest('.check-row'); row.querySelector('.chip').outerHTML = chip('Verified'); el.textContent = 'View'; el.classList.add('ghost'); return toast('Document verified'); }
   if ((el = q('.seg button')) && !q('#pMode')) { $$('button', el.parentElement).forEach(b => b.classList.toggle('on', b === el)); }
-  if ((el = q('[data-sm-add]'))) return smAddModal();
+  if ((el = q('[data-sm-addcourse]'))) return smAddCourse();
+  if ((el = q('[data-sm-add]'))) return smAddModal(el.dataset.smAdd);
+  if ((el = q('[data-st-toggle]'))) { const p = el.dataset.stToggle; if (ST_CLOSED.has(p)) ST_CLOSED.delete(p); else ST_CLOSED.add(p); return stRender(); }
+  if ((el = q('[data-st-expand]'))) { ST_CLOSED.clear(); if (el.dataset.stExpand === '0') stAllPaths().filter(p => p.split('.').length >= 3).forEach(p => ST_CLOSED.add(p)); return stRender(); }
   if ((el = q('[data-st-rename]'))) { if (stEdit) stSave(true); stEdit = el.dataset.stRename; return stRender(); }
   if ((el = q('[data-st-add]'))) {
     if (stEdit) stSave(true);
-    const parent = stGet(el.dataset.stAdd), lvl = ST_NEXT[parent.lvl];
+    const parent = stGet(el.dataset.stAdd), lvl = ST_NEXT[parent.lvl]; ST_CLOSED.delete(el.dataset.stAdd);
     const n = { name: 'New ' + stLbl(lvl).toLowerCase(), lvl };
     if (lvl === 'Programme') n.meta = PROG_META; else n.kids = [];
     if (lvl === 'Institution') n.tag = 'Institution';
@@ -1631,7 +1890,7 @@ document.addEventListener('click', e => {
   if ((el = q('[data-st-del]'))) {
     const path = el.dataset.stDel, n = stGet(path), parent = stGet(path.split('.').slice(0, -1).join('.'));
     const under = n.kids && n.kids.length ? ` and the ${n.kids.length} ${n.kids.length === 1 ? 'item' : 'items'} under it` : '';
-    if (!confirm(`Delete ${stLbl(n.lvl).toLowerCase()} "${n.name}"${under}?`)) return;
+    if (el.dataset.armed !== '1') { el.dataset.armed = '1'; el.classList.add('armed'); el.title = 'Click again to delete'; toast(`Click delete again to remove ${stLbl(n.lvl).toLowerCase()} "${n.name}"${under}`); setTimeout(() => { el.dataset.armed = ''; el.classList.remove('armed'); el.title = 'Delete'; }, 3500); return; }
     parent.kids.splice(+path.split('.').pop(), 1); stEdit = null; stRender(); return toast(`Deleted ${n.name}`);
   }
   if ((el = q('[data-fdrop]'))) return el.parentElement.classList.toggle('open');
@@ -1697,6 +1956,6 @@ document.addEventListener('keydown', e => { if (e.key === '[' && !/INPUT|TEXTARE
 $$('[data-ic]').forEach(el => el.innerHTML = ic(el.dataset.ic, el.classList.contains('ic-wrap') ? 15 : 18));
 document.addEventListener('change', e => { if (e.target.id === 'aySel') { state.ay = e.target.value; route(); } });
 window.addEventListener('resize', () => window.fitCol && window.fitCol());
-window.addEventListener('hashchange', () => { closeDrawer(); closeModal(); route(); });
+window.addEventListener('hashchange', () => { route(); });
 route();
 })();
