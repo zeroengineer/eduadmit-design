@@ -32,7 +32,7 @@ const PROGS = [
 ];
 const QUOTAS = ['Government', 'Management', 'NRI', 'Lateral entry'];
 const TUITION = { Government: 52000, Management: 98000, NRI: 265000, 'Lateral entry': 64000 };
-const FIXED = { 'Admission fee': 5000, 'Caution deposit': 10000, 'Exam fee': 3500 };
+const FIXED = { 'Application fee': 5000, 'Caution deposit': 10000, 'University & other fees': 3500 };
 const PAY_MODES = ['Cash', 'UPI', 'Bank transfer', 'Cheque', 'DD'];
 const modePicked = () => { const b = $('#pMode .on'); if (b) return b.textContent; $('#pMode').classList.add('invalid'); const e = $('#pModeErr'); if (e) e.textContent = 'Choose how the payment was received.'; return ''; };
 const STATUSES = ['Seat booked', 'Details collected', 'Confirmed', 'Cancelled', 'Withdrawn'];
@@ -115,6 +115,7 @@ rawPays.forEach((p, i) => {
   const ref = p.mode === 'Cash' ? '—' : p.mode === 'UPI' ? 'UPI' + Math.floor(1e11 + rnd() * 8e11) : p.mode === 'Cheque' ? 'CHQ ' + Math.floor(100000 + rnd() * 899999) : p.mode === 'DD' ? 'DD ' + Math.floor(100000 + rnd() * 899999) : p.mode === 'Payment link' ? 'pay_' + Math.random().toString(36).slice(2, 12) : 'NEFT' + Math.floor(1e9 + rnd() * 8e9);
   payments.push({ id: 'p' + i, rcpt: 'TEC/RCP/26/' + pad(i + 1, 5), ...p, ref, kind: 'Payment', status: 'Posted' });
 });
+students.forEach(s => { const p = payments.find(x => x.sid === s.id); if (p) { s.bfee = p.amt; p.alloc = 'Booking fee'; } });
 
 // refunds
 const RSTAT = ['Submitted', 'Awaiting approval', 'Awaiting approval', 'Approved', 'Processing', 'Completed', 'Completed', 'Rejected', 'On hold'];
@@ -219,7 +220,7 @@ const admHead = (sec, actions = '') => setTitle(ADMSET.find(x => x[0] === sec)[1
 const admWrap = (sec, body, actions = '') => `<div class="fill">${admHead(sec, actions)}<div class="content">${body}</div></div>`;
 function settingsShell(cur, inner) {
   const groups = [['Organisation', state.role === 'Admin' ? SET.map(([k, l]) => ['#settings/' + k, l, 'settings/' + k]) : []], ['Admission', allowed('admset') ? ADMSET.map(([k, l]) => ['#admset/' + k, l, 'admset/' + k]) : []]];
-  return `<div>${pageHead('Settings')}<div class="content"><div class="split"><nav class="subnav">${groups.filter(g => g[1].length).map(([g, items]) => `<div class="subnav-h">${g}</div>${items.map(([href, l, id]) => `<a href="${href}" class="${id === cur ? 'on' : ''}">${l}</a>`).join('')}`).join('')}</nav><div class="set-body">${inner}</div></div></div></div>`;
+  return `<div class="set-page">${pageHead('Settings')}<div class="content"><div class="split"><nav class="subnav">${groups.filter(g => g[1].length).map(([g, items]) => `<div class="subnav-h">${g}</div>${items.map(([href, l, id]) => `<a href="${href}" class="${id === cur ? 'on' : ''}">${l}</a>`).join('')}`).join('')}</nav><div class="set-body">${inner}</div></div></div></div>`;
 }
 
 /* ================= DataTable (PrimeReact style) ================= */
@@ -306,7 +307,7 @@ PAGES.dashboard = () => {
   const maxD = Math.max(...byDay, 1);
   const colSvg = (W, H) => {
   const X0 = 54, bw = (W - X0) / 14, PH = H - 40;
-  const bars = days.map((d, i) => { const h = Math.max(2, byDay[i] / maxD * PH); return `<g><rect x="${X0 + i * bw + 7}" y="${H - 22 - h}" width="${bw - 14}" height="${h}" rx="4" fill="${d === TODAY ? '#C10007' : '#E5E5E5'}" opacity="1"><title>${fd(d)}: ${inr(byDay[i])}</title></rect>${i % 2 === 1 || d === TODAY ? `<text x="${X0 + i * bw + bw / 2}" y="${H - 4}" text-anchor="middle">${fdShort(d)}</text>` : ''}</g>`; }).join('');
+  const bars = days.map((d, i) => { const h = Math.max(2, byDay[i] / maxD * PH); return `<g><rect x="${X0 + i * bw + 7}" y="${H - 22 - h}" width="${bw - 14}" height="${h}" rx="4" fill="${d === TODAY ? '#0A3C6E' : '#E5E5E5'}" opacity="1"><title>${fd(d)}: ${inr(byDay[i])}</title></rect>${i % 2 === 1 || d === TODAY ? `<text x="${X0 + i * bw + bw / 2}" y="${H - 4}" text-anchor="middle">${fdShort(d)}</text>` : ''}</g>`; }).join('');
   const grid = [0, .5, 1].map(f => `<line x1="${X0}" x2="${W}" y1="${H - 22 - f * PH}" y2="${H - 22 - f * PH}" stroke="#E6EAF0" stroke-dasharray="${f ? '3 3' : ''}"/><text x="${X0 - 8}" y="${H - 18 - f * PH}" text-anchor="end">${f ? inrS(maxD * f) : '₹0'}</text>`).join('');
   return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="display:block">${grid}${bars}</svg>`;
   };
@@ -322,7 +323,7 @@ PAGES.dashboard = () => {
     const c = Object.values(p.cap).reduce((a, b) => a + b, 0);
     const n = st => students.filter(s => s.prog === p.code && s.status === st).length;
     const cf = n('Confirmed'), pp = n('Details collected'), sb = n('Seat booked');
-    return `<div class="hbar" data-go="admissions" data-preset='{"prog":"${p.code}"}' style="cursor:pointer"><span class="lbl">${p.name}</span><span class="track"><i style="width:${cf / c * 100}%;background:#C10007"></i><i style="width:${pp / c * 100}%;background:#FF6467"></i><i style="width:${sb / c * 100}%;background:#FFC9C9"></i></span><span class="val">${cf + pp + sb} <span class="faint">/ ${c}</span></span></div>`;
+    return `<div class="hbar" data-go="admissions" data-preset='{"prog":"${p.code}"}' style="cursor:pointer"><span class="lbl">${p.name}</span><span class="track"><i style="width:${cf / c * 100}%;background:#0A3C6E"></i><i style="width:${pp / c * 100}%;background:#1783C1"></i><i style="width:${sb / c * 100}%;background:#A2CDE6"></i></span><span class="val">${cf + pp + sb} <span class="faint">/ ${c}</span></span></div>`;
   }).join('');
   const quotaRows = QUOTAS.map(q => {
     const a = occ.filter(s => s.quota === q); const as = a.reduce((t, s) => t + s.net, 0), pd = a.reduce((t, s) => t + s.paid, 0);
@@ -348,7 +349,7 @@ PAGES.dashboard = () => {
       </div></div>
     </div>
     <div style="margin-bottom:14px">
-      <div class="card"><div class="card-h"><h3>Admissions by programme</h3><div class="legend" style="margin-left:auto"><span><i style="background:#C10007"></i>Confirmed</span><span><i style="background:#FF6467"></i>Details collected</span><span><i style="background:#FFC9C9"></i>Seat booked</span></div></div><div class="card-b">${progRows}</div></div>
+      <div class="card"><div class="card-h"><h3>Admissions by programme</h3><div class="legend" style="margin-left:auto"><span><i style="background:#0A3C6E"></i>Confirmed</span><span><i style="background:#1783C1"></i>Details collected</span><span><i style="background:#A2CDE6"></i>Seat booked</span></div></div><div class="card-b">${progRows}</div></div>
     </div>
     <div>
       <div class="card"><div class="card-h"><h3>Recent activity</h3><a class="muted" href="#audit">View audit log</a></div><div class="card-b">
@@ -417,7 +418,7 @@ function stepper(status) {
   const idx = { 'Seat booked': 1, 'Details collected': 2, Confirmed: 4 }[status] ?? 0;
   return `<div class="stepper">${flow.map((f, i) => `${i ? `<span class="step-line ${i < idx ? 'done' : ''}"></span>` : ''}<span class="step ${i < idx ? 'done' : i === idx ? 'cur' : ''}"><i>${i < idx ? ic('check', 10) : i + 1}</i>${f}</span>`).join('')}</div>`;
 }
-function openStudent(id, tab = 'overview') {
+function studentTabBody(id, tab) {
   const s = sById(id);
   const pays = payments.filter(p => p.sid === id);
   const tabs = [['overview', 'Overview'], ['fees', 'Fee plan'], ['payments', `Payments (${pays.length})`], ['docs', 'Documents'], ['activity', 'Activity']];
@@ -459,16 +460,13 @@ function openStudent(id, tab = 'overview') {
     ...pays.map(p => [p.date, p.cashier, `${p.kind === 'Reversal' ? 'Reversal' : 'Payment'} ${inr(p.amt)} · ${p.rcpt}`]),
     ...(s.status === 'Confirmed' ? [[s.d1, 'System', 'Confirmed · receipt and fee slip issued to guardian']] : []),
   ].map(([d, u, t]) => `<div class="list-row"><span class="dotico">${ic('clock', 14)}</span><div class="grow"><div class="t">${esc(t)}</div><div class="s">${esc(u)} · ${fd(d)}</div></div></div>`).join('');
-  openDrawer(`<div class="d-head"><div class="d-top"><div style="flex:1"><div class="d-title">${esc(s.name)}</div><div class="d-sub">${s.adm || s.app} · ${s.progName} · ${s.quota} ${chip(s.status)}</div></div><button class="icon-btn" data-close-drawer>${ic('x')}</button></div>
-    <div style="margin-top:12px">${stepper(s.status)}</div>
-    <div class="grid-3" style="margin-top:14px;gap:10px">
-      <div><div class="faint" style="font-size:11px">Assessed</div><div style="font-size:16px" class="num">${s.net ? inr(s.net) : '—'}</div></div>
-      <div><div class="faint" style="font-size:11px">Paid</div><div style="font-size:16px;color:var(--ok)" class="num">${s.paid ? inr(s.paid) : '—'}</div></div>
-      <div><div class="faint" style="font-size:11px">Balance ${s.overdue ? `· <span style="color:var(--bad)">${inr(s.overdue)} overdue</span>` : ''}</div><div style="font-size:16px" class="num">${s.due ? inr(s.due) : '—'}</div></div>
-    </div>
-    <div class="d-tabs">${tabs.map(([k, l]) => `<button class="d-tab ${k === tab ? 'on' : ''}" data-stab="${k}" data-sid="${id}">${l}</button>`).join('')}</div></div>
-    <div class="d-body">${body}</div>
-    <div class="d-foot"><button class="btn ghost act-write" style="margin-right:auto;color:var(--bad)" data-action="cancel-adm" data-sid="${id}">Cancel admission</button><button class="btn" data-feeslip="${id}">${ic('printer', 14)}Fee slip</button>${s.status === 'Seat booked' ? `<button class="btn primary act-write" data-wizard="${id}" data-step="2">${ic('user', 14)}Collect details</button>` : s.status === 'Details collected' ? `<button class="btn primary act-write" data-wizard="${id}" data-step="3">${ic('payments', 14)}Take payment</button>` : `<button class="btn primary act-write" data-action="record-payment" data-sid="${id}" ${s.due > 0 && OCCUPY.includes(s.status) ? '' : 'disabled'}>${ic('payments', 14)}Record payment</button>`}</div>`);
+  return body;
+}
+/* a student opens as a page: #admissions/view/<id>[/<tab>] */
+function openStudent(id, tab = 'overview') {
+  closeDrawer();
+  const h = 'admissions/view/' + id + (tab && tab !== 'overview' ? '/' + tab : '');
+  if (location.hash === '#' + h) route(); else location.hash = h;
 }
 
 /* ---------- Booking wizard: book seat → collect details → payment → receipt & fee slip ---------- */
@@ -558,6 +556,9 @@ function bookingWizard(sid, step = 1, pid) {
         ${F('Amount (₹)', 'amt', { req: true, html: '<input class="input num" id="pAmt" inputmode="numeric" placeholder="e.g. 10000">' })}
         <div class="field" style="grid-column:span 2"><label>Mode <span class="req">*</span></label><div class="seg" id="pMode" role="radiogroup" aria-label="Mode of payment">${PAY_MODES.map(m => `<button type="button">${m}</button>`).join('')}</div><span class="hint mode-err" id="pModeErr"></span></div>
         <div class="field hidden" id="pRefF" style="grid-column:1/-1"><label>Reference no.</label><input class="input" id="pRef" placeholder="UTR / cheque / DD no. (optional)"></div>
+        ${F('Scholarship (₹ per year)', 'schol', { ph: '0', attr: ' inputmode="numeric"' })}
+        ${F('Sponsorship (₹ per year)', 'spons', { ph: '0', attr: ' inputmode="numeric"' })}
+        ${F('Fee remarks', 'fremarks', { ph: 'Shown on the fee structure slip' })}
       </div>
       <div id="dupWarn" class="hidden" style="margin-top:10px"></div>
       <div id="wzErr"></div>
@@ -620,12 +621,12 @@ function bookingWizard(sid, step = 1, pid) {
         guardian: v('guardian'), relation: v('relation'), gmobile: v('gmobile'), gemail: v('gemail'), gocc: v('gocc'),
         qual: v('qual'), board: v('board'), yop: v('yop'), marks: v('marks'), school: v('school'),
         prog: p.code, progName: p.name, dept: p.dept, quota, cat: v('cat'), status: 'Details collected', created: v('adate') || TODAY, officer: 'Anita Joseph',
-        entrance: v('rank') ? `${v('exam')} ${v('rank')}` : '—', examRoll: v('roll'), fee, conc: 0, net: fee, d1: TODAY, paid: 0, policy: { ver: POLICY.ver, at: TODAY }, details: true,
+        entrance: v('rank') ? `${v('exam')} ${v('rank')}` : '—', examRoll: v('roll'), fee, schol: Math.max(0, +v('schol') || 0), spons: Math.max(0, +v('spons') || 0), feeRemarks: v('fremarks'), conc: Math.max(0, +v('schol') || 0) + Math.max(0, +v('spons') || 0), net: fee - (Math.max(0, +v('schol') || 0) + Math.max(0, +v('spons') || 0)), d1: TODAY, paid: 0, policy: { ver: POLICY.ver, at: TODAY }, details: true,
         docs: Object.fromEntries(['SSLC', 'Plus Two', 'TC', 'Community certificate'].map(d => [d, docs.includes(d) ? 'Uploaded' : 'Pending'])) };
       const pay = { id: 'p' + Date.now(), rcpt: 'TEC/RCP/26/' + pad(payments.filter(x => x.kind === 'Payment').length + 1, 5), sid: ns.id, amt, date: TODAY, mode, cashier: 'Anita Joseph', ref: mode === 'Cash' ? '—' : ($('#pRef').value.trim() || '—'), kind: 'Payment', status: 'Posted', alloc: 'Booking fee' };
       ns.paid = amt; ns.bfee = amt; students.unshift(ns); payments.push(pay); recalc(ns);
       audit.unshift({ id: 'a' + Date.now(), at: TODAY + ' 10:22', user: 'Anita Joseph', role: state.role, module: 'Admissions', action: 'seat.book', record: ns.adm, detail: `${ns.name} · seat booked by ${ns.guardian} · booking fee ${inr(amt)} (${mode})`, before: '—', after: ns.status, ip: '10.12.4.1' });
-      location.hash = 'admissions'; toast(`Seat booked · ${ns.adm} · booking fee ${inr(amt)} received`);
+      state.justBooked = ns.id; location.hash = 'admissions/view/' + ns.id; toast(`Seat booked · ${ns.adm} · booking fee ${inr(amt)} received`);
     };
   }
   if (step === 2) {
@@ -762,6 +763,151 @@ function bkSetup() {
   $('#main').onscroll = null;
   show(0); setTimeout(refresh);
 }
+
+/* ---------- Admission summary + college documents (receipt, fee structure slip) ---------- */
+const CATEGORY = { Government: 'Merit', Management: 'Management', NRI: 'NRI', 'Lateral entry': 'Merit (Lateral entry)' };
+const dmy = iso => iso ? iso.split('-').reverse().join('.') : '—';
+const docCourse = s => { const p = PROGS.find(x => x.code === s.prog); const c = p ? progCourse(p) : s.progName.split(' ')[0]; return s.quota === 'Lateral entry' && c === 'B.Tech' ? 'B.Tech LET' : c; };
+const docBranch = s => { const p = PROGS.find(x => x.code === s.prog); return p ? progBranch(p) : s.progName; };
+const docExam = s => s.quota === 'Lateral entry' ? 'LET' : (s.entrance && s.entrance !== '—' ? s.entrance.replace(/\s+rank\b/i, '').split(' ')[0].replace(/\/$/, '') : 'Other');
+const docExamFull = s => s.entrance && s.entrance !== '—' ? s.entrance : (s.quota === 'Lateral entry' ? 'LET' : '—');
+const bookingPay = s => payments.find(x => x.sid === s.id && x.alloc === 'Booking fee') || payments.filter(x => x.sid === s.id && x.kind === 'Payment').sort((a, b) => a.date.localeCompare(b.date))[0] || (s.bfee ? { amt: s.bfee, date: s.created, mode: 'Cash', ref: '—', rcpt: '—' } : null);
+function feeModel(s) {
+  const tuition = s.fee - Object.values(FIXED).reduce((a, b) => a + b, 0);
+  const schol = s.schol ?? (s.conc || 0), spons = s.spons || 0;
+  const annualNet = Math.max(0, tuition - schol - spons);
+  const y1 = annualNet + Object.values(FIXED).reduce((a, b) => a + b, 0);
+  const years = docCourse(s) === 'B.Tech' ? 4 : docCourse(s) === 'B.Tech LET' ? 3 : 2;
+  const firstSem = docCourse(s) === 'B.Tech LET' ? 3 : 1;
+  const yr = +(s.created || TODAY).slice(0, 4);
+  const bp = bookingPay(s), inst1 = Math.min(y1, bp ? bp.amt : Math.round(y1 * .4 / 100) * 100);
+  const nov = `${yr}-11-30` > (s.created || TODAY) ? `${yr}-11-30` : addDays(s.created || TODAY, 30);
+  const rows = [{ k: 'Year 1', n: 'Payment schedule — Instalment 1', amt: inst1, due: bp ? bp.date : s.created }, { k: 'Year 1', n: 'Payment schedule — Instalment 2', amt: y1 - inst1, due: nov }];
+  for (let y = 1; y < years; y++) for (let h = 0; h < 2; h++) {
+    const sem = firstSem + 2 * y + h;
+    rows.push({ k: 'Semester ' + sem, n: 'Payment schedule', amt: h ? annualNet - Math.round(annualNet / 2) : Math.round(annualNet / 2), due: `${yr + y}-${h ? '11-30' : '06-30'}` });
+  }
+  return { tuition, schol, spons, annualNet, y1, paid: s.paid, bal: Math.max(0, y1 - s.paid), rows, years };
+}
+const COLLEGE = `<div class="cd-head"><span class="logo">T</span><div><h4>Thejus Engineering College</h4><div class="cd-sub">Vellarakad P.O., Thrissur, Kerala — 680584 · Promoted by Cheruvathur Foundation</div></div></div>`;
+const cdTable = rows => `<table class="cd-t"><tbody>${rows.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join('')}</tbody></table>`;
+function admReceiptDoc(s) {
+  const bp = bookingPay(s), m = feeModel(s);
+  return `<div class="paper cd">${COLLEGE}
+    <div class="cd-title">Admission Registration Receipt — ${(s.created || TODAY).slice(0, 4)}</div>
+    <div class="cd-h">1. Admission details</div>
+    ${cdTable([['Receipt no.', bp ? bp.rcpt : '—'], ['Date', dmy(bp ? bp.date : s.created)], ['Student name', esc(s.name)], ['Date of birth', dmy(s.dob)], ['Admission category', CATEGORY[s.quota] || s.quota], ['Course', docCourse(s)], ['Entrance exam', esc(docExam(s))], ['Branch', esc(docBranch(s))], ['Contact no.', s.mobile || '—']])}
+    <div class="cd-h">2. Fee details</div>
+    <table class="cd-t cd-fee"><thead><tr><th>Fee particulars</th><th class="r">Amount</th></tr></thead><tbody>
+      <tr><td>Fee per year (tuition fee)</td><td class="r">${inr(m.tuition)}</td></tr>
+      <tr><td>Caution deposit (refundable)</td><td class="r">${inr(FIXED['Caution deposit'])}</td></tr>
+      <tr><td>Application fee</td><td class="r">${inr(FIXED['Application fee'])}</td></tr>
+      <tr><td>University fee &amp; other fees</td><td class="r">${inr(FIXED['University & other fees'])}</td></tr></tbody></table>
+    <div class="cd-h">3. Faculty in charge</div>
+    <div class="cd-line"><b>Mr./Ms.</b> ${esc(s.officer || '—')}</div>
+    <table class="cd-t cd-sign"><thead><tr><th>Authorisation</th><th>Signature</th></tr></thead><tbody>${['Signature of the faculty in charge', 'Verified by', 'Signature of student', 'Signature of parent'].map(x => `<tr><td>${x}</td><td></td></tr>`).join('')}</tbody></table>
+    <div class="cd-h">4. Fee payment receipt</div>
+    ${cdTable([['Fee received', bp ? `<b>${inr(bp.amt)}</b>` : '—'], ['Date', dmy(bp ? bp.date : '')], ['Mode of payment', bp ? bp.mode : '—'], ['Transaction ID', bp && bp.ref && bp.ref !== '—' ? esc(bp.ref) : (bp && bp.mode === 'Cash' ? 'Cash' : '—')]])}
+    <div class="cd-sig">Signature of the accounts in charge</div>
+  </div>`;
+}
+function feeStructureDoc(s) {
+  const m = feeModel(s), ay = state.ay || '2026–27';
+  return `<div class="paper cd">${COLLEGE}
+    <div class="cd-sub cd-acc">Accredited by NAAC · Affiliated to APJ Abdul Kalam Technological University · Approved by AICTE</div>
+    <div class="cd-title">Fee Structure — Academic Year ${ay} Admissions</div>
+    <div class="cd-h">1. Admission details</div>
+    ${cdTable([['Course', docCourse(s)], ['Branch', esc(docBranch(s))], ['Date of admission', dmy(s.created)], ['Admission number', s.adm], ['Admission mode', CATEGORY[s.quota] || s.quota], ['Student name', esc(s.name)], ['Date of birth', dmy(s.dob)]])}
+    <div class="cd-h">2. Annual fee details</div>
+    <table class="cd-t cd-fee"><thead><tr><th>Fee particulars</th><th class="r">Amount</th><th>Payment frequency / remarks</th></tr></thead><tbody>
+      <tr><td>Annual fee</td><td class="r">${inr(m.tuition)}</td><td>Annual</td></tr>
+      <tr><td>Application fee</td><td class="r">${inr(FIXED['Application fee'])}</td><td>First year only</td></tr>
+      <tr><td>Caution deposit</td><td class="r">${inr(FIXED['Caution deposit'])}</td><td>First year only · refundable</td></tr>
+      <tr><td>University &amp; other fees</td><td class="r">${inr(FIXED['University & other fees'])}</td><td>First year</td></tr>
+      <tr><td>Sponsorship</td><td class="r">${inr(m.spons)}</td><td></td></tr>
+      <tr><td>Scholarship</td><td class="r">${inr(m.schol)}</td><td></td></tr>
+      <tr><td>Remarks</td><td colspan="2">${esc(s.feeRemarks || '—')}</td></tr></tbody>
+      <tfoot><tr><td>Annual fee / year</td><td class="r">${inr(m.annualNet)}</td><td>After scholarship and sponsorship</td></tr></tfoot></table>
+    <div class="cd-h">3. Fee payment and schedule</div>
+    <table class="cd-t cd-fee"><tbody>
+      <tr><td>Net fee payable in Year 1 (${ay})</td><td class="r">${inr(m.y1)}</td></tr>
+      <tr><td>Net annual fee payable from Year II</td><td class="r">${inr(m.annualNet)}</td></tr>
+      <tr><td>Year I fee paid</td><td class="r">${inr(m.paid)}</td></tr>
+      <tr><td><b>Year I fee balance payable</b></td><td class="r"><b>${inr(m.bal)}</b></td></tr></tbody></table>
+    <div class="cd-sh">Instalment schedule</div>
+    <table class="cd-t cd-fee"><thead><tr><th>Year / semester</th><th>Payment particulars</th><th class="r">Amount</th><th>Due on or before</th></tr></thead><tbody>
+      ${m.rows.map(r => `<tr><td>${r.k}</td><td>${r.n}</td><td class="r">${inr(r.amt)}</td><td>${dmy(r.due)}</td></tr>`).join('')}</tbody></table>
+    <div class="cd-h">4. Declaration by student and parent</div>
+    <p class="cd-decl">I understand the fee structure for my preferred course at TEC as described above, and I hereby declare that I am liable to pay the fee as agreed upon mutually. Transport, hostel, uniform, miscellaneous fee and university exam fee are not included in the above fee. Scholarship offered will be cancelled from Year II if the student fails to make the payment in the preceding year.</p>
+    <table class="cd-t cd-decl-t"><thead><tr><th>Student</th><th>Parent</th></tr></thead><tbody>
+      <tr><td>Name: ${esc(s.name)}</td><td>Name: ${esc(s.guardian || '—')}</td></tr>
+      <tr><td>Signature:</td><td>Signature:</td></tr>
+      <tr><td>Date: ${dmy(TODAY)}</td><td>Date: ${dmy(TODAY)}</td></tr></tbody></table>
+  </div>`;
+}
+function printDocs(html) {
+  let el = $('#printArea'); if (!el) { el = document.createElement('div'); el.id = 'printArea'; document.body.appendChild(el); }
+  el.innerHTML = html; document.body.classList.add('printing');
+  const done = () => { document.body.classList.remove('printing'); el.innerHTML = ''; window.removeEventListener('afterprint', done); };
+  window.addEventListener('afterprint', done);
+  setTimeout(() => window.print(), 50);
+}
+PAGES['admissions/view'] = () => {
+  const parts = location.hash.slice(1).split('/'), s = sById(parts[2] || ''), tab = parts[3] || 'overview';
+  if (!s) return `<div>${pageHead('Admission not found')}<div class="content"><a class="btn" href="#admissions">Back to Admissions</a></div></div>`;
+  const pays = payments.filter(x => x.sid === s.id), bp = bookingPay(s), m = feeModel(s);
+  const TABS = [['overview', 'Overview'], ['fees', 'Fee plan'], ['payments', `Payments (${pays.length})`], ['docs', 'Documents'], ['print', 'Print documents'], ['activity', 'Activity']];
+  const kv = rows => `<div class="sum-kv">${rows.map(([k, v]) => `<div><span>${k}</span><b>${v || '—'}</b></div>`).join('')}</div>`;
+  const card = (t, body) => `<div class="card sum-card"><div class="card-h"><h3>${t}</h3></div><div class="card-b">${body}</div></div>`;
+  let body;
+  if (tab === 'overview') body = `<div class="sum-left">
+      ${card('Quota, course & branch', kv([['Admission category', CATEGORY[s.quota] || s.quota], ['Quota', s.quota], ['Course', docCourse(s)], ['Branch', esc(docBranch(s))], ['Department', esc(s.dept)]]))}
+      ${card('Admission details', kv([['Admission no.', s.adm], ['Application no.', s.app], ['Academic year', s.ay || state.ay], ['Fee category', s.cat], ['Admission date', fd(s.created)], ['Faculty in charge', esc(s.officer)]]))}
+      ${card('Personal details', kv([['Student name', esc(s.name)], ['Date of birth', fd(s.dob)], ['Gender', s.gender], ['Mobile', s.mobile ? '+91 ' + s.mobile : ''], ['Email', esc(s.email)], ['Aadhaar', s.aadhaar || (s.mobile ? 'XXXX XXXX ' + s.mobile.slice(-4) : '')], ['Nationality', s.nat], ['Religion', s.religion], ['Community', s.community ? '•••• (masked)' : ''], ['Annual income', s.income ? '•••• (masked)' : ''], ['Blood group', s.blood], ['Address', esc(s.address)]]))}
+      ${card('Parent / guardian', kv([['Name', esc(s.guardian)], ['Relation', s.relation || 'Guardian'], ['Mobile', s.gmobile || s.mobile], ['Email', esc(s.gemail)], ['Occupation', esc(s.gocc)]]))}
+      ${card('Academic & entrance', kv([['Qualifying exam', esc(s.qual)], ['Board / university', esc(s.board)], ['Year of passing', s.yop], ['Marks %', s.marks], ['School / college', esc(s.school)], ['Entrance', esc(docExamFull(s))], ['Roll no.', esc(s.examRoll)]]))}
+      ${card('Documents received', `<div class="sum-docs">${Object.entries(s.docs).map(([d, v]) => `<span>${v === 'Pending' ? ic('clock', 13) : ic('check', 13)}${d}<em>${v}</em></span>`).join('')}</div>`)}
+      ${card('Refund policy', `<div class="notice ok">${ic('check', 14)}<div style="flex:1">Policy <b>${s.policy.ver}</b> accepted by <b>${esc(s.guardian)}</b> on ${fd(s.policy.at)}.</div><button class="btn sm" data-policy="${s.id}">View</button></div>`)}
+      ${card('Messages to guardian', `<div class="list-row"><span class="dotico">${ic('sms', 14)}</span><div class="grow"><div class="t">Seat booked — ${s.adm || s.app}</div><div class="s">SMS · ${fd(s.created)}</div></div>${chip('Delivered')}</div>${s.paid ? `<div class="list-row"><span class="dotico">${ic('chat', 14)}</span><div class="grow"><div class="t">Receipt + fee slip sent</div><div class="s">WhatsApp + SMS · ${fd(s.d1)}</div></div>${chip('Delivered')}</div>` : ''}`)}
+    </div>`;
+  else if (tab === 'print') body = `<div class="seg" id="docSeg" style="margin:0 0 12px"><button class="on" data-d="r" type="button">Admission fee receipt</button><button data-d="f" type="button">Fee structure slip</button></div>
+      <div id="docR" class="sum-prev">${admReceiptDoc(s)}</div><div id="docF" class="sum-prev hidden">${feeStructureDoc(s)}</div>`;
+  else body = `<div class="card"><div class="card-b sv-body">${studentTabBody(s.id, tab)}</div></div>`;
+  const primary = s.status === 'Seat booked' ? `<button class="btn primary act-write" data-wizard="${s.id}" data-step="2">${ic('user', 14)}Collect details</button>`
+    : s.status === 'Details collected' ? `<button class="btn primary act-write" data-wizard="${s.id}" data-step="3">${ic('payments', 14)}Take payment</button>`
+    : `<button class="btn primary act-write" data-action="record-payment" data-sid="${s.id}" ${s.due > 0 && OCCUPY.includes(s.status) ? '' : 'disabled'}>${ic('payments', 14)}Record payment</button>`;
+  const justBooked = state.justBooked === s.id; state.justBooked = null;
+  setTimeout(() => {
+    const sw = $('#docSeg');
+    if (sw) sw.onclick = e => { const b = e.target.closest('button'); if (!b) return; $$('#docSeg button').forEach(x => x.classList.toggle('on', x === b)); $('#docR').classList.toggle('hidden', b.dataset.d !== 'r'); $('#docF').classList.toggle('hidden', b.dataset.d !== 'f'); };
+    $('#prR').onclick = () => printDocs(admReceiptDoc(s));
+    $('#prF').onclick = () => printDocs(feeStructureDoc(s));
+    $('#prB').onclick = () => printDocs(admReceiptDoc(s) + '<div class="pb"></div>' + feeStructureDoc(s));
+  });
+  return `<div class="sv-page">${pageHead(esc(s.name), '', `<a class="btn" href="#admissions">Back to Admissions</a><button class="btn ghost act-write sv-cancel" data-action="cancel-adm" data-sid="${s.id}">Cancel admission</button>${primary}`, `<a href="#admissions">Admissions</a> / ${s.adm || s.app}`)}
+  <div class="content">
+    ${justBooked ? `<div class="notice ok sum-ok">${ic('check', 16)}<div><b>Seat booked · ${s.adm}</b> — booking fee ${bp ? `<b>${inr(bp.amt)}</b> received by ${bp.mode} · receipt ${bp.rcpt}` : 'not recorded'}. Print the admission fee receipt and fee structure slip from the right.</div></div>` : ''}
+    <div class="card sv-hero"><div class="card-b">
+      <div class="sv-sub">${s.adm || s.app} · ${esc(s.progName)} · ${s.quota} ${chip(s.status)}</div>
+      <div class="sv-step">${stepper(s.status)}</div>
+      <div class="sv-money">
+        <div><span>Assessed</span><b class="num">${s.net ? inr(s.net) : '—'}</b></div>
+        <div><span>Paid</span><b class="num" style="color:var(--ok)">${s.paid ? inr(s.paid) : '—'}</b></div>
+        <div><span>Balance${s.overdue ? ` · <em>${inr(s.overdue)} overdue</em>` : ''}</span><b class="num">${s.due ? inr(s.due) : '—'}</b></div>
+        <div><span>Booking fee</span><b class="num">${bp ? inr(bp.amt) : '—'}</b></div>
+      </div>
+    </div></div>
+    <div class="sheet-tabs sv-tabs">${TABS.map(([k, l]) => `<a class="sheet-tab ${k === tab ? 'on' : ''}" href="#admissions/view/${s.id}${k === 'overview' ? '' : '/' + k}">${l}</a>`).join('')}</div>
+    <div class="sum-layout"><div class="sv-main">${body}</div>
+      <div class="sum-right"><div class="card sum-print"><div class="card-h"><h3>Print documents</h3></div><div class="card-b">
+        <button class="btn sum-pbtn" id="prR">${ic('printer', 14)}<span><b>Admission fee receipt</b><em>Admission Registration Receipt · ${bp ? bp.rcpt : '—'}</em></span></button>
+        <button class="btn sum-pbtn" id="prF">${ic('printer', 14)}<span><b>Fee structure slip</b><em>${CATEGORY[s.quota] || s.quota} · ${docCourse(s)} · ${m.rows.length} instalments</em></span></button>
+        <button class="btn primary" id="prB" style="width:100%;justify-content:center;margin-top:4px">${ic('printer', 14)}Print both</button>
+        ${tab !== 'print' ? `<a class="lnk sv-preview" href="#admissions/view/${s.id}/print">Preview documents</a>` : ''}
+      </div></div></div>
+    </div>
+  </div></div>`;
+};
 function feeSlipPaper(s) {
   const nd = nextDue(s);
   return `<div class="paper">
@@ -1169,15 +1315,12 @@ function openReport(name) {
 
 /* ---------- Audit ---------- */
 PAGES.audit = () => {
-  const mods = [...new Set(audit.map(a => a.module))];
   const html = `<div class="fill">${pageHead('Audit log', 'An append-only record of every change, approval, export, login and permission change. Entries can never be edited.')}
-  <div class="content">${sheet({ cols: [{ key: 'at', label: 'Timestamp', w: 140 }, { key: 'user', label: 'User', w: 170 }, { key: 'role', label: 'Role', w: 150 }, { key: 'module', label: 'Module', w: 110 }, { key: 'action', label: 'Action', w: 140, render: r => `<span class="tag">${r.action}</span>` }, { key: 'record', label: 'Record', w: 160 }, { key: 'detail', label: 'Detail', w: 280 }, { key: 'before', label: 'Before', w: 120 }, { key: 'after', label: 'After', w: 130 }, { key: 'ip', label: 'IP', w: 110 }], rows: audit, onOpen: openAudit,
-    chips: fchip('all', 'All', audit.length, true) + mods.map(m => fchip(m, m, audit.filter(a => a.module === m).length)).join(''), chipLabel: 'Module' })}</div></div>`;
-  chipHandler = ids => { S.filter = ids.length ? r => ids.includes(r.module) : null; renderSheet(); };
+  <div class="content">${sheet({ cols: [{ key: 'at', label: 'Timestamp', w: 140 }, { key: 'user', label: 'User', w: 170 }, { key: 'role', label: 'Role', w: 150 }, { key: 'action', label: 'Action', w: 140, render: r => `<span class="tag">${r.action}</span>` }, { key: 'record', label: 'Record', w: 160 }, { key: 'detail', label: 'Detail', w: 280 }, { key: 'before', label: 'Before', w: 120 }, { key: 'after', label: 'After', w: 130 }, { key: 'ip', label: 'IP', w: 110 }], rows: audit, onOpen: openAudit })}</div></div>`;
   return html;
 };
 function openAudit(a) {
-  openModal(`${mHead('Audit event')}<div class="m-body"><div class="kv"><div><span>When</span>${a.at}</div><div><span>Who</span>${esc(a.user)} · ${a.role}</div><div><span>Action</span><span class="tag">${a.action}</span></div><div><span>Record</span>${esc(a.record)}</div><div><span>IP</span>${a.ip}</div><div><span>Module</span>${a.module}</div></div>
+  openModal(`${mHead('Audit event')}<div class="m-body"><div class="kv"><div><span>When</span>${a.at}</div><div><span>Who</span>${esc(a.user)} · ${a.role}</div><div><span>Action</span><span class="tag">${a.action}</span></div><div><span>Record</span>${esc(a.record)}</div><div><span>IP</span>${a.ip}</div></div>
   <div class="section-t">Change</div><div class="grid-2"><div class="notice bad" style="display:block"><div class="faint" style="font-size:11px">Before</div>${esc(a.before)}</div><div class="notice ok" style="display:block"><div class="faint" style="font-size:11px">After</div>${esc(a.after)}</div></div><p class="muted">${esc(a.detail)}</p></div>`);
 }
 
@@ -1278,7 +1421,7 @@ SETTINGS.numbering = () => `<div class="card"><div class="card-b" style="padding
   </tbody></table><div style="margin-top:12px" class="faint">Tokens: <span class="token">{INST}</span> <span class="token">{YEAR}</span> <span class="token">{YY}</span> <span class="token">{PROG}</span> <span class="token">{QUOTA}</span> <span class="token">{SEQ:n}</span></div></div></div>`;
 SETTINGS.branding = () => `<div class="grid-2"><div class="card"><div class="card-b" style="padding-top:16px">
   <div class="field"><label>Logo</label><div style="display:flex;gap:12px;align-items:center"><span class="logo" style="width:48px;height:48px;font-size:24px;border-radius:12px">T</span><button class="btn sm">${ic('upload', 13)}Replace</button></div></div>
-  <div class="field" style="margin-top:14px"><label>Brand colours</label><div style="display:flex;gap:8px">${['#C10007', '#FB2C36', '#0A0A0A', '#737373', '#E5E5E5', '#FEF2F2', '#F5F5F5'].map(c => `<span title="${c}" style="width:36px;height:36px;border-radius:9px;background:${c};border:1px solid var(--line)"></span>`).join('')}</div></div>
+  <div class="field" style="margin-top:14px"><label>Brand colours</label><div style="display:flex;gap:8px">${['#0A3C6E', '#1783C1', '#0A0A0A', '#737373', '#E5E5E5', '#E8F2FA', '#F5F5F5'].map(c => `<span title="${c}" style="width:36px;height:36px;border-radius:9px;background:${c};border:1px solid var(--line)"></span>`).join('')}</div></div>
   <div class="field" style="margin-top:14px"><label>Subdomain</label><div style="display:flex;align-items:center;gap:6px"><input class="input" value="thejus" style="width:140px"><span class="muted">.eduadmit.app</span></div></div>
   <div class="field" style="margin-top:14px"><label>Custom domain (optional)</label><input class="input" placeholder="admissions.thejus.edu.in"></div>
   <div class="field" style="margin-top:14px"><label>Signatures</label><div class="list-row"><span class="grow">Principal · Dr. Suma Rajan</span>${chip('Uploaded')}</div><div class="list-row"><span class="grow">Cashier · Joby Mathew</span>${chip('Uploaded')}</div></div>
@@ -1375,7 +1518,7 @@ document.addEventListener('click', e => {
     if (a === 'record-payment') return recordPayment(el.dataset.sid);
     if (a === 'bulk-fee') return bulkFee();
     if (a === 'new-refund') { const s = students.find(x => x.status === 'Confirmed'); return toast('Pick a student, then choose “Cancel admission” to raise a refund'); }
-    if (a === 'cancel-adm') { closeDrawer(); return toast('Cancellation request created · refund form ready to print'); }
+    if (a === 'cancel-adm') { closeDrawer(); closeModal(); return toast('Cancellation request created · refund form ready to print'); }
   }
   // sheet interactions
   if ((el = q('[data-pg]'))) { S.page = +el.dataset.pg; renderSheet(); $('#sheet').scrollTop = 0; return; }
