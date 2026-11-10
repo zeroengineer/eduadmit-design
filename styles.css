@@ -1447,3 +1447,5 @@ body,.topbar{background:#FFFFFF}
 .rep-view .hbar{padding:10px 0;border-bottom:1px solid #F0F0F0}
 .rep-view .hbar:last-child{border-bottom:0}
 .rep-card > .rep-card-h .muted:empty{display:none}
+/* only the tabs push right; search, filters, year and export stay together at the right edge */
+.sheet-card > .toolbar > div[style*="margin-left:auto"],.sheet-card > .toolbar:not(:has(.ay-pick)) > div[style*="margin-left:auto"]{margin-left:0!important}
