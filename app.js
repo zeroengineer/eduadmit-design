@@ -1647,18 +1647,13 @@ PAGES['reports/list'] = () => {
   const cats = Object.keys(REPORTS), cat = cats.includes(state.repCat) ? state.repCat : 'all';
   const all = cats.flatMap(g => REPORTS[g].map((r, i) => ({ r, g, last: addDays(TODAY, -((r.length * 7 + i * 3) % 12)) })));
   const rows = cat === 'all' ? all : all.filter(x => x.g === cat);
-  const exportsDone = [['Fee collection register · Apr–Oct 2026', 'Excel · 14,882 rows', 'Running', TODAY], ['Outstanding dues by student', 'PDF · 196 students', 'Ready', TODAY], ['Daily admission register · Oct', 'CSV · 512 rows', 'Ready', addDays(TODAY, -1)]];
   const switcher = `<div class="rep-switch"><div class="seg">${[['all', 'All', all.length], ...cats.map(g => [g, g, REPORTS[g].length])].map(([k, l, n]) => `<button type="button" class="${k === cat ? 'on' : ''}" data-repcat="${k}">${l} <span class="pp-n">${n}</span></button>`).join('')}</div><span class="muted">${rows.length} report${rows.length === 1 ? '' : 's'}</span></div>`;
   const table = `<div class="rep-tbl-wrap"><table class="simple rep-tbl"><thead><tr><th>Report</th><th>Category</th><th>Formats</th><th>Last generated</th><th class="r"></th></tr></thead><tbody>
     ${rows.map(x => `<tr><td><button class="lnk rep-name" data-report="${esc(x.r)}">${ic('sheet', 14)}${esc(x.r)}</button></td><td><span class="tag">${x.g}</span></td><td class="faint">${REP_FMT[x.g]}</td><td>${fd(x.last)}</td>
-      <td class="r"><div class="rep-act"><button class="btn sm" data-report="${esc(x.r)}">Open</button><button class="btn sm" data-toast="Export queued · it will appear in Recent exports" title="Export" aria-label="Export ${esc(x.r)}">${ic('download', 14)}</button></div></td></tr>`).join('')}
+      <td class="r"><div class="rep-act"><button class="btn sm" data-report="${esc(x.r)}">Open</button><button class="btn sm" data-toast="Export started · you will get a download link" title="Export" aria-label="Export ${esc(x.r)}">${ic('download', 14)}</button></div></td></tr>`).join('')}
     </tbody></table></div>`;
   return `<div>${pageHead('Reports & analytics', '')}
   <div class="content">${repFrame('list', '', switcher + table)}
-  <div class="card" style="margin-top:16px"><div class="card-h"><h3>Recent exports</h3><span class="muted" style="margin-left:auto">Large exports run in the background and arrive here as a download</span></div><div class="card-b" style="overflow:auto">
-    <table class="simple"><thead><tr><th>Export</th><th>Format</th><th>Requested</th><th>Status</th><th class="r"></th></tr></thead><tbody>
-    ${exportsDone.map(([n, m, s, d]) => `<tr><td>${n}</td><td class="faint">${m}</td><td>Anita Joseph · ${fd(d)}</td><td>${chip(s)}</td><td class="r">${s === 'Ready' ? `<button class="btn sm">${ic('download', 14)}Download</button>` : '<span class="faint">—</span>'}</td></tr>`).join('')}
-    </tbody></table></div></div>
   </div></div>`;
 };
 function openReport(name) {
