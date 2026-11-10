@@ -987,8 +987,6 @@ body,.topbar{background:#FFFFFF}
 .sm-edit tr.sm-off td{background:#FAFAFA}
 .sm-edit tr.sm-off .input{color:#A3A3A3}
 /* reports: section headings */
-.rep-h{font-size:12px;letter-spacing:.4px;text-transform:uppercase;color:#737373;margin:6px 0 10px}
-.rep-h:not(:first-child){margin-top:22px}
 /* ===== Book seat: full page with section progress ===== */
 .bk-page .content{padding-bottom:0}
 .bk-progress{display:flex;align-items:center;gap:14px;margin:0 0 18px}
@@ -1162,7 +1160,6 @@ body,.topbar{background:#FFFFFF}
 .rep-grid .hbar{grid-template-columns:200px 1fr 120px}
 .rep-grid .hbar .lbl .chip{font-size:12px}
 .rep-sub{font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#404040;margin:16px 0 6px;padding-top:12px;border-top:1px solid #E5E5E5}
-.rep-note{margin:0 0 12px}
 /* ===== Seat occupancy: views + quota filter ===== */
 .sm-cards .sm-card{text-align:left;background:#fff}
 .sm-cards .sm-card.hero{background:#fff}
@@ -1436,3 +1433,15 @@ body,.topbar{background:#FFFFFF}
 .sheet-card > .toolbar{padding:12px 16px!important;column-gap:6px}
 .sheet-card > .toolbar .tsearch{width:190px}
 .sheet-card > .toolbar .tsel{min-width:0;width:auto;max-width:150px}
+
+/* Reports & analytics: KPI cards, then one card with the tabs in its header (same frame as tables) */
+.rep-card{overflow:hidden;border-radius:14px}
+.rep-card > .rep-card-h{display:flex;align-items:center;gap:12px;padding:12px 16px!important;border-bottom:1px solid #E5E5E5!important;margin:0!important}
+.rep-card > .rep-card-h .muted{margin-left:auto;font-size:12px}
+.rep-card .sm-wrap{border:0;border-radius:0}
+.rep-groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.rep-groups section{padding:16px 20px;border-left:1px solid #E5E5E5}
+.rep-groups section:first-child{border-left:0}
+.rep-groups h3{display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:500;margin:0 0 6px}
+.rep-groups .list-row{padding:10px 0}
+@media (max-width:1000px){.rep-groups{grid-template-columns:1fr}.rep-groups section{border-left:0;border-top:1px solid #E5E5E5}}

@@ -1162,8 +1162,7 @@ function showReceipt(pid) {
 /* ---------- Seat occupancy (Reports → Analytics): summary cards per quota + the programme × quota table ---------- */
 const SM_COL = { cf: '#0A3C6E', dc: '#1783C1', sb: '#A2CDE6', av: '#EBEBEB' };
 const SM_LBL = { cf: 'Confirmed', dc: 'Details collected', sb: 'Seat booked', av: 'Available' };
-const seatOccupancy = () => `<div id="smOcc">${smInner()}</div><div class="sm-tip" id="smTip" role="tooltip"></div>`;
-function smInner() {
+function smParts() {
   const QS = QUOTAS, PROGS_A = actProgs();
   const stat = (p, q) => { const n = st => students.filter(s => s.prog === p.code && s.quota === q && s.status === st && inAy(s)).length; const cf = n('Confirmed'), dc = n('Details collected'), sb = n('Seat booked'); return { cap: p.cap[q] || 0, cf, dc, sb, used: cf + dc + sb }; };
   const add = (a, b) => ({ cap: a.cap + b.cap, cf: a.cf + b.cf, dc: a.dc + b.dc, sb: a.sb + b.sb, used: a.used + b.used });
@@ -1178,10 +1177,10 @@ function smInner() {
   const cell = (s, title) => s.cap ? `<div class="sm-cell"><div class="sm-top"><span class="sm-num">${s.used}<span> / ${s.cap}</span></span>${badge(s)}</div>${bar(s, false, title)}</div>` : '<span class="sm-na">Not offered</span>';
   const card = (label, s) => `<div class="card sm-card"><div class="sm-card-l">${label}</div><div class="sm-card-v">${s.used}<span> / ${s.cap}</span></div>${bar(s, true, label)}<div class="sm-card-s"><span>${Math.round(pct(s.used, s.cap))}% filled</span><span>${av(s)} left</span></div></div>`;
   const legend = `<div class="sm-legend">${['cf', 'dc', 'sb', 'av'].map(k => `<span><i style="background:${SM_COL[k]}"></i>${SM_LBL[k]} <b>${k === 'av' ? av(all) : all[k]}</b></span>`).join('')}</div>`;
-  const body = `<div class="card sm-wrap">${legend}<table class="sm-table"><thead><tr><th>Programme</th>${QS.map(q => `<th>${q}</th>`).join('')}<th class="r">Total</th></tr></thead>
+  const table = `<div class="sm-wrap">${legend}<table class="sm-table"><thead><tr><th>Programme</th>${QS.map(q => `<th>${q}</th>`).join('')}<th class="r">Total</th></tr></thead>
     <tbody>${PROGS_A.map(p => { const row = QS.map(q => stat(p, q)), t = row.reduce(add, Z); return t.cap ? `<tr><td><div class="sm-prog">${p.name}</div><div class="sm-sub">${p.dept} · ${p.code}</div></td>${row.map((x, i) => `<td>${cell(x, p.name + ' · ' + QS[i])}</td>`).join('')}<td class="r"><div class="sm-num">${t.used}<span> / ${t.cap}</span></div><div class="sm-sub">${Math.round(pct(t.used, t.cap))}% filled</div></td></tr>` : ''; }).join('')}</tbody>
     <tfoot><tr><td>All programmes</td>${QS.map(q => { const x = PROGS_A.reduce((a, p) => add(a, stat(p, q)), Z); return `<td>${cell(x, 'All programmes · ' + q)}</td>`; }).join('')}<td class="r"><div class="sm-num">${all.used}<span> / ${all.cap}</span></div><div class="sm-sub">${Math.round(pct(all.used, all.cap))}% filled</div></td></tr></tfoot></table></div>`;
-  return `<div class="sm-cards">${card('All quotas', all)}${QUOTAS.map((q, k) => card(q, byQAll[k])).join('')}</div>${body}`;
+  return { cards: `<div class="sm-cards">${card('All quotas', all)}${QUOTAS.map((q, k) => card(q, byQAll[k])).join('')}</div>`, table };
 }
 document.addEventListener('mousemove', e => {
   const t = $('#smTip'); if (!t) return;
@@ -1614,7 +1613,11 @@ const REPORTS = {
 };
 /* ---------- Reports & analytics: two sections ---------- */
 const REP_TABS = [['analytics', 'Analytics'], ['list', 'Reports']];
-const repTabs = cur => `<div class="sheet-tabs sv-tabs"><div class="tab-seg">${REP_TABS.map(([k, l]) => `<a class="sheet-tab ${k === cur ? 'on' : ''}" href="#reports/${k}">${l}</a>`).join('')}</div></div>`;
+const repTabs = cur => `<div class="tab-seg">${REP_TABS.map(([k, l]) => `<a class="sheet-tab ${k === cur ? 'on' : ''}" href="#reports/${k}">${l}</a>`).join('')}</div>`;
+/* same frame as the other pages: KPI cards, then one card whose header holds the tabs */
+const repFrame = (cur, note, body) => `<div id="smOcc">${smParts().cards}
+  <div class="card rep-card"><div class="sheet-tabs rep-card-h">${repTabs(cur)}<span class="muted">${note}</span></div>${body}</div></div>
+  <div class="sm-tip" id="smTip" role="tooltip"></div>`;
 PAGES.reports = PAGES['reports/analytics'] = () => {
   const yr = students.filter(inAy), occ = yr.filter(s => OCCUPY.includes(s.status));
   const progs = PROGS.map(p => { const a = occ.filter(s => s.prog === p.code); const as = a.reduce((t, s) => t + s.net, 0), pd = a.reduce((t, s) => t + s.paid, 0); return { p, n: a.length, as, pd, pct: as ? Math.round(pd / as * 100) : 0 }; }).filter(r => r.n);
@@ -1623,8 +1626,7 @@ PAGES.reports = PAGES['reports/analytics'] = () => {
   const byQuota = QUOTAS.map(q => [q, occ.filter(s => s.quota === q).length]), maxQ = Math.max(1, ...byQuota.map(x => x[1]));
   const bar = (v, max, color) => `<span class="track"><i style="width:${v / max * 100}%;background:${color}"></i></span>`;
   return `<div>${pageHead('Reports & analytics', '')}
-  <div class="content">${repTabs('analytics')}
-    <div class="rep-h">Seat occupancy · ${state.ay}</div>${seatOccupancy()}
+  <div class="content">${repFrame('analytics', `Seat occupancy · ${state.ay}`, smParts().table)}
     <div class="grid-2 rep-grid">
       <div class="card"><div class="card-h"><h3>Fee collection by programme</h3><span class="muted num">${inrS(totP)} of ${inrS(totA)} · ${totA ? Math.round(totP / totA * 100) : 0}%</span></div><div class="card-b">
         ${progs.map(r => `<div class="hbar"><span class="lbl">${esc(r.p.name)}</span>${bar(r.pd, r.as || 1, '#0A3C6E')}<span class="val">${r.pct}% <span class="faint">· ${inrS(r.pd)}</span></span></div>`).join('')}
@@ -1638,9 +1640,7 @@ PAGES.reports = PAGES['reports/analytics'] = () => {
   </div></div>`;
 };
 PAGES['reports/list'] = () => `<div>${pageHead('Reports & analytics', '')}
-  <div class="content">${repTabs('list')}
-  <p class="muted rep-note">The standard reports, filtered to your role. Large exports run in the background and you get a download link.</p>
-  <div class="grid-3">${Object.entries(REPORTS).map(([g, list]) => `<div class="card"><div class="card-h"><h3>${g}</h3><span class="muted">${list.length}</span></div><div class="card-b">${list.map(r => `<div class="list-row" style="cursor:pointer" data-report="${r}"><span class="dotico">${ic('sheet', 14)}</span><span class="grow t">${r}</span><button class="icon-btn" title="Export">${ic('download', 14)}</button></div>`).join('')}</div></div>`).join('')}</div>
+  <div class="content">${repFrame('list', 'Standard reports for your role · large exports arrive as a download link', `<div class="rep-groups">${Object.entries(REPORTS).map(([g, list]) => `<section><h3>${g}<span class="muted">${list.length}</span></h3>${list.map(r => `<div class="list-row" style="cursor:pointer" data-report="${r}"><span class="dotico">${ic('sheet', 14)}</span><span class="grow t">${r}</span><button class="icon-btn" title="Export">${ic('download', 14)}</button></div>`).join('')}</section>`).join('')}</div>`)}
   <div class="card" style="margin-top:16px"><div class="card-h"><h3>Background exports</h3></div><div class="card-b">
   ${[['Fee collection register · Apr–Oct 2026', 'Excel · 14,882 rows', 'Running'], ['Outstanding dues by student', 'PDF · 196 students', 'Ready'], ['Daily admission register · Oct', 'CSV · 512 rows', 'Ready']].map(([n, m, s]) => `<div class="list-row"><span class="dotico">${ic('download', 14)}</span><div class="grow"><div class="t">${n}</div><div class="s">${m} · requested by Anita Joseph</div></div>${chip(s)}${s === 'Ready' ? '<button class="btn sm">Download</button>' : ''}</div>`).join('')}
   </div></div></div></div>`;
