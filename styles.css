@@ -1432,12 +1432,6 @@ body,.topbar{background:#FFFFFF}
 .rep-card > .rep-card-h{display:flex;align-items:center;gap:12px;padding:12px 16px!important;border-bottom:1px solid #E5E5E5!important;margin:0!important}
 .rep-card > .rep-card-h .muted{margin-left:auto;font-size:12px}
 .rep-card .sm-wrap{border:0;border-radius:0}
-.rep-groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
-.rep-groups section{padding:16px 20px;border-left:1px solid #E5E5E5}
-.rep-groups section:first-child{border-left:0}
-.rep-groups h3{display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:500;margin:0 0 6px}
-.rep-groups .list-row{padding:10px 0}
-@media (max-width:1000px){.rep-groups{grid-template-columns:1fr}.rep-groups section{border-left:0;border-top:1px solid #E5E5E5}}
 .sheet-card > .toolbar:not(:has(.tab-seg)):has(.tsearch) > div[style*="margin-left:auto"]{margin-left:0!important}
 .sheet-card > .toolbar > div[style*="margin-left:auto"]:empty{display:none}
 /* Analytics view switch: sits where the legend was, under the tabs */
@@ -1450,3 +1444,13 @@ body,.topbar{background:#FFFFFF}
 /* only the tabs push right; search, filters, year and export stay together at the right edge */
 .sheet-card > .toolbar > div[style*="margin-left:auto"],.sheet-card > .toolbar:not(:has(.ay-pick)) > div[style*="margin-left:auto"]{margin-left:0!important}
 .fa-sum em{display:block;font-size:12px;margin-top:2px}
+/* Reports tab: report table inside the tabbed card */
+.rep-tbl-wrap{padding:4px 20px 12px;overflow:auto}
+.rep-tbl td{vertical-align:middle}
+.rep-name{display:inline-flex;align-items:center;gap:8px;background:none;border:0;padding:0;font:inherit;color:#0A0A0A;cursor:pointer;text-align:left}
+.rep-name:hover{color:#0A3C6E;text-decoration:underline}
+.rep-name .pi{color:#0A3C6E}
+.rep-act{display:inline-flex;gap:6px}
+.rep-act .btn.sm:last-child{width:32px;padding:0;justify-content:center}
+.rep-switch .seg{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.rep-switch .seg button{white-space:nowrap}

@@ -1640,11 +1640,27 @@ PAGES.reports = PAGES['reports/analytics'] = () => {
   <div class="content">${repFrame('analytics', '', switcher + body)}
   </div></div>`;
 };
-PAGES['reports/list'] = () => `<div>${pageHead('Reports & analytics', '')}
-  <div class="content">${repFrame('list', 'Standard reports for your role · large exports arrive as a download link', `<div class="rep-groups">${Object.entries(REPORTS).map(([g, list]) => `<section><h3>${g}<span class="muted">${list.length}</span></h3>${list.map(r => `<div class="list-row" style="cursor:pointer" data-report="${r}"><span class="dotico">${ic('sheet', 14)}</span><span class="grow t">${r}</span><button class="icon-btn" title="Export">${ic('download', 14)}</button></div>`).join('')}</section>`).join('')}</div>`)}
-  <div class="card" style="margin-top:16px"><div class="card-h"><h3>Background exports</h3></div><div class="card-b">
-  ${[['Fee collection register · Apr–Oct 2026', 'Excel · 14,882 rows', 'Running'], ['Outstanding dues by student', 'PDF · 196 students', 'Ready'], ['Daily admission register · Oct', 'CSV · 512 rows', 'Ready']].map(([n, m, s]) => `<div class="list-row"><span class="dotico">${ic('download', 14)}</span><div class="grow"><div class="t">${n}</div><div class="s">${m} · requested by Anita Joseph</div></div>${chip(s)}${s === 'Ready' ? '<button class="btn sm">Download</button>' : ''}</div>`).join('')}
-  </div></div></div></div>`;
+/* Reports tab: one table of every report, narrowed by a category switch (same pattern as the analytics views) */
+const REP_FMT = { Admissions: 'Excel · PDF', 'Fees & collections': 'Excel · CSV · PDF', 'Payments & refunds': 'Excel · PDF' };
+document.addEventListener('click', e => { const b = e.target.closest('[data-repcat]'); if (b) { state.repCat = b.dataset.repcat; route(); } });
+PAGES['reports/list'] = () => {
+  const cats = Object.keys(REPORTS), cat = cats.includes(state.repCat) ? state.repCat : 'all';
+  const all = cats.flatMap(g => REPORTS[g].map((r, i) => ({ r, g, last: addDays(TODAY, -((r.length * 7 + i * 3) % 12)) })));
+  const rows = cat === 'all' ? all : all.filter(x => x.g === cat);
+  const exportsDone = [['Fee collection register · Apr–Oct 2026', 'Excel · 14,882 rows', 'Running', TODAY], ['Outstanding dues by student', 'PDF · 196 students', 'Ready', TODAY], ['Daily admission register · Oct', 'CSV · 512 rows', 'Ready', addDays(TODAY, -1)]];
+  const switcher = `<div class="rep-switch"><div class="seg">${[['all', 'All', all.length], ...cats.map(g => [g, g, REPORTS[g].length])].map(([k, l, n]) => `<button type="button" class="${k === cat ? 'on' : ''}" data-repcat="${k}">${l} <span class="pp-n">${n}</span></button>`).join('')}</div><span class="muted">${rows.length} report${rows.length === 1 ? '' : 's'}</span></div>`;
+  const table = `<div class="rep-tbl-wrap"><table class="simple rep-tbl"><thead><tr><th>Report</th><th>Category</th><th>Formats</th><th>Last generated</th><th class="r"></th></tr></thead><tbody>
+    ${rows.map(x => `<tr><td><button class="lnk rep-name" data-report="${esc(x.r)}">${ic('sheet', 14)}${esc(x.r)}</button></td><td><span class="tag">${x.g}</span></td><td class="faint">${REP_FMT[x.g]}</td><td>${fd(x.last)}</td>
+      <td class="r"><div class="rep-act"><button class="btn sm" data-report="${esc(x.r)}">Open</button><button class="btn sm" data-toast="Export queued · it will appear in Recent exports" title="Export" aria-label="Export ${esc(x.r)}">${ic('download', 14)}</button></div></td></tr>`).join('')}
+    </tbody></table></div>`;
+  return `<div>${pageHead('Reports & analytics', '')}
+  <div class="content">${repFrame('list', '', switcher + table)}
+  <div class="card" style="margin-top:16px"><div class="card-h"><h3>Recent exports</h3><span class="muted" style="margin-left:auto">Large exports run in the background and arrive here as a download</span></div><div class="card-b" style="overflow:auto">
+    <table class="simple"><thead><tr><th>Export</th><th>Format</th><th>Requested</th><th>Status</th><th class="r"></th></tr></thead><tbody>
+    ${exportsDone.map(([n, m, s, d]) => `<tr><td>${n}</td><td class="faint">${m}</td><td>Anita Joseph · ${fd(d)}</td><td>${chip(s)}</td><td class="r">${s === 'Ready' ? `<button class="btn sm">${ic('download', 14)}Download</button>` : '<span class="faint">—</span>'}</td></tr>`).join('')}
+    </tbody></table></div></div>
+  </div></div>`;
+};
 function openReport(name) {
   const rows = PROGS.map(p => { const a = students.filter(s => s.prog === p.code && s.fee); const as = a.reduce((t, s) => t + s.net, 0), pd = a.reduce((t, s) => t + s.paid, 0); return { p: p.name, n: a.length, as, pd, bal: as - pd, od: a.reduce((t, s) => t + s.overdue, 0), pct: as ? Math.round(pd / as * 100) + '%' : '—' }; });
   openModal(`${mHead(name)}<div class="m-body"><div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"><select class="input" style="width:auto"><option>Thejus Engineering College</option></select><select class="input" style="width:auto"><option>2026–27</option></select><input class="input" type="date" value="2026-06-01" style="width:auto"><input class="input" type="date" value="${TODAY}" style="width:auto"></div>
