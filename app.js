@@ -1600,20 +1600,33 @@ function newCampaignModal() {
   $('#cmpGo').onclick = () => save(false); $('#cmpDraft').onclick = () => save(true);
 }
 PAGES['notifications/events'] = () => {
-  const ev = [['Seat booked', 1, 1, 1], ['Payment received', 1, 1, 1], ['Instalment due (3 days before)', 1, 1, 0], ['Instalment overdue', 1, 1, 1], ['Refund status changed', 1, 0, 1], ['Document ready', 0, 1, 1], ['Admission cancelled', 1, 0, 1]];
-  return `<div class="fill">${pageHead('Messages', 'Pick a channel for each event. Templates are per language and use your own sender IDs and DLT template IDs.', `<button class="btn">${ic('clock', 14)}Quiet hours 21:00–08:00</button>`)}
-  <div class="content" style="overflow:auto">${msgKpis()}<div class="grid-3"><div class="card span-2"><table class="perm"><thead><tr><th>Event</th><th>SMS</th><th>WhatsApp <span class="p1">P1</span></th><th>Email</th><th>Languages</th><th>Reminder</th></tr></thead><tbody>
-  ${ev.map(([e, a, b, c]) => `<tr><td>${e}</td>${[a, b, c].map(v => `<td><button class="switch ${v ? 'on' : ''}" data-toggle></button></td>`).join('')}<td><span class="tag">EN</span> <span class="tag">ML</span></td><td class="faint">${e.includes('due') ? '3 days before' : e.includes('overdue') ? 'Every 5 days' : '—'}</td></tr>`).join('')}
-  </tbody></table></div>
-  <div class="card"><div class="card-h"><h3>Credits &amp; delivery</h3></div><div class="card-b">
-    <div class="usage-row"><span>SMS credits</span><span class="num">18,240</span></div><div class="meter"><i style="width:46%"></i></div>
-    <div class="usage-row"><span>WhatsApp credits</span><span class="num">4,120</span></div><div class="meter"><i style="width:21%;background:#E37400"></i></div>
-    <div class="notice warn" style="margin-top:12px">${ic('alert', 16)}<div>WhatsApp credits will run out in about 9 days at the current rate.</div></div>
-    <div class="list-row" style="margin-top:8px"><span class="grow">Sent this month</span><span class="num">6,402</span></div>
-    <div class="list-row"><span class="grow">Delivered</span><span class="num" style="color:var(--ok)">98.7%</span></div>
-    <div class="list-row"><span class="grow">Failed, retried</span><span class="num">61</span></div>
-    <button class="btn primary" style="margin-top:12px;width:100%;justify-content:center">Top up credits</button>
-  </div></div></div></div>${sheetTabs('notifications', NOTE_TABS, 'events')}</div>`;
+  /* same structure as Campaigns: KPI row, then one card with tabs, toolbar and table */
+  const rows = [['Seat booked', 1, 1, 1], ['Payment received', 1, 1, 1], ['Instalment due (3 days before)', 1, 1, 0], ['Instalment overdue', 1, 1, 1], ['Refund status changed', 1, 0, 1], ['Document ready', 0, 1, 1], ['Admission cancelled', 1, 0, 1]]
+    .map(([e, sms, wa, em]) => ({ e, sms, wa, em, lang: 'EN ML', rem: e.includes('overdue') ? 'Every 5 days' : e.includes('due') ? '3 days before' : '' }));
+  const sw = k => r => `<button class="switch ${r[k] ? 'on' : ''}" data-toggle></button>`;
+  const html = `<div class="fill">${pageHead('Messages', '', `<button class="btn primary act-write" data-action="new-campaign">${ic('plus', 14)}New campaign</button>`)}
+  <div class="content" style="overflow:auto">${msgKpis()}
+  ${sheet({ cols: [
+    { key: 'e', label: 'Event', w: 280 },
+    { key: 'sms', label: 'SMS', w: 110, render: sw('sms') },
+    { key: 'wa', label: 'WhatsApp <span class="p1">P1</span>', w: 130, render: sw('wa') },
+    { key: 'em', label: 'Email', w: 110, render: sw('em') },
+    { key: 'lang', label: 'Languages', w: 140, render: () => '<span class="tag">EN</span> <span class="tag">ML</span>' },
+    { key: 'rem', label: 'Reminder', w: 160, render: r => r.rem || '<span class="faint">—</span>' }],
+    rows, onOpen: () => { }, exportBtn: false,
+    toolbar: `<button class="btn sm">${ic('clock', 14)}Quiet hours 21:00–08:00</button>`,
+    tabs: sheetTabs('notifications', NOTE_TABS, 'events') })}
+  <div class="card ev-credits"><div class="card-h"><h3>Credits &amp; delivery</h3><button class="btn sm primary" style="margin-left:auto">Top up credits</button></div><div class="card-b">
+    <div class="ev-cr">
+      <div><div class="usage-row"><span>SMS credits</span><span class="num">18,240</span></div><div class="meter"><i style="width:46%"></i></div></div>
+      <div><div class="usage-row"><span>WhatsApp credits</span><span class="num">4,120</span></div><div class="meter"><i style="width:21%;background:#E37400"></i></div></div>
+      <div><span>Sent this month</span><b class="num">6,402</b></div>
+      <div><span>Delivered</span><b class="num" style="color:var(--ok)">98.7%</b></div>
+      <div><span>Failed, retried</span><b class="num">61</b></div>
+    </div>
+    <div class="notice warn" style="margin-top:16px">${ic('alert', 16)}<div>WhatsApp credits will run out in about 9 days at the current rate.</div></div>
+  </div></div></div></div>`;
+  return html;
 };
 PAGES['notifications/log'] = () => {
   const rows = payments.slice(-60).reverse().map((p, i) => { const s = sById(p.sid); return { at: p.date, to: '+91 ' + s.mobile, name: s.guardian, ev: 'Payment received', ch: i % 3 === 0 ? 'WhatsApp' : 'SMS', tpl: 'PAY_RCVD_EN', st: i % 23 === 7 ? 'Failed' : i < 2 ? 'Queued' : 'Delivered', ref: p.rcpt }; });
