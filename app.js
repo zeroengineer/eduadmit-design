@@ -896,13 +896,12 @@ PAGES['admissions/view'] = () => {
     body = card('Submitted documents', Object.entries(s.docs).map(docRow).join(''), `<span class="muted" style="margin-left:auto">${pend ? `${pend} pending` : 'All received'}</span>`);
   }
   else body = `${feeAccountView(s)}
-    <div class="sv-docs" style="margin-top:16px">
+    <div style="margin-top:16px">
       ${card('Fee heads', `<table class="simple"><thead><tr><th>Head</th><th>Type</th><th class="r">Amount</th></tr></thead><tbody>
         <tr><td>Tuition fee</td><td><span class="tag">Non-refundable</span></td><td class="r">${inr(s.fee - 18500)}</td></tr>
         ${Object.entries(FIXED).map(([k, v]) => `<tr><td>${k}</td><td><span class="tag">${k === 'Caution deposit' ? 'Refundable' : 'Non-refundable'}</span></td><td class="r">${inr(v)}</td></tr>`).join('')}
         ${s.conc ? `<tr><td>Concession · Merit scholarship</td><td>${chip('Approved')}</td><td class="r" style="color:var(--ok)">− ${inr(s.conc)}</td></tr>` : ''}
         </tbody><tfoot><tr><td colspan="2">Net payable</td><td class="r">${inr(s.net)}</td></tr></tfoot></table>`, `<span class="muted" style="margin-left:auto">FT-26-${s.prog}-${s.quota.slice(0, 4).toUpperCase()} v3</span>`)}
-      ${card('Refund policy', `<div class="notice ok">${ic('check', 14)}<div style="flex:1">Policy <b>${s.policy.ver}</b> accepted by <b>${esc(s.guardian)}</b> on ${fd(s.policy.at)}.</div><button class="btn sm" data-policy="${s.id}">View</button></div>`)}
     </div>`;
   const primary = s.status === 'Seat booked' ? `<button class="btn primary act-write" data-wizard="${s.id}" data-step="2">${ic('user', 14)}Collect details</button>`
     : s.status === 'Details collected' ? `<button class="btn primary act-write" data-wizard="${s.id}" data-step="3">${ic('payments', 14)}Take payment</button>`
@@ -969,25 +968,32 @@ function instTable(s, inv, hlNos = new Set(), collect = false) {
 function feeAccountView(s) {
   const { inv, pays, apply } = feeAccount(s), hl = state.hlPay; state.hlPay = null;
   const hlInv = hl ? new Set((apply.get(hl) || []).filter(x => x.i).map(x => x.i.no)) : new Set();
-  const next = inv.find(i => i.bal > 0);
+  const next = inv.find(i => i.bal > 0), pane = hl ? 'hist' : 'sched'; // arriving from a receipt opens the history
   let run = s.net;
   setTimeout(() => { const r = $('.fa-pay.hl'); if (r) r.scrollIntoView({ block: 'center' }); });
   return `<div class="fa">
     <div class="card fa-sum"><div class="card-b">
       <div><span>Assessed</span><b>${inr(s.net)}</b></div><div><span>Paid</span><b style="color:var(--ok)">${inr(s.paid)}</b></div>
       <div><span>Balance</span><b>${inr(s.due)}</b></div><div><span>Overdue</span><b style="color:${s.overdue ? 'var(--bad)' : 'inherit'}">${s.overdue ? inr(s.overdue) : '—'}</b></div>
-      <div><span>Next due</span><b>${next ? `${inr(next.bal)} <em>on ${fd(next.due)}</em>` : 'Fully paid'}</b></div>
+      <div><span>Next due</span><b>${next ? `${inr(next.bal)}<em>${fd(next.due)}</em>` : 'Fully paid'}</b></div>
     </div></div>
-    <div class="card"><div class="card-h"><h3>Payment schedule · Year 1 ${state.ay}</h3><span class="muted" style="margin-left:auto">payments are applied to the oldest instalment first</span></div><div class="card-b" style="overflow:auto">
+    <div class="card fa-card"><div class="card-h"><div class="seg" id="faSeg"><button type="button" class="${pane === 'sched' ? 'on' : ''}" data-fapane="sched">Instalments <span class="pp-n">${inv.length}</span></button><button type="button" class="${pane === 'hist' ? 'on' : ''}" data-fapane="hist">Payment history <span class="pp-n">${pays.length}</span></button></div><span class="muted" style="margin-left:auto">Year 1 ${state.ay} · payments are applied to the oldest instalment first</span></div>
+      <div class="card-b ${pane === 'sched' ? '' : 'hidden'}" id="faSched" style="overflow:auto">
       ${instTable(s, inv, hlInv)}
-    </div></div>
-    <div class="card"><div class="card-h"><h3>Payment history</h3><span class="muted" style="margin-left:auto">${pays.length} receipt${pays.length === 1 ? '' : 's'}</span></div><div class="card-b">
+    </div>
+      <div class="card-b ${pane === 'hist' ? '' : 'hidden'}" id="faHist">
       ${pays.length ? `<table class="simple fa-hist"><thead><tr><th>Receipt</th><th>Date</th><th>Mode</th><th>Reference</th><th>Applied to</th><th class="r">Amount</th><th class="r">Balance after</th></tr></thead><tbody>
       ${pays.map(x => { if (x.status !== 'Reversed') run -= x.amt; return `<tr class="fa-pay ${x.id === hl ? 'hl' : ''}"><td><button class="lnk" data-receipt="${x.id}">${x.rcpt}</button>${x.alloc === 'Booking fee' ? ' <span class="tag">Booking fee</span>' : ''}</td><td>${fd(x.date)}</td><td>${x.mode}</td><td class="faint">${esc(x.ref)}</td>
         <td>${(apply.get(x.id) || []).map(({ i, a }) => i ? `<button class="lnk" data-invoice="${s.id}" data-k="${i.k}">${i.no}</button> <span class="faint">${inr(a)}</span>` : `<span class="faint">Advance ${inr(a)}</span>`).join('<br>')}</td>
         <td class="r">${inr(x.amt)}</td><td class="r">${inr(Math.max(0, run))}</td></tr>`; }).join('')}</tbody></table>` : '<div class="empty">No payments recorded yet.</div>'}
     </div></div></div>`;
 }
+/* Finance card switch: Instalments / Payment history */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-fapane]'); if (!b) return;
+  $$('#faSeg button').forEach(x => x.classList.toggle('on', x === b));
+  $('#faSched').classList.toggle('hidden', b.dataset.fapane !== 'sched'); $('#faHist').classList.toggle('hidden', b.dataset.fapane !== 'hist');
+});
 
 /* ---------- Payments → one student's payment page (timeline + invoices + history) ---------- */
 PAGES['payments/student'] = () => {

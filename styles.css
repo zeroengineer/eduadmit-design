@@ -1449,3 +1449,4 @@ body,.topbar{background:#FFFFFF}
 .rep-card > .rep-card-h .muted:empty{display:none}
 /* only the tabs push right; search, filters, year and export stay together at the right edge */
 .sheet-card > .toolbar > div[style*="margin-left:auto"],.sheet-card > .toolbar:not(:has(.ay-pick)) > div[style*="margin-left:auto"]{margin-left:0!important}
+.fa-sum em{display:block;font-size:12px;margin-top:2px}
