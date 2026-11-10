@@ -1615,25 +1615,23 @@ const repTabs = cur => `<div class="tab-seg">${REP_TABS.map(([k, l]) => `<a clas
 const repFrame = (cur, note, body) => `<div id="smOcc">${smParts().cards}
   <div class="card rep-card"><div class="sheet-tabs rep-card-h">${repTabs(cur)}<span class="muted">${note}</span></div>${body}</div></div>
   <div class="sm-tip" id="smTip" role="tooltip"></div>`;
+/* Analytics card: a switch under the tabs picks which view fills the card */
+const REP_VIEWS = [['seats', 'Seat occupancy'], ['fees', 'Fee collection by programme'], ['quota', 'Seats filled by quota']];
+document.addEventListener('click', e => { const b = e.target.closest('[data-repview]'); if (b) { state.repView = b.dataset.repview; route(); } });
 PAGES.reports = PAGES['reports/analytics'] = () => {
+  const view = REP_VIEWS.some(([k]) => k === state.repView) ? state.repView : 'seats';
   const yr = students.filter(inAy), occ = yr.filter(s => OCCUPY.includes(s.status));
   const progs = PROGS.map(p => { const a = occ.filter(s => s.prog === p.code); const as = a.reduce((t, s) => t + s.net, 0), pd = a.reduce((t, s) => t + s.paid, 0); return { p, n: a.length, as, pd, pct: as ? Math.round(pd / as * 100) : 0 }; }).filter(r => r.n);
   const totA = progs.reduce((t, r) => t + r.as, 0), totP = progs.reduce((t, r) => t + r.pd, 0);
-  const byStatus = STATUSES.map(st => [st, yr.filter(s => s.status === st).length]), maxS = Math.max(1, ...byStatus.map(x => x[1]));
   const byQuota = QUOTAS.map(q => [q, occ.filter(s => s.quota === q).length]), maxQ = Math.max(1, ...byQuota.map(x => x[1]));
   const bar = (v, max, color) => `<span class="track"><i style="width:${v / max * 100}%;background:${color}"></i></span>`;
+  const note = { seats: `Seat occupancy · ${state.ay}`, fees: `${inrS(totP)} of ${inrS(totA)} collected · ${totA ? Math.round(totP / totA * 100) : 0}%`, quota: `${occ.length} seats filled · ${state.ay}` }[view];
+  const body = view === 'seats' ? smParts().table
+    : view === 'fees' ? `<div class="rep-view">${progs.map(r => `<div class="hbar"><span class="lbl">${esc(r.p.name)}</span>${bar(r.pd, r.as || 1, '#0A3C6E')}<span class="val">${r.pct}% <span class="faint">· ${inrS(r.pd)}</span></span></div>`).join('')}</div>`
+    : `<div class="rep-view">${byQuota.map(([q, n]) => `<div class="hbar"><span class="lbl">${q}</span>${bar(n, maxQ, '#0A3C6E')}<span class="val">${n} <span class="faint">· ${occ.length ? Math.round(n / occ.length * 100) : 0}%</span></span></div>`).join('')}</div>`;
+  const switcher = `<div class="rep-switch"><div class="seg">${REP_VIEWS.map(([k, l]) => `<button type="button" class="${k === view ? 'on' : ''}" data-repview="${k}">${l}</button>`).join('')}</div><span class="muted">${note}</span></div>`;
   return `<div>${pageHead('Reports & analytics', '')}
-  <div class="content">${repFrame('analytics', `Seat occupancy · ${state.ay}`, smParts().table)}
-    <div class="grid-2 rep-grid">
-      <div class="card"><div class="card-h"><h3>Fee collection by programme</h3><span class="muted num">${inrS(totP)} of ${inrS(totA)} · ${totA ? Math.round(totP / totA * 100) : 0}%</span></div><div class="card-b">
-        ${progs.map(r => `<div class="hbar"><span class="lbl">${esc(r.p.name)}</span>${bar(r.pd, r.as || 1, '#0A3C6E')}<span class="val">${r.pct}% <span class="faint">· ${inrS(r.pd)}</span></span></div>`).join('')}
-      </div></div>
-      <div class="card"><div class="card-h"><h3>Admissions by status</h3><span class="muted num">${yr.length} admissions</span></div><div class="card-b">
-        ${byStatus.map(([st, n]) => `<div class="hbar" data-go="admissions" data-preset='{"status":"${st}"}' style="cursor:pointer"><span class="lbl">${chip(st)}</span>${bar(n, maxS, st === 'Cancelled' || st === 'Withdrawn' ? '#D4D4D4' : '#1783C1')}<span class="val">${n} <span class="faint">· ${yr.length ? Math.round(n / yr.length * 100) : 0}%</span></span></div>`).join('')}
-        <div class="rep-sub">Seats filled by quota</div>
-        ${byQuota.map(([q, n]) => `<div class="hbar"><span class="lbl">${q}</span>${bar(n, maxQ, '#0A3C6E')}<span class="val">${n}</span></div>`).join('')}
-      </div></div>
-    </div>
+  <div class="content">${repFrame('analytics', '', switcher + body)}
   </div></div>`;
 };
 PAGES['reports/list'] = () => `<div>${pageHead('Reports & analytics', '')}
