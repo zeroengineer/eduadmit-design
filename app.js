@@ -232,17 +232,17 @@ function settingsShell(cur, inner) {
 
 /* ================= DataTable (PrimeReact style) ================= */
 const S = { cols: [], rows: [], view: [], sort: null, q: '', filter: null, onOpen: null, col: null, page: 0, rpp: 25 };
-function sheet({ cols, rows, onOpen, toolbar = '', chips = '', chipLabel = 'Status', tabs = '', lead = '', search = true }) {
+function sheet({ cols, rows, onOpen, toolbar = '', chips = '', chipLabel = 'Status', tabs = '', lead = '', search = true, exportBtn = true }) {
   Object.assign(S, { cols, rows, onOpen, sort: null, q: '', filter: null, col: null, view: rows, page: 0, sel: [] });
   return `<div class="sheet-card">
     ${tabs}
-    <div class="toolbar">
+    ${search || chips || lead || toolbar || exportBtn ? `<div class="toolbar">
       ${search ? `<div class="tsearch">${ic('search', 14)}<input id="sheetSearch" placeholder="Keyword search"></div>` : ''}
       ${chips ? `<div class="fdrop" id="fdrop"><button class="fdrop-btn" data-fdrop>${ic('filter', 13)}<span class="fdrop-k">${chipLabel}:</span><span id="fdropLabel">All</span><b id="fdropCount"></b><i class="pi pi-chevron-down fdrop-chev"></i></button><div class="fdrop-menu" id="fchips">${chips}</div></div>` : ''}
       ${lead ? `<div class="tlead">${lead}</div>` : ''}
       <div style="margin-left:auto;display:flex;gap:6px;align-items:center">${toolbar}
-        <button class="btn sm" data-export>${ic('download', 14)}Export</button></div>
-    </div>
+        ${exportBtn ? `<button class="btn sm" data-export>${ic('download', 14)}Export</button>` : ''}</div>
+    </div>` : ''}
     <div class="sheet" id="sheet"></div>
     <div class="statusbar"><span id="rowCount"></span><div class="paginator" id="pager"></div></div>
   </div>`;
@@ -1382,7 +1382,7 @@ PAGES['fees/late'] = () => `<div class="fill">${admHead('fees', `<button class="
   <div class="content">${sheet({ cols: [{ key: 'n', label: 'Rule', w: 220 }, { key: 'type', label: 'Type', w: 100 }, { key: 'v', label: 'Value', w: 120 }, { key: 'g', label: 'Grace', w: 90 }, { key: 'cap', label: 'Cap', w: 100 }, { key: 'on', label: 'Applies to', w: 240 }, { key: 'st', label: 'Status', w: 90, render: r => chip(r.st) }], rows: [
     { n: 'Tuition late fee', type: 'Per day', v: '₹50 / day', g: '7 days', cap: '₹2,500', on: 'All B.Tech & M.Tech templates', st: 'Active' },
     { n: 'MBA late fee', type: 'Flat', v: '₹1,000', g: '10 days', cap: '—', on: 'MBA annual', st: 'Active' },
-    { n: 'Hostel late fine', type: 'Per day', v: '₹25 / day', g: '5 days', cap: '₹1,000', on: 'Hostel termly', st: 'Active' }], onOpen: () => { }, tabs: sheetTabs('admset/fees', FEE_TABS, 'late') })}</div></div>`;
+    { n: 'Hostel late fine', type: 'Per day', v: '₹25 / day', g: '5 days', cap: '₹1,000', on: 'Hostel termly', st: 'Active' }], onOpen: () => { }, tabs: sheetTabs('admset/fees', FEE_TABS, 'late'), search: false, exportBtn: false })}</div></div>`;
 function bulkFee() {
   openModal(`${mHead('Bulk assign fees to a batch')}<div class="m-body">
   <div class="form-grid" style="grid-template-columns:1fr 1fr">
