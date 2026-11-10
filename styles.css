@@ -1354,3 +1354,37 @@ body,.topbar{background:#FFFFFF}
 .sm-ch .sm-adddept{margin-left:12px}
 .sm-edit th.r,.sm-edit td.r{text-align:center}
 .sm-edit .sm-cap{display:block;margin:0 auto;width:84px;text-align:center}
+
+/* ================= Layout system: one set of spacing values for every page =================
+   --gutter  page side padding        --gap  space between blocks (cards, grids, KPI rows, tabs)
+   --pad-x   card inner side padding  --pad-y card inner vertical padding
+   Heading scale: page h1 19/600 · section h2 16/600 · card h3 14/500                        */
+:root{--gutter:32px;--gap:16px;--pad-x:20px;--pad-y:16px}
+.page-head{padding:16px var(--gutter);margin-bottom:var(--gap);min-height:72px}
+.page-head h1{font-size:19px;font-weight:600;letter-spacing:-.3px}
+.content{padding:0 var(--gutter) var(--gutter)}
+.card-h{padding:14px var(--pad-x)}
+.card-h h3{font-size:14px;font-weight:500}
+.card-b,.sum-card .card-b,.sv-body{padding:var(--pad-y) var(--pad-x)}
+.card-b > .list-row{margin:0 calc(-1 * var(--pad-x));padding:12px var(--pad-x)}
+.card-b > .list-row:first-child{margin-top:calc(-1 * var(--pad-y))}
+.card-b > .list-row:last-child{margin-bottom:calc(-1 * var(--pad-y))}
+.kpis,.camp-kpis,.pp-strip,.sv-hero,.sv-tabs,.sheet-card > .sheet-tabs{margin-bottom:var(--gap)!important}
+.kpis,.grid-2,.grid-3,.grid-4,.sum-left,.sv-docs,.pp-layout,.sum-layout{gap:var(--gap)}
+.fa{gap:var(--gap)}
+.sv-docs{margin-bottom:var(--gap)}
+.fa-sum .card-b,.pp-strip .card-b{padding:var(--pad-y) var(--pad-x);gap:var(--gap)}
+.fa-sum b,.pp-strip b{font-size:18px;font-weight:500}
+.pp-meta{margin:calc(-1 * var(--gap) / 2) 0 var(--gap)}
+.sv-sheet{padding:0 var(--pad-x)}
+.sv-sec{padding:var(--pad-x) 0}
+/* sheet toolbar sits on the same left edge as the tabs and table */
+.sheet-tabs .sheet-tab:first-child{padding-left:2px}
+.sheet-card .toolbar{padding:0 0 12px}
+/* Settings: section title lines up with the nav card, clear step down from the page title */
+.split,.set-page .split{gap:24px}
+.set-title{min-height:36px;margin:0 0 var(--gap)}
+.set-title h2{font-size:16px;font-weight:600;letter-spacing:-.2px;color:#0A0A0A}
+.set-page .set-body{padding:0 2px var(--gutter) 0}
+.set-body table.grid{width:100%;min-width:0}
+@media (max-width:900px){:root{--gutter:16px;--pad-x:16px}}

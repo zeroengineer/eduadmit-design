@@ -257,7 +257,10 @@ function renderSheet() {
   S.view = rows;
   const pages = Math.max(1, Math.ceil(rows.length / S.rpp)); if (S.page >= pages) S.page = pages - 1;
   const st = S.page * S.rpp, pageRows = rows.slice(st, st + S.rpp);
-  el.innerHTML = `<table class="grid"><colgroup>${S.cols.map(c => `<col style="width:${c.w || 120}px">`).join('')}</colgroup>
+  /* inside Settings the table fills its panel: columns share the width in proportion to w, and it scrolls below 80% of the designed width */
+  const fit = !!el.closest('.set-body'), tot = S.cols.reduce((t, c) => t + (c.w || 120), 0);
+  const colW = c => fit ? `${((c.w || 120) / tot * 100).toFixed(3)}%` : `${c.w || 120}px`;
+  el.innerHTML = `<table class="grid"${fit ? ` style="min-width:${Math.round(tot * 0.8)}px"` : ''}><colgroup>${S.cols.map(c => `<col style="width:${colW(c)}">`).join('')}</colgroup>
   <thead><tr class="hdr">${S.cols.map(c => `<th data-sort="${c.key}" class="${c.align || ''} ${S.sort && S.sort.key === c.key ? 'sorted' : ''}">${c.label}<i class="pi ${S.sort && S.sort.key === c.key ? (S.sort.dir > 0 ? 'pi-sort-amount-up-alt' : 'pi-sort-amount-down') : 'pi-sort-alt'} sort-ic"></i></th>`).join('')}</tr></thead>
   <tbody>${pageRows.map((r, i) => { const ri = st + i; return `<tr data-ri="${ri}" class="${r._strike ? 'strike' : ''}">${S.cols.map((c, ci) => `<td data-ci="${ci}" class="${c.align || ''}">${c.render ? c.render(r) : esc(c.fmt ? c.fmt(r[c.key]) : r[c.key])}</td>`).join('')}</tr>`; }).join('')}</tbody></table>${rows.length ? '' : '<div class="empty">No rows match this view.</div>'}`;
   const rc = $('#rowCount'); if (rc) rc.textContent = rows.length ? `Showing ${st + 1} to ${Math.min(st + S.rpp, rows.length)} of ${rows.length.toLocaleString('en-IN')} entries` : 'No entries';
@@ -892,7 +895,7 @@ PAGES['admissions/view'] = () => {
     body = card('Submitted documents', Object.entries(s.docs).map(docRow).join(''), `<span class="muted" style="margin-left:auto">${pend ? `${pend} pending` : 'All received'}</span>`);
   }
   else body = `${feeAccountView(s)}
-    <div class="sv-docs" style="margin-top:14px">
+    <div class="sv-docs" style="margin-top:16px">
       ${card('Fee heads', `<table class="simple"><thead><tr><th>Head</th><th>Type</th><th class="r">Amount</th></tr></thead><tbody>
         <tr><td>Tuition fee</td><td><span class="tag">Non-refundable</span></td><td class="r">${inr(s.fee - 18500)}</td></tr>
         ${Object.entries(FIXED).map(([k, v]) => `<tr><td>${k}</td><td><span class="tag">${k === 'Caution deposit' ? 'Refundable' : 'Non-refundable'}</span></td><td class="r">${inr(v)}</td></tr>`).join('')}
@@ -1660,7 +1663,7 @@ PAGES['reports/list'] = () => `<div>${pageHead('Reports & analytics', '')}
   <div class="content">${repTabs('list')}
   <p class="muted rep-note">The standard reports, filtered to your role. Large exports run in the background and you get a download link.</p>
   <div class="grid-3">${Object.entries(REPORTS).map(([g, list]) => `<div class="card"><div class="card-h"><h3>${g}</h3><span class="muted">${list.length}</span></div><div class="card-b">${list.map(r => `<div class="list-row" style="cursor:pointer" data-report="${r}"><span class="dotico">${ic('sheet', 14)}</span><span class="grow t">${r}</span><button class="icon-btn" title="Export">${ic('download', 14)}</button></div>`).join('')}</div></div>`).join('')}</div>
-  <div class="card" style="margin-top:14px"><div class="card-h"><h3>Background exports</h3></div><div class="card-b">
+  <div class="card" style="margin-top:16px"><div class="card-h"><h3>Background exports</h3></div><div class="card-b">
   ${[['Fee collection register · Apr–Oct 2026', 'Excel · 14,882 rows', 'Running'], ['Outstanding dues by student', 'PDF · 196 students', 'Ready'], ['Daily admission register · Oct', 'CSV · 512 rows', 'Ready']].map(([n, m, s]) => `<div class="list-row"><span class="dotico">${ic('download', 14)}</span><div class="grow"><div class="t">${n}</div><div class="s">${m} · requested by Anita Joseph</div></div>${chip(s)}${s === 'Ready' ? '<button class="btn sm">Download</button>' : ''}</div>`).join('')}
   </div></div></div></div>`;
 function openReport(name) {
@@ -1763,15 +1766,15 @@ SETTINGS.roles = () => {
   return `<div class="card"><div class="card-h"><h3>Default permission matrix</h3><span class="muted">action × module × scope · click a cell to change</span></div><div class="card-b" style="overflow:auto"><table class="perm"><thead><tr><th>Action</th>${R.map(r => `<th>${r}</th>`).join('')}</tr></thead><tbody>
   ${M.map(([a, v]) => `<tr><td>${a}</td>${v.split(',').map(x => `<td style="cursor:pointer">${cell(x)}</td>`).join('')}</tr>`).join('')}
   </tbody></table></div></div>
-  <div class="grid-2" style="margin-top:14px"><div class="card"><div class="card-h"><h3>Field masking</h3></div><div class="card-b">${[['Caste / community', 'Admin'], ['Annual income', 'Admin'], ['Bank account', 'Admin, Finance'], ['Aadhaar', 'Masked for everyone · last 4 shown']].map(([f, w]) => `<div class="list-row"><span class="dotico">${ic('lock', 14)}</span><div class="grow"><div class="t">${f}</div><div class="s">Visible to: ${w}</div></div></div>`).join('')}</div></div>
+  <div class="grid-2" style="margin-top:16px"><div class="card"><div class="card-h"><h3>Field masking</h3></div><div class="card-b">${[['Caste / community', 'Admin'], ['Annual income', 'Admin'], ['Bank account', 'Admin, Finance'], ['Aadhaar', 'Masked for everyone · last 4 shown']].map(([f, w]) => `<div class="list-row"><span class="dotico">${ic('lock', 14)}</span><div class="grow"><div class="t">${f}</div><div class="s">Visible to: ${w}</div></div></div>`).join('')}</div></div>
   <div class="card"><div class="card-h"><h3>Roles</h3><span class="muted" style="margin-left:auto">Admin has access to everything</span></div><div class="card-b">${['Admin', 'Finance'].map(r => `<div class="list-row"><span class="grow">${r}</span><span class="faint">${USERS.filter(u => u.role === r).length} users</span></div>`).join('')}</div></div></div>`;
 };
 SETTINGS.workflows = () => `<div class="card"><div class="card-h"><h3>Admission status pipeline</h3><span class="muted">Drag to reorder · rename freely</span></div><div class="card-b"><div class="pipeline">${STATUSES.map((s, i) => `<span class="pipe-step">${ic('grip', 14)}${chip(s)}</span>${i < 2 ? ic('right', 14) : ''}`).join('')}</div>
   <div class="check-row" style="margin-top:12px"><span style="flex:1">Seat is booked</span><div class="seg"><button class="on">At the desk, before payment</button><button>Only after first payment</button></div></div>
   <div class="check-row"><span style="flex:1">Seat booker must accept the refund policy to book</span><button class="switch on"></button></div></div></div>
-  <div class="card" style="margin-top:14px"><div class="card-h"><h3>Refund policy · ${POLICY.ver}</h3></div><div class="card-b">${policyTable()}
+  <div class="card" style="margin-top:16px"><div class="card-h"><h3>Refund policy · ${POLICY.ver}</h3></div><div class="card-b">${policyTable()}
   <div style="display:flex;gap:8px;margin-top:12px"><button class="btn sm" data-policy="">${ic('eye', 12)}Preview as booker</button><button class="btn sm">Publish new version</button></div></div></div>
-  <div class="grid-2" style="margin-top:14px"><div class="card"><div class="card-h"><h3>Refund approval chain</h3></div><div class="card-b">
+  <div class="grid-2" style="margin-top:16px"><div class="card"><div class="card-h"><h3>Refund approval chain</h3></div><div class="card-b">
     <div class="chain">${[['Admin', 'Approves all amounts'], ['Finance', 'Executes the payout after approval']].map(([r, w], i) => `<div class="ch-item"><span class="ch-dot">${i + 1}</span><div><div>${r}</div><div class="faint" style="font-size:11.5px">${w}</div></div><button class="icon-btn">${ic('more')}</button></div>`).join('')}</div>
     <div class="check-row"><span style="flex:1">Approval mode</span><div class="seg"><button class="on">Physical signature + scan</button><button>In-app e-approval</button></div></div>
     <div class="check-row"><span style="flex:1">Executor must differ from approvers</span><button class="switch on"></button></div></div></div>
