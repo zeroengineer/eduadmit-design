@@ -295,7 +295,7 @@ function setChips(ids) {
   $('#fdrop')?.classList.toggle('active', on.length > 0);
   if (chipHandler) chipHandler(S.sel);
 }
-const sheetTabs = (page, tabs, cur) => `<div class="sheet-tabs">${tabs.map(([k, l]) => `<a class="sheet-tab ${k === cur ? 'on' : ''}" href="#${page}/${k}">${l}</a>`).join('')}</div>`;
+const sheetTabs = (page, tabs, cur) => `<div class="sheet-tabs"><div class="tab-seg">${tabs.map(([k, l]) => `<a class="sheet-tab ${k === cur ? 'on' : ''}" href="#${page}/${k}">${l}</a>`).join('')}</div></div>`;
 
 /* ================= pages ================= */
 const PAGES = {};
@@ -912,7 +912,7 @@ PAGES['admissions/view'] = () => {
     <div class="actions"><a class="btn" href="#admissions">Back to Admissions</a><button class="btn danger act-write" data-action="cancel-adm" data-sid="${s.id}">Cancel admission</button>${primary}</div></div>
   <div class="content">
     ${justBooked ? `<div class="notice ok sum-ok">${ic('check', 16)}<div><b>Seat booked · ${s.adm}</b> — booking fee ${bp ? `<b>${inr(bp.amt)}</b> received by ${bp.mode} · receipt ${bp.rcpt}` : 'not recorded'}.</div></div>` : ''}
-    <div class="sheet-tabs sv-tabs">${TABS.map(([k, l]) => `<a class="sheet-tab ${k === tab ? 'on' : ''}" href="#admissions/view/${s.id}${k === 'details' ? '' : '/' + k}">${l}</a>`).join('')}</div>
+    <div class="sheet-tabs sv-tabs"><div class="tab-seg">${TABS.map(([k, l]) => `<a class="sheet-tab ${k === tab ? 'on' : ''}" href="#admissions/view/${s.id}${k === 'details' ? '' : '/' + k}">${l}</a>`).join('')}</div></div>
     <div class="sv-main">${body}</div>
   </div></div>`;
 };
@@ -1008,7 +1008,7 @@ PAGES['payments/student'] = () => {
       <div><span>Overdue</span><b style="color:${s.overdue ? 'var(--bad)' : 'inherit'}">${s.overdue ? inr(s.overdue) : '—'}</b></div>
       <div><span>Next due</span><b>${next ? `${inr(next.bal)}<em>${fd(next.due)}</em>` : '—'}</b></div>
     </div></div>
-    <div class="sheet-tabs sv-tabs">${[['', `Instalments <span class="pp-n">${inv.length}</span>`], ['history', `Payment history <span class="pp-n">${pays.length}</span>`]].map(([k, l]) => `<a class="sheet-tab ${k === ptab ? 'on' : ''}" href="#payments/student/${s.id}${k ? '/' + k : ''}">${l}</a>`).join('')}</div>
+    <div class="sheet-tabs sv-tabs"><div class="tab-seg">${[['', `Instalments <span class="pp-n">${inv.length}</span>`], ['history', `Payment history <span class="pp-n">${pays.length}</span>`]].map(([k, l]) => `<a class="sheet-tab ${k === ptab ? 'on' : ''}" href="#payments/student/${s.id}${k ? '/' + k : ''}">${l}</a>`).join('')}</div></div>
     ${ptab === '' ? `<div class="card"><div class="card-h"><h3>Instalments</h3><span class="muted" style="margin-left:auto">payments are applied to the oldest first</span></div><div class="card-b" style="overflow:auto">
       ${instTable(s, inv, new Set(inv.filter(i => hl && i.recs.some(r => r.x.id === hl)).map(i => i.no)), true)}
     </div></div>` : `<div class="card"><div class="card-h"><h3>Payment history</h3><span class="muted" style="margin-left:auto">${pays.length} receipt${pays.length === 1 ? '' : 's'}</span></div><div class="card-b">
@@ -1636,7 +1636,7 @@ const REPORTS = {
 };
 /* ---------- Reports & analytics: two sections ---------- */
 const REP_TABS = [['analytics', 'Analytics'], ['list', 'Reports']];
-const repTabs = cur => `<div class="sheet-tabs sv-tabs">${REP_TABS.map(([k, l]) => `<a class="sheet-tab ${k === cur ? 'on' : ''}" href="#reports/${k}">${l}</a>`).join('')}</div>`;
+const repTabs = cur => `<div class="sheet-tabs sv-tabs"><div class="tab-seg">${REP_TABS.map(([k, l]) => `<a class="sheet-tab ${k === cur ? 'on' : ''}" href="#reports/${k}">${l}</a>`).join('')}</div></div>`;
 PAGES.reports = PAGES['reports/analytics'] = () => {
   const yr = students.filter(inAy), occ = yr.filter(s => OCCUPY.includes(s.status));
   const progs = PROGS.map(p => { const a = occ.filter(s => s.prog === p.code); const as = a.reduce((t, s) => t + s.net, 0), pd = a.reduce((t, s) => t + s.paid, 0); return { p, n: a.length, as, pd, pct: as ? Math.round(pd / as * 100) : 0 }; }).filter(r => r.n);

@@ -1392,3 +1392,15 @@ body,.topbar{background:#FFFFFF}
 
 /* Settings has no page title bar: content starts under the top bar */
 .set-page > .content{padding-top:24px}
+
+/* ================= Tabs: segmented control (same look as .seg) =================
+   .sheet-tabs is the row (tabs + any extra controls such as the year picker);
+   .tab-seg is the grey track; the active tab is a raised white pill.          */
+.sheet-tabs,.sheet-card > .sheet-tabs,.sv-tabs{display:flex;align-items:center;gap:12px;height:auto;padding:0!important;background:none;border:0!important}
+.tab-seg{display:inline-flex;align-items:center;gap:2px;padding:4px;background:#F5F5F5;border-radius:10px;max-width:100%;overflow-x:auto;scrollbar-width:none}
+.tab-seg::-webkit-scrollbar{display:none}
+.sheet-tabs .tab-seg .sheet-tab{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 14px;margin:0;border:0;border-radius:7px;background:none;color:#737373;font-size:13px;font-weight:400;white-space:nowrap}
+.sheet-tabs .tab-seg .sheet-tab:hover{color:#0A0A0A}
+.sheet-tabs .tab-seg .sheet-tab.on{background:#fff;color:#0A0A0A;font-weight:500;box-shadow:0 1px 3px rgba(10,10,10,.10),0 0 0 1px rgba(10,10,10,.04)}
+.sheet-tabs .tab-seg .sheet-tab .pp-n{background:#E5E5E5}
+.sheet-tabs .tab-seg .sheet-tab.on .pp-n{background:#F0F0F0;color:#404040}
