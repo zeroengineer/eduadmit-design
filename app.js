@@ -1677,7 +1677,7 @@ function openReport(name) {
 /* ---------- Audit ---------- */
 PAGES.audit = () => {
   const html = `<div class="fill">${pageHead('Audit log', 'An append-only record of every change, approval, export, login and permission change. Entries can never be edited.')}
-  <div class="content">${sheet({ cols: [{ key: 'at', label: 'Timestamp', w: 140 }, { key: 'user', label: 'User', w: 170 }, { key: 'role', label: 'Role', w: 150 }, { key: 'action', label: 'Action', w: 140, render: r => `<span class="tag">${r.action}</span>` }, { key: 'record', label: 'Record', w: 160 }, { key: 'detail', label: 'Detail', w: 280 }, { key: 'before', label: 'Before', w: 120 }, { key: 'after', label: 'After', w: 130 }, { key: 'ip', label: 'IP', w: 110 }], rows: audit, onOpen: openAudit, search: false })}</div></div>`;
+  <div class="content">${sheet({ cols: [{ key: 'at', label: 'Timestamp', w: 140 }, { key: 'user', label: 'User', w: 170 }, { key: 'role', label: 'Role', w: 150 }, { key: 'action', label: 'Action', w: 140, render: r => `<span class="tag">${r.action}</span>` }, { key: 'record', label: 'Record', w: 160 }, { key: 'detail', label: 'Detail', w: 280 }, { key: 'before', label: 'Before', w: 120 }, { key: 'after', label: 'After', w: 130 }, { key: 'ip', label: 'IP', w: 110 }], rows: audit, onOpen: openAudit, search: false, exportBtn: false })}</div></div>`;
   return html;
 };
 function openAudit(a) {
