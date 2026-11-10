@@ -1404,3 +1404,39 @@ body,.topbar{background:#FFFFFF}
 .sheet-tabs .tab-seg .sheet-tab.on{background:#fff;color:#0A0A0A;font-weight:500;box-shadow:0 1px 3px rgba(10,10,10,.10),0 0 0 1px rgba(10,10,10,.04)}
 .sheet-tabs .tab-seg .sheet-tab .pp-n{background:#E5E5E5}
 .sheet-tabs .tab-seg .sheet-tab.on .pp-n{background:#F0F0F0;color:#404040}
+
+/* ================= Data tables live inside one card =================
+   Header row: tabs on the left; search, filter, export and year picker on the right.
+   The table and pager run edge to edge below it.                                    */
+.sheet-card{background:#fff;border:1px solid #E5E5E5;border-radius:14px;box-shadow:none;overflow:hidden}
+.sheet-card > .toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:16px 20px!important;border:0;margin:0}
+.sheet-card > .toolbar .sheet-tabs{display:contents}
+.sheet-card > .toolbar .tab-seg{order:0}
+.sheet-card > .toolbar .tlead{order:1}
+.sheet-card > .toolbar .tsearch{order:2;margin-left:auto;width:260px}
+.sheet-card > .toolbar .fdrop{order:3}
+.sheet-card > .toolbar > div[style*="margin-left:auto"]{order:4}
+.sheet-card > .toolbar .ay-pick{order:5;margin-left:0}
+.sheet-card > .toolbar .tab-seg ~ .tsearch,.sheet-card > .toolbar .tsearch:first-child{margin-left:auto}
+.sheet-card .sheet{border:0;border-top:1px solid #E5E5E5;border-radius:0;background:#fff}
+.sheet-card .statusbar{border:0;border-top:1px solid #E5E5E5;border-radius:0;padding:8px 20px}
+.sheet-card .statusbar #rowCount{left:20px}
+.set-body .sheet-card{max-height:none}
+
+/* Header row layout, same on every table:
+   row 1  [tabs] ................................ [Academic year] [Export]
+   row 2  [course / branch selects] [search] [status filter]                */
+.sheet-card > .toolbar{row-gap:12px;column-gap:8px}
+.sheet-card > .toolbar .tab-seg{order:0}
+.sheet-card > .toolbar .ay-pick{order:1;margin-left:auto}
+.sheet-card > .toolbar > div[style*="margin-left:auto"]{order:2;margin-left:0!important}
+.sheet-card > .toolbar:not(:has(.ay-pick)) > div[style*="margin-left:auto"]{margin-left:auto!important}
+.sheet-card > .toolbar:has(.tab-seg):has(.tsearch,.fdrop,.tlead)::after{content:"";order:3;flex-basis:100%;height:0}
+.sheet-card > .toolbar .tlead{order:4}
+.sheet-card > .toolbar .tsearch{order:5;margin-left:0;width:260px}
+.sheet-card > .toolbar .fdrop{order:6}
+
+/* Page title: balanced space above and below, aligned to the content edge */
+.page-head{padding:24px var(--gutter) 0;min-height:0;margin-bottom:20px;align-items:center}
+.page-head h1{font-size:20px;font-weight:600;letter-spacing:-.3px;line-height:28px}
+.page-head .crumb{margin-bottom:4px}

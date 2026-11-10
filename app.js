@@ -234,9 +234,10 @@ function settingsShell(cur, inner) {
 const S = { cols: [], rows: [], view: [], sort: null, q: '', filter: null, onOpen: null, col: null, page: 0, rpp: 25 };
 function sheet({ cols, rows, onOpen, toolbar = '', chips = '', chipLabel = 'Status', tabs = '', lead = '', search = true, exportBtn = true }) {
   Object.assign(S, { cols, rows, onOpen, sort: null, q: '', filter: null, col: null, view: rows, page: 0, sel: [] });
+  /* one container: tabs + filters share the header row, the table and pager sit below it */
   return `<div class="sheet-card">
-    ${tabs}
-    ${search || chips || lead || toolbar || exportBtn ? `<div class="toolbar">
+    ${tabs || search || chips || lead || toolbar || exportBtn ? `<div class="toolbar">
+      ${tabs}
       ${search ? `<div class="tsearch">${ic('search', 14)}<input id="sheetSearch" placeholder="Keyword search"></div>` : ''}
       ${chips ? `<div class="fdrop" id="fdrop"><button class="fdrop-btn" data-fdrop>${ic('filter', 13)}<span class="fdrop-k">${chipLabel}:</span><span id="fdropLabel">All</span><b id="fdropCount"></b><i class="pi pi-chevron-down fdrop-chev"></i></button><div class="fdrop-menu" id="fchips">${chips}</div></div>` : ''}
       ${lead ? `<div class="tlead">${lead}</div>` : ''}
