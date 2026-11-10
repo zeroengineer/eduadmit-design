@@ -242,7 +242,7 @@ function sheet({ cols, rows, onOpen, toolbar = '', chips = '', chipLabel = 'Stat
       ${chips ? `<div class="fdrop" id="fdrop"><button class="fdrop-btn" data-fdrop>${ic('filter', 13)}<span class="fdrop-k">${chipLabel}:</span><span id="fdropLabel">All</span><b id="fdropCount"></b><i class="pi pi-chevron-down fdrop-chev"></i></button><div class="fdrop-menu" id="fchips">${chips}</div></div>` : ''}
       ${lead ? `<div class="tlead">${lead}</div>` : ''}
       <div style="margin-left:auto;display:flex;gap:6px;align-items:center">${toolbar}
-        ${exportBtn ? `<button class="btn sm" data-export>${ic('download', 14)}Export</button>` : ''}</div>
+        ${exportBtn ? `<button class="btn sm" data-export title="Export" aria-label="Export">${ic('download', 14)}<span class="exp-l">Export</span></button>` : ''}</div>
     </div>` : ''}
     <div class="sheet" id="sheet"></div>
     <div class="statusbar"><span id="rowCount"></span><div class="paginator" id="pager"></div></div>
@@ -1405,7 +1405,7 @@ const PAY_TABS = [['daybook', 'Recent payments'], ['students', 'Students'], ['re
 const AYS = ['2026–27', '2025–26', '2024–25'];
 const ayOf = sid => sById(sid)?.ay || '2026–27';
 const inAy = r => ayOf(r.sid ?? r.id) === state.ay;
-const ayPick = () => `<label class="ay-pick">Academic year<select class="input" id="aySel">${AYS.map(y => `<option ${y === state.ay ? 'selected' : ''}>${y}</option>`).join('')}</select></label>`;
+const ayPick = () => `<label class="ay-pick" title="Academic year"><span class="ay-l">Academic year</span><select class="input" id="aySel" aria-label="Academic year">${AYS.map(y => `<option ${y === state.ay ? 'selected' : ''}>${y}</option>`).join('')}</select></label>`;
 const admTabs = cur => sheetTabs('admissions', [['register', 'Register ' + state.ay], ['docs', 'Document checklist']], cur).replace(/<\/div>$/, ayPick() + '</div>');
 const payTabs = (cur, withAy = true) => {
   const t = sheetTabs('payments', PAY_TABS.filter(([k]) => k === 'students' ? allowed('dues') : k === 'refunds' ? allowed('refunds') : true), cur);

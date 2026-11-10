@@ -1452,3 +1452,23 @@ body,.topbar{background:#FFFFFF}
 @media (max-width:1100px){.ev-cr{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* divider between the tabs row and the filters row, edge to edge across the card */
 .sheet-card > .toolbar:has(.tab-seg):has(.tsearch,.fdrop,.tlead)::after{flex:0 0 calc(100% + 40px);height:1px;margin:4px -20px;background:#E5E5E5}
+
+/* Table header: ONE row. Tabs left; search, filters, year and export right.
+   Replaces the two-row layout and its divider above.                         */
+.sheet-card > .toolbar:has(.tab-seg):has(.tsearch,.fdrop,.tlead)::after{content:none}
+.sheet-card > .toolbar{row-gap:10px;column-gap:8px;padding:14px 20px!important}
+.sheet-card > .toolbar .tab-seg{order:0;margin-right:auto}
+.sheet-card > .toolbar .tlead{order:1}
+.sheet-card > .toolbar .tsearch{order:2;margin-left:0;width:220px}
+.sheet-card > .toolbar .fdrop{order:3}
+.sheet-card > .toolbar .ay-pick{order:4;margin-left:0}
+.sheet-card > .toolbar > div[style*="margin-left:auto"]{order:5;margin-left:0!important}
+.sheet-card > .toolbar .tsel{min-width:120px;max-width:170px}
+.sheet-card > .toolbar .ay-l{display:none}
+.sheet-card > .toolbar [data-export]{width:32px;padding:0;justify-content:center}
+.sheet-card > .toolbar [data-export] .exp-l{display:none}
+.sheet-card > .toolbar:not(:has(.tab-seg)) .tsearch{margin-right:auto}
+/* tighter header so the busiest table (Admissions) still fits on one row */
+.sheet-card > .toolbar{padding:12px 16px!important;column-gap:6px}
+.sheet-card > .toolbar .tsearch{width:190px}
+.sheet-card > .toolbar .tsel{min-width:0;width:auto;max-width:150px}
