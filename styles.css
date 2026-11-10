@@ -1164,54 +1164,18 @@ body,.topbar{background:#FFFFFF}
 .rep-sub{font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#404040;margin:16px 0 6px;padding-top:12px;border-top:1px solid #E5E5E5}
 .rep-note{margin:0 0 12px}
 /* ===== Seat occupancy: views + quota filter ===== */
-.sm-cards .sm-card{text-align:left;cursor:pointer;font:inherit;color:inherit;background:#fff}
-.sm-cards .sm-card:hover{border-color:#A2CDE6}
-.sm-cards .sm-card.on{border-color:#0A3C6E;box-shadow:0 0 0 1px #0A3C6E}
+.sm-cards .sm-card{text-align:left;background:#fff}
 .sm-cards .sm-card.hero{background:#fff}
 .sm-bar .cf,.sm-card.hero .sm-bar .cf{background:#0A3C6E}
 .sm-bar .dc,.sm-card.hero .sm-bar .dc{background:#1783C1}
 .sm-bar .sb,.sm-card.hero .sm-bar .sb{background:#A2CDE6}
 .sm-card.hero .sm-bar,.sm-bar{background:#F0F0F0}
-.sm-ctl{display:flex;align-items:center;gap:12px;margin:0 0 12px}
-.sm-ctl .seg button{display:inline-flex;align-items:center;gap:6px}
-.sm-ctl .seg .pi{font-size:12px}
-.sm-qf{display:flex;align-items:center;gap:8px;font-size:13px;color:#737373;margin-left:auto}
-.sm-qf .input{height:32px;width:auto;min-width:150px;font-size:13px}
 .sm-legend b{font-weight:600;color:#0A0A0A;margin-left:2px}
 .sm-legend-note{display:none}
 .sm-table td{padding:14px 16px}
 .sm-table tbody tr:hover td{background:#F8FBFD}
 .sm-bar{height:6px;gap:2px}
 .sm-bar.big{height:8px}
-/* bar chart */
-.sm-chart .sm-legend{border-bottom:1px solid #E5E5E5}
-.sm-bars{padding:8px 18px 4px}
-.sm-brow{display:grid;grid-template-columns:220px minmax(0,1fr) 120px;align-items:center;gap:16px;padding:10px 0;border-bottom:1px solid #F0F0F0}
-.sm-brow:last-child{border-bottom:0}
-.sm-btrack-wrap{min-width:0}
-.sm-btrack{height:18px;background:#EBEBEB;border-radius:4px;display:flex;gap:2px;overflow:hidden}
-.sm-btrack i{display:block;height:100%}
-.sm-btrack i:first-child{border-radius:4px 0 0 4px}
-.sm-bval{text-align:right;font-variant-numeric:tabular-nums;color:#737373;font-size:13px}
-.sm-bval b{color:#0A0A0A;font-weight:600;font-size:14px}
-.sm-bval span{display:block;font-size:12px}
-.sm-note{font-size:12px;color:#737373;padding:10px 18px 14px;border-top:1px solid #F0F0F0}
-/* pie chart */
-.sm-pies{display:grid;grid-template-columns:minmax(320px,420px) minmax(0,1fr);gap:14px;align-items:start}
-.sm-pie-body{display:flex;align-items:center;gap:24px;padding:18px 20px}
-.sm-donut circle{transition:opacity .12s}
-.sm-donut circle:hover{opacity:.82}
-.sm-donut .d-v{font-size:24px;font-weight:600;fill:#0A0A0A;font-variant-numeric:tabular-nums}
-.sm-mini .sm-donut .d-v{font-size:14px}
-.sm-donut .d-s{font-size:11px;fill:#737373}
-.sm-pie-legend{display:flex;flex-direction:column;gap:10px;flex:1;min-width:0}
-.sm-pie-legend div{display:grid;grid-template-columns:12px 1fr auto 40px;align-items:center;gap:8px;font-size:13px}
-.sm-pie-legend i{width:10px;height:10px;border-radius:50%}
-.sm-pie-legend b{font-weight:600;font-variant-numeric:tabular-nums}
-.sm-pie-legend em{font-style:normal;color:#737373;text-align:right;font-size:12px}
-.sm-pie-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:18px;padding:16px 18px}
-.sm-mini{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px}
-.sm-mini .sm-prog{font-size:13px;margin-top:4px}
 /* tooltip */
 .sm-tip{position:fixed;z-index:80;display:none;pointer-events:none;background:#0A0A0A;color:#fff;border-radius:8px;padding:7px 10px;font-size:12px;line-height:1.4;max-width:280px;box-shadow:0 6px 18px rgba(0,0,0,.18)}
 .sm-tip b{display:block;font-weight:600}

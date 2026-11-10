@@ -1159,65 +1159,30 @@ function showReceipt(pid) {
 }
 
 /* ---------- Seat matrix ---------- */
-/* ---------- Seat occupancy (Reports → Analytics): Table · Bar chart · Pie chart, filterable by quota ---------- */
+/* ---------- Seat occupancy (Reports → Analytics): summary cards per quota + the programme × quota table ---------- */
 const SM_COL = { cf: '#0A3C6E', dc: '#1783C1', sb: '#A2CDE6', av: '#EBEBEB' };
 const SM_LBL = { cf: 'Confirmed', dc: 'Details collected', sb: 'Seat booked', av: 'Available' };
 const seatOccupancy = () => `<div id="smOcc">${smInner()}</div><div class="sm-tip" id="smTip" role="tooltip"></div>`;
 function smInner() {
-  const view = state.smView || 'table', qf = state.smQuota || '';
-  const QS = qf ? [qf] : QUOTAS, PROGS_A = actProgs();
+  const QS = QUOTAS, PROGS_A = actProgs();
   const stat = (p, q) => { const n = st => students.filter(s => s.prog === p.code && s.quota === q && s.status === st && inAy(s)).length; const cf = n('Confirmed'), dc = n('Details collected'), sb = n('Seat booked'); return { cap: p.cap[q] || 0, cf, dc, sb, used: cf + dc + sb }; };
   const add = (a, b) => ({ cap: a.cap + b.cap, cf: a.cf + b.cf, dc: a.dc + b.dc, sb: a.sb + b.sb, used: a.used + b.used });
   const Z = { cap: 0, cf: 0, dc: 0, sb: 0, used: 0 };
-  const sumQ = (p, qs) => qs.map(q => stat(p, q)).reduce(add, Z);
   const byQAll = QUOTAS.map(q => PROGS_A.reduce((a, p) => add(a, stat(p, q)), Z));
-  const all = (qf ? [byQAll[QUOTAS.indexOf(qf)]] : byQAll).reduce(add, Z);
+  const all = byQAll.reduce(add, Z);
   const pct = (v, c) => c ? v / c * 100 : 0;
   const av = s => Math.max(0, s.cap - s.used);
   const tip = (title, s) => `${esc(title)}|${s.cf} confirmed · ${s.dc} details collected · ${s.sb} seat booked · ${av(s)} available`;
   const bar = (s, big, title = '') => `<div class="sm-bar ${big ? 'big' : ''}" data-tip="${tip(title, s)}"><i class="cf" style="width:${pct(s.cf, s.cap)}%"></i><i class="dc" style="width:${pct(s.dc, s.cap)}%"></i><i class="sb" style="width:${pct(s.sb, s.cap)}%"></i></div>`;
   const badge = s => { const left = av(s); return left <= 0 ? '<span class="chip bad">Full</span>' : left / s.cap <= .15 ? `<span class="chip warn">${left} left</span>` : `<span class="sm-left">${left} left</span>`; };
   const cell = (s, title) => s.cap ? `<div class="sm-cell"><div class="sm-top"><span class="sm-num">${s.used}<span> / ${s.cap}</span></span>${badge(s)}</div>${bar(s, false, title)}</div>` : '<span class="sm-na">Not offered</span>';
-  const card = (key, label, s) => `<button type="button" class="card sm-card ${qf === key ? 'on' : ''}" data-smquota="${key}"><div class="sm-card-l">${label}</div><div class="sm-card-v">${s.used}<span> / ${s.cap}</span></div>${bar(s, true, label)}<div class="sm-card-s"><span>${Math.round(pct(s.used, s.cap))}% filled</span><span>${av(s)} left</span></div></button>`;
+  const card = (label, s) => `<div class="card sm-card"><div class="sm-card-l">${label}</div><div class="sm-card-v">${s.used}<span> / ${s.cap}</span></div>${bar(s, true, label)}<div class="sm-card-s"><span>${Math.round(pct(s.used, s.cap))}% filled</span><span>${av(s)} left</span></div></div>`;
   const legend = `<div class="sm-legend">${['cf', 'dc', 'sb', 'av'].map(k => `<span><i style="background:${SM_COL[k]}"></i>${SM_LBL[k]} <b>${k === 'av' ? av(all) : all[k]}</b></span>`).join('')}</div>`;
-  const controls = `<div class="sm-ctl"><div class="seg" role="radiogroup" aria-label="View">${[['table', 'Table', 'table'], ['bar', 'Bar chart', 'chart-bar'], ['pie', 'Pie chart', 'chart-pie']].map(([k, l, i]) => `<button type="button" class="${view === k ? 'on' : ''}" data-smview="${k}"><i class="pi pi-${i}"></i>${l}</button>`).join('')}</div>
-    <label class="sm-qf">Quota<select class="input" id="smQuota"><option value="">All quotas</option>${QUOTAS.map(q => `<option ${q === qf ? 'selected' : ''}>${q}</option>`).join('')}</select></label></div>`;
-  let body = '';
-  if (view === 'table') {
-    body = `<div class="card sm-wrap">${legend}<table class="sm-table"><thead><tr><th>Programme</th>${QS.map(q => `<th>${q}</th>`).join('')}<th class="r">Total</th></tr></thead>
+  const body = `<div class="card sm-wrap">${legend}<table class="sm-table"><thead><tr><th>Programme</th>${QS.map(q => `<th>${q}</th>`).join('')}<th class="r">Total</th></tr></thead>
     <tbody>${PROGS_A.map(p => { const row = QS.map(q => stat(p, q)), t = row.reduce(add, Z); return t.cap ? `<tr><td><div class="sm-prog">${p.name}</div><div class="sm-sub">${p.dept} · ${p.code}</div></td>${row.map((x, i) => `<td>${cell(x, p.name + ' · ' + QS[i])}</td>`).join('')}<td class="r"><div class="sm-num">${t.used}<span> / ${t.cap}</span></div><div class="sm-sub">${Math.round(pct(t.used, t.cap))}% filled</div></td></tr>` : ''; }).join('')}</tbody>
     <tfoot><tr><td>All programmes</td>${QS.map(q => { const x = PROGS_A.reduce((a, p) => add(a, stat(p, q)), Z); return `<td>${cell(x, 'All programmes · ' + q)}</td>`; }).join('')}<td class="r"><div class="sm-num">${all.used}<span> / ${all.cap}</span></div><div class="sm-sub">${Math.round(pct(all.used, all.cap))}% filled</div></td></tr></tfoot></table></div>`;
-  }
-  if (view === 'bar') {
-    const rows = PROGS_A.map(p => ({ p, s: sumQ(p, QS) })).filter(r => r.s.cap), maxCap = Math.max(1, ...rows.map(r => r.s.cap));
-    const seg = (r, k) => r.s[k] ? `<i style="width:${r.s[k] / r.s.cap * 100}%;background:${SM_COL[k]}" data-tip="${esc(r.p.name)}|${SM_LBL[k]}: ${r.s[k]} of ${r.s.cap} seats"></i>` : '';
-    body = `<div class="card sm-chart">${legend}<div class="sm-bars">${rows.map(r => `<div class="sm-brow"><div class="sm-blbl"><div class="sm-prog">${esc(r.p.name)}</div><div class="sm-sub">${esc(r.p.dept)}</div></div>
-      <div class="sm-btrack-wrap"><div class="sm-btrack" style="width:${r.s.cap / maxCap * 100}%" data-tip="${tip(r.p.name, r.s)}">${['cf', 'dc', 'sb'].map(k => seg(r, k)).join('')}</div></div>
-      <div class="sm-bval"><b>${r.s.used}</b> / ${r.s.cap}<span>${Math.round(pct(r.s.used, r.s.cap))}%</span></div></div>`).join('')}</div>
-      <div class="sm-note">Bar length = seats available in the programme${qf ? ' for ' + qf : ''}; filled part split by status. Hover a segment for the exact count.</div></div>`;
-  }
-  if (view === 'pie') {
-    const donut = (s, r, w, big, title) => {
-      const C = 2 * Math.PI * r, tot = Math.max(1, s.cap), parts = [['cf', s.cf], ['dc', s.dc], ['sb', s.sb], ['av', av(s)]].filter(x => x[1] > 0);
-      const gap = parts.length > 1 ? 2 : 0; let off = 0;
-      const arcs = parts.map(([k, v]) => { const len = Math.max(0, v / tot * C - gap); const el = `<circle r="${r}" cx="0" cy="0" fill="none" stroke="${SM_COL[k]}" stroke-width="${w}" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-off}" data-tip="${esc(title)}|${SM_LBL[k]}: ${v} (${Math.round(v / tot * 100)}%)"/>`; off += v / tot * C; return el; }).join('');
-      const R = r + w / 2 + 2;
-      return `<svg viewBox="${-R} ${-R} ${2 * R} ${2 * R}" width="${2 * R}" height="${2 * R}" class="sm-donut" role="img" aria-label="${esc(title)}: ${s.used} of ${s.cap} seats filled"><g transform="rotate(-90)">${arcs}</g>
-        <text class="d-v" y="${big ? 2 : 4}" text-anchor="middle">${big ? s.used : Math.round(pct(s.used, s.cap)) + '%'}</text>${big ? `<text class="d-s" y="22" text-anchor="middle">of ${s.cap} seats</text>` : ''}</svg>`;
-    };
-    const rows = PROGS_A.map(p => ({ p, s: sumQ(p, QS) })).filter(r => r.s.cap);
-    body = `<div class="sm-pies"><div class="card sm-chart sm-pie-main"><div class="card-h"><h3>${qf || 'All quotas'} · all programmes</h3></div><div class="card-b sm-pie-body">${donut(all, 70, 22, true, 'All programmes')}
-        <div class="sm-pie-legend">${['cf', 'dc', 'sb', 'av'].map(k => { const v = k === 'av' ? av(all) : all[k]; return `<div><i style="background:${SM_COL[k]}"></i><span>${SM_LBL[k]}</span><b>${v}</b><em>${Math.round(pct(v, all.cap))}%</em></div>`; }).join('')}</div></div></div>
-      <div class="card sm-chart"><div class="card-h"><h3>By programme</h3><span class="muted">% of seats filled</span></div><div class="card-b sm-pie-grid">${rows.map(r => `<div class="sm-mini">${donut(r.s, 30, 10, false, r.p.name)}<div class="sm-prog">${esc(r.p.name)}</div><div class="sm-sub">${r.s.used} / ${r.s.cap} · ${av(r.s)} left</div></div>`).join('')}</div></div></div>`;
-  }
-  return `<div class="sm-cards">${card('', 'All quotas', byQAll.reduce(add, Z))}${QUOTAS.map((q, k) => card(q, q, byQAll[k])).join('')}</div>${controls}${body}`;
+  return `<div class="sm-cards">${card('All quotas', all)}${QUOTAS.map((q, k) => card(q, byQAll[k])).join('')}</div>${body}`;
 }
-function smRerender() { const el = $('#smOcc'); if (el) el.innerHTML = smInner(); }
-document.addEventListener('click', e => {
-  const v = e.target.closest('[data-smview]'); if (v) { state.smView = v.dataset.smview; try { localStorage.setItem('ta.smView', state.smView); } catch (x) { /* storage unavailable */ } return smRerender(); }
-  const q = e.target.closest('[data-smquota]'); if (q) { state.smQuota = q.dataset.smquota === state.smQuota ? '' : q.dataset.smquota; return smRerender(); }
-});
-document.addEventListener('change', e => { if (e.target.id === 'smQuota') { state.smQuota = e.target.value; smRerender(); } });
 document.addEventListener('mousemove', e => {
   const t = $('#smTip'); if (!t) return;
   const el = e.target.closest('#smOcc [data-tip]');
@@ -1227,7 +1192,6 @@ document.addEventListener('mousemove', e => {
   const x = Math.min(e.clientX + 14, window.innerWidth - t.offsetWidth - 8), y = e.clientY + 16 + t.offsetHeight > window.innerHeight ? e.clientY - t.offsetHeight - 10 : e.clientY + 16;
   t.style.left = x + 'px'; t.style.top = y + 'px';
 });
-try { state.smView = localStorage.getItem('ta.smView') || 'table'; } catch (x) { /* storage unavailable */ }
 
 /* ---------- Seat matrix (Settings): capacity editor ---------- */
 const actProgs = () => PROGS.filter(p => p.active !== false);
