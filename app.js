@@ -906,7 +906,7 @@ PAGES['admissions/view'] = () => {
   const justBooked = state.justBooked === s.id; state.justBooked = null;
   return `<div class="sv-page"><div class="page-head"><div><div class="crumb"><a href="#admissions">Admissions</a> / ${s.adm || s.app}</div><h1>${esc(s.name)}</h1>
       <div class="sv-sub">${s.adm || s.app} · ${esc(s.progName)} · ${s.quota} ${chip(s.status)}</div></div>
-    <div class="actions"><a class="btn" href="#admissions">Back to Admissions</a><button class="btn ghost act-write sv-cancel" data-action="cancel-adm" data-sid="${s.id}">Cancel admission</button>${primary}</div></div>
+    <div class="actions"><a class="btn" href="#admissions">Back to Admissions</a><button class="btn danger act-write" data-action="cancel-adm" data-sid="${s.id}">Cancel admission</button>${primary}</div></div>
   <div class="content">
     ${justBooked ? `<div class="notice ok sum-ok">${ic('check', 16)}<div><b>Seat booked · ${s.adm}</b> — booking fee ${bp ? `<b>${inr(bp.amt)}</b> received by ${bp.mode} · receipt ${bp.rcpt}` : 'not recorded'}.</div></div>` : ''}
     <div class="sheet-tabs sv-tabs">${TABS.map(([k, l]) => `<a class="sheet-tab ${k === tab ? 'on' : ''}" href="#admissions/view/${s.id}${k === 'details' ? '' : '/' + k}">${l}</a>`).join('')}</div>

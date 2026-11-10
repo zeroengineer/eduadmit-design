@@ -1107,7 +1107,6 @@ body,.topbar{background:#FFFFFF}
 .sv-money b{font-size:18px;font-weight:500;color:#0A0A0A}
 .sv-tabs{margin:0 0 14px!important}
 .sv-body{padding:16px 20px}
-.sv-cancel{color:var(--bad)!important}
 .sv-preview{display:block;text-align:center;margin-top:10px;font-size:12.5px}
 .sv-main{min-width:0}
 .sv-page .page-head > div:first-child{flex:1;min-width:0}
@@ -1138,7 +1137,6 @@ body,.topbar{background:#FFFFFF}
 .input:focus,select.input:focus,textarea.input:focus{border-color:#1783C1}
 .field.invalid label{color:#E7000B}
 .st-btn.danger:hover{background:#FEF2F2;color:#E7000B}
-.sv-cancel,.sv-cancel:hover{color:#E7000B!important}
 /* menu group headings (Settings, Book seat): readable, clearly separated */
 .subnav .subnav-h{font-size:11.5px;font-weight:600;letter-spacing:.6px;color:#404040;opacity:1;padding:12px 12px 6px}
 .subnav .subnav-h:first-child{padding-top:6px}
