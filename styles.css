@@ -1389,3 +1389,6 @@ body,.topbar{background:#FFFFFF}
 .set-page .set-body{padding:0 2px var(--gutter) 0}
 .set-body table.grid{width:100%;min-width:0}
 @media (max-width:900px){:root{--gutter:16px;--pad-x:16px}}
+
+/* Settings has no page title bar: content starts under the top bar */
+.set-page > .content{padding-top:24px}

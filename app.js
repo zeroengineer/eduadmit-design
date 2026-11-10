@@ -227,7 +227,7 @@ const admHead = (sec, actions = '') => setTitle(ADMSET.find(x => x[0] === sec)[1
 const admWrap = (sec, body, actions = '') => `<div class="fill">${admHead(sec, actions)}<div class="content">${body}</div></div>`;
 function settingsShell(cur, inner) {
   const groups = [['Organisation', state.role === 'Admin' ? SET.map(([k, l]) => ['#settings/' + k, l, 'settings/' + k]) : []], ['Admission', allowed('admset') ? ADMSET.map(([k, l]) => ['#admset/' + k, l, 'admset/' + k]) : []]];
-  return `<div class="set-page">${pageHead('Settings')}<div class="content"><div class="split"><nav class="subnav">${groups.filter(g => g[1].length).map(([g, items]) => `<div class="subnav-h">${g}</div>${items.map(([href, l, id]) => `<a href="${href}" class="${id === cur ? 'on' : ''}">${l}</a>`).join('')}`).join('')}</nav><div class="set-body">${inner}</div></div></div></div>`;
+  return `<div class="set-page"><div class="content"><div class="split"><nav class="subnav">${groups.filter(g => g[1].length).map(([g, items]) => `<div class="subnav-h">${g}</div>${items.map(([href, l, id]) => `<a href="${href}" class="${id === cur ? 'on' : ''}">${l}</a>`).join('')}`).join('')}</nav><div class="set-body">${inner}</div></div></div></div>`;
 }
 
 /* ================= DataTable (PrimeReact style) ================= */
