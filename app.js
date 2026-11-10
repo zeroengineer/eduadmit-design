@@ -1046,7 +1046,7 @@ function feeSlipPaper(s) {
     <div class="section-t">Payment schedule</div>${scheduleTable(s)}
     <div class="slip-next">${nd ? `<div><div class="faint">Next payment</div><b>${inr(nd.bal)}</b> due on <b>${fd(nd.due)}</b> · ${nd.n}</div>` : '<div><b>Fully paid</b> for 2026–27</div>'}</div>
     <p class="faint" style="margin:12px 0 0">Pay at the accounts counter (cash, UPI, cheque, DD) or by bank transfer to SBI A/c XXXXXX4521, IFSC SBIN0070123. Quote the admission number.<br>Refund policy ${s.policy.ver} accepted by ${esc(s.guardian)} on ${fd(s.policy.at)}. Refunds follow the policy slabs.</p>
-    <div style="display:flex;justify-content:flex-end;margin-top:18px"><div style="text-align:center"><div style="font-family:cursive;color:var(--blue-600);font-size:14px">Accounts</div><div class="faint" style="border-top:1px solid var(--line-2);padding-top:3px">Finance department</div></div></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:18px"><div style="text-align:center"><div style="font-family:cursive;color:#00629B;font-size:14px">Accounts</div><div class="faint" style="border-top:1px solid var(--line-2);padding-top:3px">Finance department</div></div></div>
   </div>`;
 }
 function showFeeSlip(sid) {
@@ -1155,7 +1155,7 @@ function receiptPaper(p) {
     <div style="display:flex;justify-content:space-between;margin-bottom:14px"><div><div style="font-size:14px;color:var(--navy-800)">FEE RECEIPT</div><div class="faint">${p.rcpt}</div></div><div style="text-align:right"><div class="faint">Date</div>${fd(p.date)}</div></div>
     <div class="kv" style="margin-bottom:12px"><div><span>Received from</span>${esc(s.guardian)}</div><div><span>Student</span>${esc(s.name)}</div><div><span>Admission no.</span>${s.adm}</div><div><span>Programme</span>${s.progName} · ${s.quota}</div><div><span>Mode</span>${p.mode}</div><div><span>Reference</span>${esc(p.ref)}</div></div>
     <table class="simple"><thead><tr><th>Applied to</th><th class="r">Amount</th></tr></thead><tbody>${(feeAccount(s).apply.get(p.id) || [{ i: null, a: p.amt }]).map(({ i, a }) => `<tr><td>${i ? `${i.no} · ${esc(i.n)}${p.alloc === 'Booking fee' ? ' (booking fee)' : ''}` : 'Advance / unallocated'}</td><td class="r">${inr(a)}</td></tr>`).join('')}</tbody><tfoot><tr><td>Total received</td><td class="r">${inr(p.amt)}</td></tr></tfoot></table>
-    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:28px"><div class="faint">Balance: ${inr(s.due)}${s.nextDue ? ` · next due ${fd(s.nextDue)}` : ''}<br>Refund policy ${s.policy.ver} accepted by ${esc(s.guardian)}.<br>Computer-generated receipt. Verify at thejus.edu.in/verify</div><div style="text-align:center"><div style="font-family:cursive;color:var(--blue-600);font-size:16px">${p.cashier.split(' ')[0]}</div><div class="faint" style="border-top:1px solid var(--line-2);padding-top:3px">Cashier</div></div></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:28px"><div class="faint">Balance: ${inr(s.due)}${s.nextDue ? ` · next due ${fd(s.nextDue)}` : ''}<br>Refund policy ${s.policy.ver} accepted by ${esc(s.guardian)}.<br>Computer-generated receipt. Verify at thejus.edu.in/verify</div><div style="text-align:center"><div style="font-family:cursive;color:#00629B;font-size:16px">${p.cashier.split(' ')[0]}</div><div class="faint" style="border-top:1px solid var(--line-2);padding-top:3px">Cashier</div></div></div>
   </div>`;
 }
 function showReceipt(pid) {
