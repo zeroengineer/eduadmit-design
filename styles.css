@@ -566,10 +566,6 @@ body.nav-collapsed{--side:76px}
 .sm-card.hero .sm-bar{background:rgba(255,255,255,.14)}
 .sm-card.hero .sm-bar .cf{background:#fff}.sm-card.hero .sm-bar .dc{background:var(--p-accent)}.sm-card.hero .sm-bar .sb{background:rgba(95,168,255,.45)}
 .sm-wrap{overflow:auto}
-.sm-legend{display:flex;gap:18px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--p-content-border-color);font-size:12px;color:var(--p-text-muted-color);flex-wrap:wrap}
-.sm-legend span{display:inline-flex;align-items:center;gap:7px}
-.sm-legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
-.sm-legend-note{margin-left:auto;color:var(--p-text-faint-color)}
 .sm-bar{height:8px;border-radius:8px;background:var(--p-chart-track);display:flex;overflow:hidden;gap:2px}
 .sm-bar.big{height:10px}
 .sm-bar i{display:block;height:100%;border-radius:2px}
@@ -1167,8 +1163,6 @@ body,.topbar{background:#FFFFFF}
 .sm-bar .dc,.sm-card.hero .sm-bar .dc{background:#1783C1}
 .sm-bar .sb,.sm-card.hero .sm-bar .sb{background:#A2CDE6}
 .sm-card.hero .sm-bar,.sm-bar{background:#F0F0F0}
-.sm-legend b{font-weight:600;color:#0A0A0A;margin-left:2px}
-.sm-legend-note{display:none}
 .sm-table td{padding:14px 16px}
 .sm-table tbody tr:hover td{background:#F8FBFD}
 .sm-bar{height:6px;gap:2px}
@@ -1428,7 +1422,7 @@ body,.topbar{background:#FFFFFF}
 .sheet-card > .toolbar .ay-l{display:none}
 .sheet-card > .toolbar [data-export]{width:32px;padding:0;justify-content:center}
 .sheet-card > .toolbar [data-export] .exp-l{display:none}
-.sheet-card > .toolbar:not(:has(.tab-seg)) .tsearch{margin-right:auto}
+.sheet-card > .toolbar:not(:has(.tab-seg)) .tsearch{margin-left:auto;margin-right:0}
 /* tighter header so the busiest table (Admissions) still fits on one row */
 .sheet-card > .toolbar{padding:12px 16px!important;column-gap:6px}
 .sheet-card > .toolbar .tsearch{width:190px}
@@ -1445,3 +1439,5 @@ body,.topbar{background:#FFFFFF}
 .rep-groups h3{display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:500;margin:0 0 6px}
 .rep-groups .list-row{padding:10px 0}
 @media (max-width:1000px){.rep-groups{grid-template-columns:1fr}.rep-groups section{border-left:0;border-top:1px solid #E5E5E5}}
+.sheet-card > .toolbar:not(:has(.tab-seg)):has(.tsearch) > div[style*="margin-left:auto"]{margin-left:0!important}
+.sheet-card > .toolbar > div[style*="margin-left:auto"]:empty{display:none}

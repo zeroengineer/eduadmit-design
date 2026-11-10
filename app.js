@@ -1160,8 +1160,6 @@ function showReceipt(pid) {
 
 /* ---------- Seat matrix ---------- */
 /* ---------- Seat occupancy (Reports → Analytics): summary cards per quota + the programme × quota table ---------- */
-const SM_COL = { cf: '#0A3C6E', dc: '#1783C1', sb: '#A2CDE6', av: '#EBEBEB' };
-const SM_LBL = { cf: 'Confirmed', dc: 'Details collected', sb: 'Seat booked', av: 'Available' };
 function smParts() {
   const QS = QUOTAS, PROGS_A = actProgs();
   const stat = (p, q) => { const n = st => students.filter(s => s.prog === p.code && s.quota === q && s.status === st && inAy(s)).length; const cf = n('Confirmed'), dc = n('Details collected'), sb = n('Seat booked'); return { cap: p.cap[q] || 0, cf, dc, sb, used: cf + dc + sb }; };
@@ -1176,8 +1174,7 @@ function smParts() {
   const badge = s => { const left = av(s); return left <= 0 ? '<span class="chip bad">Full</span>' : left / s.cap <= .15 ? `<span class="chip warn">${left} left</span>` : `<span class="sm-left">${left} left</span>`; };
   const cell = (s, title) => s.cap ? `<div class="sm-cell"><div class="sm-top"><span class="sm-num">${s.used}<span> / ${s.cap}</span></span>${badge(s)}</div>${bar(s, false, title)}</div>` : '<span class="sm-na">Not offered</span>';
   const card = (label, s) => `<div class="card sm-card"><div class="sm-card-l">${label}</div><div class="sm-card-v">${s.used}<span> / ${s.cap}</span></div>${bar(s, true, label)}<div class="sm-card-s"><span>${Math.round(pct(s.used, s.cap))}% filled</span><span>${av(s)} left</span></div></div>`;
-  const legend = `<div class="sm-legend">${['cf', 'dc', 'sb', 'av'].map(k => `<span><i style="background:${SM_COL[k]}"></i>${SM_LBL[k]} <b>${k === 'av' ? av(all) : all[k]}</b></span>`).join('')}</div>`;
-  const table = `<div class="sm-wrap">${legend}<table class="sm-table"><thead><tr><th>Programme</th>${QS.map(q => `<th>${q}</th>`).join('')}<th class="r">Total</th></tr></thead>
+  const table = `<div class="sm-wrap"><table class="sm-table"><thead><tr><th>Programme</th>${QS.map(q => `<th>${q}</th>`).join('')}<th class="r">Total</th></tr></thead>
     <tbody>${PROGS_A.map(p => { const row = QS.map(q => stat(p, q)), t = row.reduce(add, Z); return t.cap ? `<tr><td><div class="sm-prog">${p.name}</div><div class="sm-sub">${p.dept} · ${p.code}</div></td>${row.map((x, i) => `<td>${cell(x, p.name + ' · ' + QS[i])}</td>`).join('')}<td class="r"><div class="sm-num">${t.used}<span> / ${t.cap}</span></div><div class="sm-sub">${Math.round(pct(t.used, t.cap))}% filled</div></td></tr>` : ''; }).join('')}</tbody>
     <tfoot><tr><td>All programmes</td>${QS.map(q => { const x = PROGS_A.reduce((a, p) => add(a, stat(p, q)), Z); return `<td>${cell(x, 'All programmes · ' + q)}</td>`; }).join('')}<td class="r"><div class="sm-num">${all.used}<span> / ${all.cap}</span></div><div class="sm-sub">${Math.round(pct(all.used, all.cap))}% filled</div></td></tr></tfoot></table></div>`;
   return { cards: `<div class="sm-cards">${card('All quotas', all)}${QUOTAS.map((q, k) => card(q, byQAll[k])).join('')}</div>`, table };
@@ -1655,7 +1652,7 @@ function openReport(name) {
 /* ---------- Audit ---------- */
 PAGES.audit = () => {
   const html = `<div class="fill">${pageHead('Audit log', 'An append-only record of every change, approval, export, login and permission change. Entries can never be edited.')}
-  <div class="content">${sheet({ cols: [{ key: 'at', label: 'Timestamp', w: 140 }, { key: 'user', label: 'User', w: 170 }, { key: 'role', label: 'Role', w: 150 }, { key: 'action', label: 'Action', w: 140, render: r => `<span class="tag">${r.action}</span>` }, { key: 'record', label: 'Record', w: 160 }, { key: 'detail', label: 'Detail', w: 280 }, { key: 'before', label: 'Before', w: 120 }, { key: 'after', label: 'After', w: 130 }, { key: 'ip', label: 'IP', w: 110 }], rows: audit, onOpen: openAudit, search: false, exportBtn: false })}</div></div>`;
+  <div class="content">${sheet({ cols: [{ key: 'at', label: 'Timestamp', w: 140 }, { key: 'user', label: 'User', w: 170 }, { key: 'role', label: 'Role', w: 150 }, { key: 'action', label: 'Action', w: 140, render: r => `<span class="tag">${r.action}</span>` }, { key: 'record', label: 'Record', w: 160 }, { key: 'detail', label: 'Detail', w: 280 }, { key: 'before', label: 'Before', w: 120 }, { key: 'after', label: 'After', w: 130 }, { key: 'ip', label: 'IP', w: 110 }], rows: audit, onOpen: openAudit, exportBtn: false })}</div></div>`;
   return html;
 };
 function openAudit(a) {
