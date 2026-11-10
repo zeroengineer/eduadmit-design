@@ -1360,7 +1360,7 @@ body,.topbar{background:#FFFFFF}
    --pad-x   card inner side padding  --pad-y card inner vertical padding
    Heading scale: page h1 19/600 · section h2 16/600 · card h3 14/500                        */
 :root{--gutter:32px;--gap:16px;--pad-x:20px;--pad-y:16px}
-.page-head{padding:10px var(--gutter);margin-bottom:var(--gap);min-height:56px}
+.page-head{padding:10px var(--gutter);margin-bottom:var(--gap);min-height:56px;border-bottom:0}
 .page-head h1{font-size:19px;font-weight:600;letter-spacing:-.3px}
 .content{padding:0 var(--gutter) var(--gutter)}
 .card-h{padding:14px var(--pad-x)}
